@@ -84,12 +84,12 @@
 
           var overrideConfig = {
             files: [
-                'src/collection/'+sourceDirName+'/generated/client/**/*.js'
+                'src/collection/'+sourceDirName+'/generated/**/*.js'
               ],
             preprocessors: {}
           };
 
-          overrideConfig.preprocessors['src/collection/'+sourceDirName+'/generated/client/**/*.js'] = ['browserify'];
+          overrideConfig.preprocessors['src/collection/'+sourceDirName+'/generated/**/*.js'] = ['browserify'];
 
           var karmaConfig = cfg.parseConfig(path.resolve('./build/config/karma.config.js'), overrideConfig);
 
@@ -120,12 +120,12 @@
 
           var overrideConfig = {
             files: [
-                'src/collection/'+sourceDirName+'/generated/client/**/*.js'
+                'src/collection/'+sourceDirName+'/generated/**/*.js'
               ],
             preprocessors: {}
           };
 
-          overrideConfig.preprocessors['src/collection/'+sourceDirName+'/generated/client/**/*.js'] = ['browserify'];
+          overrideConfig.preprocessors['src/collection/'+sourceDirName+'/generated/**/*.js'] = ['browserify'];
 
           var karmaConfig = cfg.parseConfig(path.resolve('./build/config/karma.config.js'), overrideConfig);
 
