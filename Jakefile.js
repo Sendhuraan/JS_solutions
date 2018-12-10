@@ -76,46 +76,70 @@
     desc('Start Karma Server');
     task('start', function(sourceDirName) {
 
-      var overrideConfig = {
-        files: [
-            'src/collection/'+sourceDirName+'/generated/client/**/*.js'
-          ],
-        preprocessors: {}
-      };
+        var dependentTask = jake.Task['transpile:unit'];
 
-      overrideConfig.preprocessors['src/collection/'+sourceDirName+'/generated/client/**/*.js'] = ['browserify'];
+        dependentTask.addListener('complete', function() {
 
-      var karmaConfig = cfg.parseConfig(path.resolve('./build/config/karma.config.js'), overrideConfig);
+          console.log('Start Test Unit Folder ~');
 
-      var serverInstance = new KarmaServer(karmaConfig, function(exitCode) {
-        console.log('Karma has exited with ' + exitCode);
-        process.exit(exitCode);
-      });
+          var overrideConfig = {
+            files: [
+                'src/collection/'+sourceDirName+'/generated/**/*.js'
+              ],
+            preprocessors: {}
+          };
 
-      serverInstance.start();
-      process.stdout.write('Capture the expected browsers');
+          overrideConfig.preprocessors['src/collection/'+sourceDirName+'/generated/**/*.js'] = ['browserify'];
+
+          var karmaConfig = cfg.parseConfig(path.resolve('./build/config/karma.config.js'), overrideConfig);
+
+          var serverInstance = new KarmaServer(karmaConfig, function(exitCode) {
+            console.log('Karma has exited with ' + exitCode);
+            process.exit(exitCode);
+          });
+
+          serverInstance.start();
+          process.stdout.write('Capture the expected browsers');
+
+          return sourceDirName;
+
+        });
+
+        dependentTask.invoke.apply(dependentTask, [sourceDirName]);
 
     });
 
     desc('Client Tests');
     task('run', function(sourceDirName) {
 
-      var overrideConfig = {
-        files: [
-            'src/collection/'+sourceDirName+'/generated/client/**/*.js'
-          ],
-        preprocessors: {}
-      };
+        var dependentTask = jake.Task['transpile:unit'];
 
-      overrideConfig.preprocessors['src/collection/'+sourceDirName+'/generated/client/**/*.js'] = ['browserify'];
+        dependentTask.addListener('complete', function() {
 
-      var karmaConfig = cfg.parseConfig(path.resolve('./build/config/karma.config.js'), overrideConfig);
+          console.log('Running Test Unit Folder ~');
 
-      var runner = require('karma').runner;
-      runner.run(karmaConfig, function(exitCode) {
-        console.log('Karma has exited with ' + exitCode);
-        process.exit(exitCode);
-      });
+          var overrideConfig = {
+            files: [
+                'src/collection/'+sourceDirName+'/generated/**/*.js'
+              ],
+            preprocessors: {}
+          };
+
+          overrideConfig.preprocessors['src/collection/'+sourceDirName+'/generated/**/*.js'] = ['browserify'];
+
+          var karmaConfig = cfg.parseConfig(path.resolve('./build/config/karma.config.js'), overrideConfig);
+
+          var runner = require('karma').runner;
+          runner.run(karmaConfig, function(exitCode) {
+            console.log('Karma has exited with ' + exitCode);
+            process.exit(exitCode);
+          });
+
+          return sourceDirName;
+
+        });
+
+        dependentTask.invoke.apply(dependentTask, [sourceDirName]);
 
     });
 
