@@ -1,5 +1,13 @@
 (function() {
 
+	function clearLowerSetBit(x) {
+		return x & (x - 1);
+	}
+
+	function extractLowestSetBit(x) {
+		return x & ~(x - 1);
+	}
+
 	function getLSB(num) {
 		return num & 1;
 	}
@@ -13,11 +21,14 @@
 
 		while(num) {
 
-			if(getLSB(num) === 1) {
-				count++;
-			}
+			// if(getLSB(num) === 1) {
+			// 	count++;
+			// }
 
-			num = shiftBit(num, 1);
+			// num = shiftBit(num, 1);
+
+			num = num & (num - 1);
+			count++;
 		}
 
 		return count;
@@ -34,8 +45,8 @@
 
 	}
 
-	var num = 0b1110;
+	var num = 0b1100;
 
-	console.log(parity(num));
+	console.log(extractLowestSetBit(num).toString(2));
 	
 })();
