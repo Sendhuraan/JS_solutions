@@ -1,42 +1,11 @@
 (function() {
 
-	function clearLowerSetBit(x) {
-		return x & (x - 1);
-	}
+	var BitUtils = require('@sendhuraan/js-utilities').BitUtils;
+	var MathUtils = require('@sendhuraan/js-utilities').MathUtils;
 
-	function extractLowestSetBit(x) {
-		return x & ~(x - 1);
-	}
+	function parity(x) {
 
-	function getLSB(num) {
-		return num & 1;
-	}
-
-	function shiftBit(num, shiftVal) {
-		return num >>> shiftVal;
-	}
-
-	function countBits(num) {
-		var count = 0;
-
-		while(num) {
-
-			// if(getLSB(num) === 1) {
-			// 	count++;
-			// }
-
-			// num = shiftBit(num, 1);
-
-			num = num & (num - 1);
-			count++;
-		}
-
-		return count;
-	}
-
-	function parity(num) {
-
-		if(countBits(num) % 2 === 0) {
+		if( MathUtils.isEven( BitUtils.countSetBits(x) ) ) {
 			return 0;
 		}
 		else {
@@ -45,8 +14,8 @@
 
 	}
 
-	var num = 0b1100;
+	var x = 0b1110;
 
-	console.log(extractLowestSetBit(num).toString(2));
+	console.log(parity(x));
 	
 })();
