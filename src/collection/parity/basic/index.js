@@ -1,21 +1,23 @@
 (function() {
 
+	var parity = require('./parity');
 	var BitUtils = require('@sendhuraan/js-utilities').BitUtils;
-	var MathUtils = require('@sendhuraan/js-utilities').MathUtils;
 
-	function parity(x) {
+	var input = 4294967295;
 
-		if( MathUtils.isEven( BitUtils.countSetBits(x) ) ) {
-			return 0;
-		}
-		else {
-			return 1;
-		}
+	var inputSwap = 47;
 
-	}
+	Number.prototype.toBinary = BitUtils.convertToBinary;
 
-	var x = 0b1110;
+	// console.log(BitUtils.countSetBits_shiftBits(input));
+	// console.log(BitUtils.countSetBits_clearSetBits(input));
+	// console.log(BitUtils.convertToBinary(input));
+	// console.log(inputSwap.toBinary());
+	console.log(BitUtils.swapBits(inputSwap, 2, 5));
 
-	console.log(parity(x));
+	// console.log(parity.parity_shiftBits(input));
+	// console.log(parity.parity_clearSetBits(input));
+	// console.log(parity.parity_lookupTable(input));
+	// console.log(parity.parity_xor(input));
 	
 })();
