@@ -226,6 +226,7 @@
 					shell.cp('-R',
 							CLIENT_DIR + '/*.html',
 							CLIENT_DIR + '/*.css',
+							CLIENT_DIR + '/images',
 							BROWSERIFY_DIR + '/*.js',
 						DEPLOY_CLIENT_DIR
 					);
@@ -274,7 +275,7 @@
 
 					var browserifyRunner = require('./build/utilities/browserify-runner.js');
 
-					browserifyRunner.bundle(COLLATED_CLIENT_DIR + '/app.js', BROWSERIFY_DIR + '/bundle.js', bundleComplete, fail);
+					browserifyRunner.bundle(COLLATED_CLIENT_DIR + '/index.js', BROWSERIFY_DIR + '/bundle.js', bundleComplete, fail);
 
 					function bundleComplete() {
 						complete();
