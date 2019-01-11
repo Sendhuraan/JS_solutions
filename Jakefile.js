@@ -40,7 +40,12 @@
 	});
 
 	desc('Lint All JS Files');
-	task('lint', function() {
+	task('lint', function(sourceDirName) {
+
+		var SOURCE_DIR = COLLECTION_DIR + sourceDirName;
+		var CLIENT_DIR = SOURCE_DIR + '/client';
+		var GENERATED_DIR = SOURCE_DIR + '/generated';
+		var DEPLOY_DIR = SOURCE_DIR + '/deploy';
 		
 		var lintConfig = require('./build/config/eslint.config.js');
 		var lintRunner = require('./build/utilities/lint-runner.js');
@@ -56,10 +61,10 @@
 		}
 		
 		var listES6 = new jake.FileList();
-		listES6.include('src/collection/**/*.js');
-		listES6.include('src/collection/**/*.jsx');
-		listES6.exclude('src/collection/*/*/generated/*');
-		listES6.exclude('src/collection/*/*/deploy/*');
+		listES6.include(SOURCE_DIR + '/**/*.js');
+		listES6.include(SOURCE_DIR + '/**/*.jsx');
+		listES6.exclude(GENERATED_DIR);
+		listES6.exclude(DEPLOY_DIR);
 
 		var lintES5 = lintRunner.validateFiles(listES5.toArray(), lintConfig.es5Options);
 		var lintES6 = lintRunner.validateFiles(listES6.toArray(), lintConfig.es6Options);
