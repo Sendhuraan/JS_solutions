@@ -10,16 +10,16 @@
 				'ecmaVersion': 2017
 			},
 
-			'env': {
-				'browser': true,
-				'node': true,
-				'commonjs': true,
-				'mocha': true
-			},
+			'envs': [
+				'browser',
+				'node',
+				'commonjs',
+				'mocha'
+			],
 
-			'globals': {
-				'Promise': false
-			},
+			'globals': [
+				'Promise'
+			],
 
 			'rules': {
 				// 'Possible Errors' (according to ESLint docs)
@@ -119,16 +119,16 @@
 				'sourceType': 'module'
 			},
 
-			'env': {
-				'browser': true,
-				'node': true,
-				'commonjs': true,
-				'mocha': true
-			},
+			'envs': [
+				'browser',
+				'node',
+				'commonjs',
+				'mocha'
+			],
 
-			'globals': {
-				'Promise': false
-			},
+			'globals': [
+				'Promise'
+			],
 
 			'rules': {
 				// 'Possible Errors' (according to ESLint docs)
