@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import ReactTestUtils from 'react-dom/test-utils';
-import SimpleComponent from './simple-component.js';
+import SimpleComponent from './simple-component.jsx';
 import { assert } from 'chai';
 
 describe('component', function() {

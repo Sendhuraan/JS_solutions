@@ -4,6 +4,7 @@
 	var http = require('http');
 	var serveStatic = require('serve-static');
 
+
 	function run(host, port, dir) {
 
 		var serve = serveStatic(dir, {'index': ['index.html', 'index.htm']});
@@ -13,6 +14,7 @@
 		});
 
 		server.listen(port, host, function(error) {
+
 			if(error) {
 				console.log(error);
 			}
