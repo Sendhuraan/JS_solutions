@@ -18,8 +18,6 @@
 		.option('-d --dir <value>', 'Input folder name')
 		.parse(process.argv);
 
-	console.log(program.dir);
-
 	var COLLECTION_DIR = 'src/collection/';
 	var SOURCE_DIR = COLLECTION_DIR + program.dir;
 	var SERVER_DIR = SOURCE_DIR + '/server';
@@ -191,7 +189,16 @@
 			});
 
 			serverInstance.start();
-			process.stdout.write('Capture the expected browsers');
+
+			serverInstance.on('listening', function (browser) {
+				console.log('CAPTURE THE REQUIRED BROWSERS...');
+			});
+
+			// serverInstance.on('browser_register', function (browser) {
+			// 	console.log(`${browser.name} was registered.`);
+			// });
+
+			return serverInstance;
 
 			cb();
 		}
@@ -209,8 +216,16 @@
 		else {
 			var overrideConfig = {
 				files: [
-						CLIENT_DIR + '/**/*.js',
-						CLIENT_DIR + '/**/*.jsx'
+							{
+								'pattern': CLIENT_DIR + '/**/*.js',
+								'included': false,
+								'watched': false
+							},
+							{
+								'pattern': CLIENT_DIR + '/**/*.jsx',
+								'included': false,
+								'watched': false
+							}
 					],
 				preprocessors: {}
 			};
@@ -223,6 +238,8 @@
 
 			var karmaConfig = cfg.parseConfig(path.resolve('./build/config/karma.config.js'), overrideConfig);
 
+			console.log(karmaConfig);
+
 			var runner = require('karma').runner;
 			runner.run(karmaConfig, function(exitCode) {
 				console.log('Karma has exited with ' + exitCode);
@@ -234,27 +251,17 @@
 	}
 
 	function runSolution(cb) {
-		
-		var host = 'localhost';
-		var port = 3000;
 
-		if (fs.existsSync(DEPLOY_DIR)) {
-			var solution = require('./' + DEPLOY_DIR);
-			solution.server.run(host, port, SERVE_DIR);
-		}
-		else {
-			child_process.exec(`node ${SOURCE_DIR}`, function(error, stdout, stderr) {
-				if (error) {
-					console.log(error.stack);
-					console.log('Error code: '+error.code);
-					console.log('Signal received: '+error.signal);
-				}
-				console.log('stdout: ' + stdout);
-				console.log('stderr: ' + stderr);
-			});
-		}
-
-		cb();
+		fs.access(DEPLOY_DIR, fs.constants.F_OK, (err) => {
+			if (err) {
+				child_process.fork(`${SOURCE_DIR}`);
+				cb();
+			}
+			else {
+				child_process.fork(`${DEPLOY_DIR}`);
+				cb();
+			}
+		});
 
 	}
 
@@ -267,7 +274,7 @@
 			cb(new Error('FOLDER DOES NOT EXISTS'));
 		}
 		else {
-			watch([`${SERVER_DIR}/**/*`], series(lintSourceFiles, runServerTests, copyServerFiles));
+			watch([`${SERVER_DIR}/**/*.js`, `${SOURCE_DIR}/*.js`], series(lintSourceFiles, runServerTests, copyServerFiles));
 			cb();
 		}
 		
@@ -289,17 +296,19 @@
 	}
 
 	function watchGlobalFiles(cb) {
+		watch(['**/*.js', '!node_modules/**', '!src/collection/**'], lintGlobalFiles);
+		cb();
+	}
 
-		if(!program.dir) {
-			cb(new Error('NO FOLDER NAME SPECIFIED'));
-		}
-		else if(!fs.existsSync(SOURCE_DIR)) {
-			cb(new Error('FOLDER DOES NOT EXISTS'));
-		}
-		else {
-			watch(['**/*, !src/collection/*, !node_modules/*'], lintGlobalFiles);
+	function startAndCaptureTestBrowsers(cb) {
+		var karmaBrowserServer = startBrowserTestServer;
+
+		karmaBrowserServer().on('browser_register', function (browser) {
+			console.log(`${browser.name} was registered.`);
+
 			cb();
-		}
+		});
+		
 	}
 
 	const lint = parallel(lintGlobalFiles, lintSourceFiles);
@@ -312,6 +321,17 @@
 	exports.copyServerFiles = copyServerFiles;
 	exports.runSolution = runSolution;
 	exports.watchServerFiles = watchServerFiles;
-	exports.default = parallel(series(lint, ), watchGlobalFiles, watchServerFiles, watchClientFiles);
+	exports.watchGlobalFiles = watchGlobalFiles;
+
+	const reactPreqs = series(startAndCaptureTestBrowsers);
+	const reactWorkflow = series(lint, runServerTests, runBrowserTests, bundle);
+	const reactWatch = parallel(watchGlobalFiles, watchServerFiles, watchClientFiles);
+
+	exports.reactPreqs = reactPreqs;
+	exports.reactWorkflow = reactWorkflow;
+	exports.reactWatch = reactWatch;
+	exports.reactMain = series(reactPreqs, reactWorkflow, reactWatch);
+
+	exports.default = parallel(watchGlobalFiles, watchServerFiles, watchClientFiles);
 	
 })();
