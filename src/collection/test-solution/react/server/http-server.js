@@ -2,7 +2,7 @@
 
 	var finalhandler = require('finalhandler');
 	var http = require('http');
-	var serveStatic = require('serve-static');
+	var serveStatic = require('serve-static')
 
 
 	function run(host, port, dir) {

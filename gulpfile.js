@@ -159,7 +159,7 @@
 		}
 	}
 
-	function startBrowserTestServer(cb) {
+	function startAndCaptureTestBrowsers(cb) {
 
 		if(!program.dir) {
 			cb(new Error('NO FOLDER NAME SPECIFIED'));
@@ -194,13 +194,10 @@
 				console.log('CAPTURE THE REQUIRED BROWSERS...');
 			});
 
-			// serverInstance.on('browser_register', function (browser) {
-			// 	console.log(`${browser.name} was registered.`);
-			// });
-
-			return serverInstance;
-
-			cb();
+			serverInstance.on('browser_register', function (browser) {
+				console.log(`${browser.name} was registered.`);
+				cb();
+			});
 		}
 		
 	}
@@ -267,6 +264,12 @@
 
 	function watchServerFiles(cb) {
 
+		var sourceDir = path.resolve(SOURCE_DIR+'/*.js');
+		var serverDir = path.resolve(SERVER_DIR+'/**/*.js');
+
+		console.log(sourceDir);
+		console.log(serverDir);
+
 		if(!program.dir) {
 			cb(new Error('NO FOLDER NAME SPECIFIED'));
 		}
@@ -274,7 +277,7 @@
 			cb(new Error('FOLDER DOES NOT EXISTS'));
 		}
 		else {
-			watch([`${SERVER_DIR}/**/*.js`, `${SOURCE_DIR}/*.js`], series(lintSourceFiles, runServerTests, copyServerFiles));
+			watch([sourceDir, serverDir], series(lintSourceFiles, runServerTests, copyServerFiles));
 			cb();
 		}
 		
@@ -289,7 +292,7 @@
 			cb(new Error('FOLDER DOES NOT EXISTS'));
 		}
 		else {
-			watch([`${CLIENT_DIR}/**/*`], series(lintSourceFiles, runBrowserTests, bundle));
+			watch([CLIENT_DIR+'/**/*'], series(lintSourceFiles, runBrowserTests, bundle));
 			cb();
 		}
 		
@@ -300,22 +303,11 @@
 		cb();
 	}
 
-	function startAndCaptureTestBrowsers(cb) {
-		var karmaBrowserServer = startBrowserTestServer;
-
-		karmaBrowserServer().on('browser_register', function (browser) {
-			console.log(`${browser.name} was registered.`);
-
-			cb();
-		});
-		
-	}
-
 	const lint = parallel(lintGlobalFiles, lintSourceFiles);
 
 	exports.lint = lint;
 	exports.runServerTests = runServerTests;
-	exports.startBrowserTestServer = startBrowserTestServer;
+	exports.startAndCaptureTestBrowsers = startAndCaptureTestBrowsers;
 	exports.runBrowserTests = runBrowserTests;
 	exports.bundle = bundle;
 	exports.copyServerFiles = copyServerFiles;
