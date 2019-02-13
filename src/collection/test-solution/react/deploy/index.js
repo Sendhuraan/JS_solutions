@@ -5,7 +5,7 @@
 	const Server = require('./server/server.js');
 
 	const PORT = 3000;
-	const SERVE_DIR = 'client'
+	const SERVE_DIR = 'client';
 	const CONTENT_DIR = path.join(__dirname, SERVE_DIR);
 
 	const server = new Server();
