@@ -1,0 +1,175 @@
+import React, { Component } from 'react';
+import axios from 'axios';
+
+const DEFAULT_QUERY = 'redux';
+const DEFAULT_HITS_PER_PAGE = '10';
+
+const PATH_BASE = 'https://hn.algolia.com/api/v1';
+const PATH_SEARCH = '/search';
+const PARAM_SEARCH = 'query=';
+const PARAM_PAGE = 'page=';
+const PARAM_HITS_PER_PAGE = 'hitsPerPage=';
+
+const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}&${PARAM_PAGE}`;
+
+function searchFilter(searchValue) {
+	return function(item) {
+		return item.title.toLowerCase().includes(searchValue.toLowerCase());
+	};
+}
+
+class App extends Component {
+
+	constructor(props) {
+		super(props);
+
+		this.state = {
+			result: null,
+			searchValue: DEFAULT_QUERY
+		};
+
+		this.onDismiss = this.onDismiss.bind(this);
+		this.onSearchChange = this.onSearchChange.bind(this);
+		this.setSearchTopStories = this.setSearchTopStories.bind(this);
+		this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
+		this.onSearchSubmit = this.onSearchSubmit.bind(this);
+	}
+
+	onDismiss(id) {
+		const updatedHits = this.state.result.hits.filter((item) => {
+			return item.objectID !== id;
+		});
+
+		this.setState({
+			result: { ...this.state.result, hits: updatedHits }
+		});
+	}
+
+	onSearchChange(event) {
+		this.setState({
+			searchValue: event.target.value
+		});
+	}
+
+	setSearchTopStories(result) {
+		const { hits, page } = result;
+
+		const oldHits = page !== 0 ? this.state.result.hits : [];
+
+		const updatedHits = [ ...oldHits, ...hits ];
+
+		this.setState({
+			result: {
+				hits: updatedHits,
+				page
+			}
+		});
+	}
+
+	fetchSearchTopStories(searchValue, page = 0) {
+		axios(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchValue}&${PARAM_PAGE}${page}&${PARAM_HITS_PER_PAGE}${DEFAULT_HITS_PER_PAGE}`)
+			.then((result) => { this.setSearchTopStories(result.data); })
+			.catch((error) => { this.setState({ error }); });
+	}
+
+	onSearchSubmit(event) {
+		event.preventDefault();
+		const { searchValue } = this.state;
+		this.fetchSearchTopStories(searchValue);
+	}
+
+	componentDidMount() {
+		const { searchValue } = this.state;
+		this.fetchSearchTopStories(searchValue);
+	}
+
+	render() {
+
+		const { searchValue, result } = this.state;
+		const page = (result && result.page) || 0;
+
+		if(!result) {
+			return null;
+		}
+
+		return (
+			<div className='page'>
+				<div className='interactions'>
+					<Search value={searchValue} onChange={this.onSearchChange} onSubmit={this.onSearchSubmit}>
+						Search Books 
+					</Search>
+					{
+						result && <Table list={result.hits} onDismiss={this.onDismiss} />
+					}
+					<div className='interactions'>
+						<Button onClick={() => this.fetchSearchTopStories(searchValue, page + 1)} >
+							More
+						</Button>
+					</div>
+				</div>
+			</div>
+		);
+	}
+}
+
+function Search(props) {
+
+	const { value, onChange, onSubmit, children } = props;
+
+	return (
+		<form onSubmit={onSubmit}>
+			{children}
+			<input type='text' value={value} onChange={onChange} />
+			<input type='submit' value={children} />
+		</form>
+	);
+}
+
+function Table(props) {
+
+	const { list, searchPattern, onDismiss } = props;
+
+	const largeColumn = {
+		width: '40%'
+	};
+
+	const midColumn = {
+		width: '30%'
+	};
+
+	const smallColumn = {
+		width: '10%'
+	};
+
+	return (
+		<div className='table'>
+			{list.map((item) => {
+				return (
+					<div className='table-row' key={item.objectID}>
+						<span style={ largeColumn }><a href={item.url}>{item.title}</a></span>
+						<span style={ midColumn }>{item.author}</span>
+						<span style={ smallColumn }>{item.num_comments}</span>
+						<span style={ smallColumn }>{item.points}</span>
+						<span>
+							<Button className='button-inline' onClick={() => onDismiss(item.objectID)}>
+								Dismiss
+							</Button>
+						</span>
+					</div>
+				);
+			})
+			}
+		</div>
+	);
+}
+
+function Button(props) {
+
+	const { className = '', onClick, children } = props;
+
+	return (
+		<input type='button' className={className} onClick={onClick} value={children} />
+	);
+}
+
+export default App;
