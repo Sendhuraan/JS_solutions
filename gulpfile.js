@@ -249,6 +249,8 @@
 
 	function runSolution(cb) {
 
+		var PORT = 3000;
+
 		fs.access(DEPLOY_DIR, fs.constants.F_OK, (err) => {
 			if (err) {
 				child_process.fork(`${SOURCE_DIR}`);
@@ -322,7 +324,8 @@
 	exports.reactPreqs = reactPreqs;
 	exports.reactWorkflow = reactWorkflow;
 	exports.reactWatch = reactWatch;
-	exports.reactMain = series(reactPreqs, reactWorkflow, reactWatch);
+	exports.reactMain = series(reactPreqs, reactWorkflow);
+	exports.reactMainWatch = series(reactPreqs, reactWorkflow, reactWatch);
 
 	exports.default = parallel(watchGlobalFiles, watchServerFiles, watchClientFiles);
 	
