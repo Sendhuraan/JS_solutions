@@ -235,8 +235,6 @@
 
 			var karmaConfig = cfg.parseConfig(path.resolve('./build/config/karma.config.js'), overrideConfig);
 
-			console.log(karmaConfig);
-
 			var runner = require('karma').runner;
 			runner.run(karmaConfig, function(exitCode) {
 				console.log('Karma has exited with ' + exitCode);
@@ -268,9 +266,6 @@
 
 		var sourceDir = path.resolve(SOURCE_DIR+'/*.js');
 		var serverDir = path.resolve(SERVER_DIR+'/**/*.js');
-
-		console.log(sourceDir);
-		console.log(serverDir);
 
 		if(!program.dir) {
 			cb(new Error('NO FOLDER NAME SPECIFIED'));
@@ -317,15 +312,14 @@
 	exports.watchServerFiles = watchServerFiles;
 	exports.watchGlobalFiles = watchGlobalFiles;
 
-	const reactPreqs = series(startAndCaptureTestBrowsers);
-	const reactWorkflow = series(lint, runServerTests, runBrowserTests, bundle);
+	const reactTests = series(runServerTests, startAndCaptureTestBrowsers, runBrowserTests);
+	const reactDefault = series(lint, bundle, copyServerFiles);
 	const reactWatch = parallel(watchGlobalFiles, watchServerFiles, watchClientFiles);
 
-	exports.reactPreqs = reactPreqs;
-	exports.reactWorkflow = reactWorkflow;
+	exports.reactTests = reactTests;
+	exports.reactDefault = reactDefault;
 	exports.reactWatch = reactWatch;
-	exports.reactMain = series(reactPreqs, reactWorkflow);
-	exports.reactMainWatch = series(reactPreqs, reactWorkflow, reactWatch);
+	exports.reactTestsWatch = series(reactTests, reactDefault, reactWatch);
 
 	exports.default = parallel(watchGlobalFiles, watchServerFiles, watchClientFiles);
 	
