@@ -15,17 +15,17 @@ class OrderForm extends Component {
 		this.addOrder = this.addOrder.bind(this);
 	}
 
-	addOrder = e => {
+	addOrder(e) {
 		e.preventDefault();
 		this.props.addOrder(this.state);
 		this.setState({ order: '', amount: 1 });
-	};
+	}
 
-	handleChange = e => {
+	handleChange(e) {
 		let newState = {};
 		newState[e.target.name] = e.target.value;
 		this.setState(newState);
-	};
+	}
 
 	render() {
 		return (
@@ -60,7 +60,7 @@ class OrderForm extends Component {
 
 OrderForm.propTypes = {
 	addOrder: PropTypes.func.isRequired
-}
+};
 
 export default connect(
 	null,

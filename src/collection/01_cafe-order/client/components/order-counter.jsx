@@ -14,7 +14,7 @@ class OrderCounter extends Component {
 
 OrderCounter.propTypes = {
 	count: PropTypes.number.isRequired
-}
+};
 
 const mapStateToProps = state => ({
 	count: state.orders.length

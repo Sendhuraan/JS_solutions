@@ -5,11 +5,12 @@ import PropTypes from 'prop-types';
 import { deleteOrder } from '../actions/orderActions';
 
 class OrdersList extends Component {
-	deleteOrder = e => {
-		this.props.deleteOrder(parseInt(e.target.getAttribute('data-id')));
-	};
 
-	loadOrders = orders => {
+	deleteOrder(e) {
+		this.props.deleteOrder(parseInt(e.target.getAttribute('data-id'), 10));
+	}
+
+	loadOrders(orders) {
 		let list = [];
 		for (let i = 0; i < orders.length; i++) {
 			list.push(
@@ -31,7 +32,7 @@ class OrdersList extends Component {
 			);
 		}
 		return list;
-	};
+	}
 
 	render() {
 		let orders = this.props.orders;
@@ -42,7 +43,7 @@ class OrdersList extends Component {
 OrdersList.propTypes = {
 	orders: PropTypes.array.isRequired,
 	deleteOrder: PropTypes.func.isRequired
-}
+};
 
 const mapStateToProps = state => ({
 	orders: state.orders

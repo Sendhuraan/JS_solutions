@@ -19,6 +19,6 @@ let generateID = (orders) => {
 		lastId = orders[orders.length - 1].id;
 	}
 	return ++lastId;
-}
+};
 
 export default orderReducer;
