@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
-import { addOrder } from '../actions/orderActions';
+import { addOrder } from '../../actions/orderActions';
 
 class OrderForm extends Component {
 	constructor(props) {
@@ -13,6 +13,7 @@ class OrderForm extends Component {
 		};
 
 		this.addOrder = this.addOrder.bind(this);
+		this.handleChange = this.handleChange.bind(this);
 	}
 
 	addOrder(e) {

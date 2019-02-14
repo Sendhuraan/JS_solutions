@@ -2,9 +2,16 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
-import { deleteOrder } from '../actions/orderActions';
+import { deleteOrder } from '../../actions/orderActions';
 
 class OrdersList extends Component {
+
+	constructor(props) {
+		super(props);
+
+		this.deleteOrder = this.deleteOrder.bind(this);
+		this.loadOrders = this.loadOrders.bind(this);
+	}
 
 	deleteOrder(e) {
 		this.props.deleteOrder(parseInt(e.target.getAttribute('data-id'), 10));
