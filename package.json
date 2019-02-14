@@ -39,12 +39,14 @@
 	},
 	"dependencies": {
 		"axios": "^0.18.0",
+		"classnames": "^2.2.6",
+		"finalhandler": "^1.1.1",
 		"prop-types": "^15.7.1",
 		"react": "^16.6.3",
 		"react-addons-test-utils": "^15.6.2",
 		"react-dom": "^16.6.3",
-		"serve-static": "^1.13.2",
-		"finalhandler": "^1.1.1",
-		"classnames": "^2.2.6"
+		"react-redux": "^6.0.0",
+		"redux": "^4.0.1",
+		"serve-static": "^1.13.2"
 	}
 }
