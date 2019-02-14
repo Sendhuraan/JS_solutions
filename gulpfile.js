@@ -105,6 +105,47 @@
 		}
 		else {
 
+			var webpackEntryPoint = `${CLIENT_DIR}/index.js`;
+			var webpackOutput = `${DEPLOY_CLIENT_DIR}`;
+
+			webpackConfig.entry = path.resolve(webpackEntryPoint);
+			webpackConfig.output.path = path.resolve(webpackOutput);
+
+			webpack(webpackConfig, (err, stats) => {
+				if (err) {
+					console.error(err.stack || err);
+				if (err.details) {
+					console.error(err.details);
+				}
+					return;
+				}
+
+				const info = stats.toJson();
+
+				if (stats.hasErrors()) {
+					console.error(info.errors);
+				}
+
+				if (stats.hasWarnings()) {
+					console.warn(info.warnings);
+				}
+
+				});
+
+			cb();
+		}
+	}
+
+	function reactBundle(cb) {
+
+		if(!program.dir) {
+			cb(new Error('NO FOLDER NAME SPECIFIED'));
+		}
+		else if(!fs.existsSync(SOURCE_DIR)) {
+			cb(new Error('FOLDER DOES NOT EXISTS'));
+		}
+		else {
+
 			var webpackEntryPoint = `${CLIENT_DIR}/index.jsx`;
 			var webpackOutput = `${DEPLOY_CLIENT_DIR}`;
 
@@ -312,14 +353,23 @@
 	exports.watchServerFiles = watchServerFiles;
 	exports.watchGlobalFiles = watchGlobalFiles;
 
+	const webTests = series(runServerTests, startAndCaptureTestBrowsers, runBrowserTests);
+	const webDefault = series(lint, bundle, copyServerFiles);
+	const webWatch = parallel(watchGlobalFiles, watchServerFiles, watchClientFiles);
+
 	const reactTests = series(runServerTests, startAndCaptureTestBrowsers, runBrowserTests);
-	const reactDefault = series(lint, bundle, copyServerFiles);
+	const reactDefault = series(lint, reactBundle, copyServerFiles);
 	const reactWatch = parallel(watchGlobalFiles, watchServerFiles, watchClientFiles);
 
 	exports.reactTests = reactTests;
 	exports.reactDefault = reactDefault;
 	exports.reactWatch = reactWatch;
 	exports.reactTestsWatch = series(reactTests, reactDefault, reactWatch);
+
+	exports.webTests = webTests;
+	exports.webDefault = webDefault;
+	exports.webWatch = webWatch;
+	exports.webTestsWatch = series(webTests, webDefault, webWatch);
 
 	exports.default = parallel(watchGlobalFiles, watchServerFiles, watchClientFiles);
 	
