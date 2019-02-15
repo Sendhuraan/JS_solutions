@@ -1,15 +1,15 @@
 import store from './store';
-import { doAddTodo, doToggleTodo } from './actions/todo-actions';
-import { doSetFilter } from './actions/filter-actions';
+import { doAddTodo, doToggleTodo } from './actions/todo';
+import { doSetFilter } from './actions/filter';
 import { SHOW_ALL, SHOW_COMPLETED_TASKS, SHOW_INCOMPLETE_TASKS } from './constants/filter-types';
 
 
 const unsubscribe = store.subscribe(() => {
-	console.log('store update, current state:');
+	console.log('Store Updated, Current State:');
 	console.log(store.getState());
 });
 
-console.log('initial state:');
+console.log('Initial State:');
 console.log(store.getState());
 
 store.dispatch(doAddTodo('0', 'Learn Redux'));
