@@ -2,10 +2,14 @@
 
 (function() {
 
+	var webpack = require('webpack');
 	var HtmlWebpackPlugin = require('html-webpack-plugin');
+	var nodeExternals = require('webpack-node-externals');
 
-	module.exports = {
+	var client = {
 		entry: '',
+		mode: 'development',
+		target: 'web',
 		output: {
 			path: '',
 			filename: 'bundle.js'
@@ -31,9 +35,7 @@
 				}
 			]
 		},
-		plugins: [
-			new HtmlWebpackPlugin()
-		],
+		plugins: [],
 		resolve: {
 			extensions: [
 				'.js',
@@ -41,5 +43,61 @@
 			]
 		}
 	};
+
+	var server = {
+		entry: '',
+		mode: 'development',
+		target: 'node',
+		node: {
+			__dirname: false
+		},
+		output: {
+			path: '',
+			filename: 'index.js'
+		},
+		externals: [nodeExternals()],
+		module: {
+			rules: [
+				{
+					test: /\.css$/,
+					use: [
+						'style-loader',
+						'css-loader'
+					]
+				},
+				{
+					test: /\.(js|jsx)$/,
+					use: {
+						loader: 'babel-loader',
+						options: {
+							presets: [
+								['@babel/preset-react'],
+								['@babel/preset-env', {
+										'targets': {
+											node: 'current'
+										}
+									}
+								]
+							]
+						}
+					}
+				}
+			]
+		},
+		plugins: [],
+		resolve: {
+			extensions: [
+				'.js',
+				'.jsx'
+			]
+		}
+	};
+
+	var publicAPI = {
+		server: server,
+		client: client
+	};
+
+	module.exports = publicAPI;
 
 }());

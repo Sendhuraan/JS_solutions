@@ -36,7 +36,8 @@
 		"shelljs": "^0.8.3",
 		"style-loader": "^0.23.1",
 		"watchify": "^3.11.0",
-		"webpack": "^4.29.2"
+		"webpack": "^4.29.2",
+		"webpack-node-externals": "^1.7.2"
 	},
 	"dependencies": {
 		"axios": "^0.18.0",
@@ -50,6 +51,7 @@
 		"react": "^16.6.3",
 		"react-dom": "^16.6.3",
 		"react-redux": "^6.0.0",
+		"react-router-dom": "^4.3.1",
 		"redux": "^4.0.1",
 		"serve-static": "^1.13.2"
 	}

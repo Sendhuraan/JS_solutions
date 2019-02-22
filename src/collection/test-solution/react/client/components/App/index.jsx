@@ -1,5 +1,6 @@
 import React from 'react';
-import './simple-component.css';
+
+import './index.css';
 
 class Greeting extends React.Component 
 {

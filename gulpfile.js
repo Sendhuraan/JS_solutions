@@ -13,13 +13,19 @@
 	var cfg = require('karma').config;
 	var shell = require('shelljs');
 	var child_process = require('child_process');
+	var HtmlWebpackPlugin = require('html-webpack-plugin');
 
 	program
 		.option('-d --dir <value>', 'Input folder name')
+		.option('--client', 'Bundle client code')
+		.option('--server', 'Bundle server code')
+		.option('--jsx', 'Entry point as JSX file')
+		.option('--serverRender', 'Enable server render')
 		.parse(process.argv);
 
 	var COLLECTION_DIR = 'src/collection/';
-	var SOURCE_DIR = COLLECTION_DIR + program.dir;
+	var DIRNAME = program.dir;
+	var SOURCE_DIR = COLLECTION_DIR + DIRNAME;
 	var SERVER_DIR = SOURCE_DIR + '/server';
 	var CLIENT_DIR = SOURCE_DIR + '/client';
 	var GENERATED_DIR = SOURCE_DIR + '/generated';
@@ -28,6 +34,11 @@
 	var DEPLOY_SERVER_DIR = DEPLOY_DIR + '/server';
 	var DEPLOY_CLIENT_DIR = DEPLOY_DIR + '/client';
 	var SERVE_DIR = DEPLOY_DIR + '/client';
+
+	var isBundle_client = program.client;
+	var isBundle_server = program.server;
+	var isEntryPoint_JSX = program.jsx;
+	var isServerRender = program.serverRender;
 
 	var eslintConfig = require('./build/config/eslint.config.js');
 	var webpackConfig = require('./build/config/webpack.config.js');
@@ -105,75 +116,90 @@
 		}
 		else {
 
-			var webpackEntryPoint = `${CLIENT_DIR}/index.js`;
-			var webpackOutput = `${DEPLOY_CLIENT_DIR}`;
+			shell.rm('-rf', DEPLOY_DIR);
 
-			webpackConfig.entry = path.resolve(webpackEntryPoint);
-			webpackConfig.output.path = path.resolve(webpackOutput);
+			if(isBundle_client) {
 
-			webpack(webpackConfig, (err, stats) => {
-				if (err) {
-					console.error(err.stack || err);
-				if (err.details) {
-					console.error(err.details);
-				}
-					return;
-				}
+				let webpackHtmlTitle = `${DIRNAME}`.replace('/', ' | ');
+				let webpackClientEntryPoint = isEntryPoint_JSX ? `${CLIENT_DIR}/index.jsx` : `${CLIENT_DIR}/index.js`;
+				let webpackClientOutput = `${DEPLOY_CLIENT_DIR}`;
+				
 
-				const info = stats.toJson();
+				webpackConfig.client.entry = path.resolve(webpackClientEntryPoint);
+				webpackConfig.client.output.path = path.resolve(webpackClientOutput);
 
-				if (stats.hasErrors()) {
-					console.error(info.errors);
-				}
+				if(!isServerRender) {
 
-				if (stats.hasWarnings()) {
-					console.warn(info.warnings);
+					let webpackClientPlugins = new HtmlWebpackPlugin({
+													title: webpackHtmlTitle
+												});
+
+					webpackConfig.client.plugins.push(webpackClientPlugins);
+
 				}
 
-				});
+				webpack(webpackConfig.client, (err, stats) => {
+					if (err) {
+						console.error(err.stack || err);
+					if (err.details) {
+						console.error(err.details);
+					}
+						return;
+					}
 
-			cb();
-		}
-	}
+					const info = stats.toJson();
 
-	function reactBundle(cb) {
+					if (stats.hasErrors()) {
+						console.error(info.errors);
+					}
 
-		if(!program.dir) {
-			cb(new Error('NO FOLDER NAME SPECIFIED'));
-		}
-		else if(!fs.existsSync(SOURCE_DIR)) {
-			cb(new Error('FOLDER DOES NOT EXISTS'));
-		}
-		else {
+					if (stats.hasWarnings()) {
+						console.warn(info.warnings);
+					}
 
-			var webpackEntryPoint = `${CLIENT_DIR}/index.jsx`;
-			var webpackOutput = `${DEPLOY_CLIENT_DIR}`;
+					});
 
-			webpackConfig.entry = path.resolve(webpackEntryPoint);
-			webpackConfig.output.path = path.resolve(webpackOutput);
+				cb();
 
-			webpack(webpackConfig, (err, stats) => {
-				if (err) {
-					console.error(err.stack || err);
-				if (err.details) {
-					console.error(err.details);
-				}
-					return;
-				}
+			}
 
-				const info = stats.toJson();
+			if(isBundle_server) {
 
-				if (stats.hasErrors()) {
-					console.error(info.errors);
-				}
+				let webpackServerEntryPoint = `${SOURCE_DIR}/index.js`;
+				let webpackServerOutput = `${DEPLOY_DIR}`;
 
-				if (stats.hasWarnings()) {
-					console.warn(info.warnings);
-				}
+				webpackConfig.server.entry = path.resolve(webpackServerEntryPoint);
+				webpackConfig.server.output.path = path.resolve(webpackServerOutput);
 
-				});
+				webpack(webpackConfig.server, (err, stats) => {
+					if (err) {
+						console.error(err.stack || err);
+					if (err.details) {
+						console.error(err.details);
+					}
+						return;
+					}
 
-			cb();
+					const info = stats.toJson();
+
+					if (stats.hasErrors()) {
+						console.error(info.errors);
+					}
+
+					if (stats.hasWarnings()) {
+						console.warn(info.warnings);
+					}
+
+					});
+
+				cb();
+
+			}
+
+			if(!(isBundle_client || isBundle_server)) {
+				cb(new Error('SPECIFY CLIENT OR SERVER TO BE BUNDLED'));
+			}
+			
 		}
 	}
 
@@ -220,7 +246,7 @@
 			overrideConfig.preprocessors[CLIENT_DIR + '/**/*.js'] = ['webpack'];
 			overrideConfig.preprocessors[CLIENT_DIR + '/**/*.jsx'] = ['webpack'];
 			overrideConfig.webpack = {
-				'module': webpackConfig.module
+				'module': webpackConfig.client.module
 			};
 
 			var karmaConfig = cfg.parseConfig(path.resolve('./build/config/karma.config.js'), overrideConfig);
@@ -271,7 +297,7 @@
 			overrideConfig.preprocessors[CLIENT_DIR + '/**/*.js'] = ['webpack'];
 			overrideConfig.preprocessors[CLIENT_DIR + '/**/*.jsx'] = ['webpack'];
 			overrideConfig.webpack = {
-				'module': webpackConfig.module
+				'module': webpackConfig.client.module
 			};
 
 			var karmaConfig = cfg.parseConfig(path.resolve('./build/config/karma.config.js'), overrideConfig);
@@ -356,15 +382,6 @@
 	const webTests = series(runServerTests, startAndCaptureTestBrowsers, runBrowserTests);
 	const webDefault = series(lint, bundle, copyServerFiles);
 	const webWatch = parallel(watchGlobalFiles, watchServerFiles, watchClientFiles);
-
-	const reactTests = series(runServerTests, startAndCaptureTestBrowsers, runBrowserTests);
-	const reactDefault = series(lint, reactBundle, copyServerFiles);
-	const reactWatch = parallel(watchGlobalFiles, watchServerFiles, watchClientFiles);
-
-	exports.reactTests = reactTests;
-	exports.reactDefault = reactDefault;
-	exports.reactWatch = reactWatch;
-	exports.reactTestsWatch = series(reactTests, reactDefault, reactWatch);
 
 	exports.webTests = webTests;
 	exports.webDefault = webDefault;
