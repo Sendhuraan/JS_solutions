@@ -17,8 +17,8 @@
 
 	program
 		.option('-d --dir <value>', 'Input folder name')
-		.option('--client', 'Bundle client code')
-		.option('--server', 'Bundle server code')
+		.option('--node', 'Bundle client code')
+		.option('--browser', 'Bundle server code')
 		.option('--jsx', 'Entry point as JSX file')
 		.option('--serverRender', 'Enable server render')
 		.parse(process.argv);
@@ -35,8 +35,29 @@
 	var DEPLOY_CLIENT_DIR = DEPLOY_DIR + '/client';
 	var SERVE_DIR = DEPLOY_DIR + '/client';
 
-	var isBundle_client = program.client;
-	var isBundle_server = program.server;
+	var TEMPLATE_DIR = CLIENT_DIR + '/templates';
+	var TEMPLATE_FILENAME = 'index.js';
+	var TEMPLATE_DATAFILE = 'index.data.json';
+
+
+	var DEFAULT_BUNDLE_ENTRY__NODE 			= 'index';
+	var DEFAULT_BUNDLE_OUTPUT__NODE 		= DEPLOY_DIR + 'index.js';
+	//var DEFAULT_BUNDLE_EXTENSIONS__NODE 	= ['.js'];
+
+	var DEFAULT_BUNDLE_ENTRY__BROWSER 		= CLIENT_DIR + 'index';
+	var DEFAULT_BUNDLE_OUTPUT_DIR__BROWSER 	= DEPLOY_CLIENT_DIR + 'bundle.js';
+	//var DEFAULT_BUNDLE_EXTENSIONS__BROWSER 	= ['.js', '.jsx'];
+
+	var DEFAULT_TEST_DIR__NODE 				= SERVER_DIR;
+	var DEFAULT_TEST_PATTERN__NODE 			= '_test';
+	//var DEFAULT_TEST_EXTENSIONS__NODE 		= ['.js'];
+
+	var DEFAULT_TEST_DIR__BROWSER 			= CLIENT_DIR;
+	var DEFAULT_TEST_PATTERN__BROWSER 		= '_test';
+	//var DEFAULT_TEST_EXTENSIONS__BROWSER 	= ['.js', '.jsx'];
+
+	var isBundle_browser = program.browser;
+	var isBundle_node = program.node;
 	var isEntryPoint_JSX = program.jsx;
 	var isServerRender = program.serverRender;
 
@@ -106,6 +127,26 @@
 		}
 	}
 
+	function displayWebpackErrorMsg(err, stats) {
+		if (err) {
+			console.error(err.stack || err);
+		if (err.details) {
+			console.error(err.details);
+		}
+			return;
+		}
+
+		const info = stats.toJson();
+
+		if (stats.hasErrors()) {
+			console.error(info.errors);
+		}
+
+		if (stats.hasWarnings()) {
+			console.warn(info.warnings);
+		}
+	}
+
 	function bundle(cb) {
 
 		if(!program.dir) {
@@ -118,9 +159,8 @@
 
 			shell.rm('-rf', DEPLOY_DIR);
 
-			if(isBundle_client) {
+			if(isBundle_browser) {
 
-				let webpackHtmlTitle = `${DIRNAME}`.replace('/', ' | ');
 				let webpackClientEntryPoint = isEntryPoint_JSX ? `${CLIENT_DIR}/index.jsx` : `${CLIENT_DIR}/index.js`;
 				let webpackClientOutput = `${DEPLOY_CLIENT_DIR}`;
 				
@@ -130,40 +170,29 @@
 
 				if(!isServerRender) {
 
-					let webpackClientPlugins = new HtmlWebpackPlugin({
-													title: webpackHtmlTitle
+					if(fs.existsSync(TEMPLATE_DIR)) {
+						compileTemplates().map(function(config) {
+							webpackConfig.client.plugins.push(config);
+						});
+					}
+					else {
+						let simpleHtmlTitle = `${DIRNAME}`.replace('/', ' | ');
+						let generateSimpleHTML = new HtmlWebpackPlugin({
+													title: simpleHtmlTitle
 												});
 
-					webpackConfig.client.plugins.push(webpackClientPlugins);
+						webpackConfig.client.plugins.push(generateSimpleHTML);
+					}
 
 				}
 
-				webpack(webpackConfig.client, (err, stats) => {
-					if (err) {
-						console.error(err.stack || err);
-					if (err.details) {
-						console.error(err.details);
-					}
-						return;
-					}
-
-					const info = stats.toJson();
-
-					if (stats.hasErrors()) {
-						console.error(info.errors);
-					}
-
-					if (stats.hasWarnings()) {
-						console.warn(info.warnings);
-					}
-
-					});
+				webpack(webpackConfig.client, displayWebpackErrorMsg);
 
 				cb();
 
 			}
 
-			if(isBundle_server) {
+			if(isBundle_node) {
 
 				let webpackServerEntryPoint = `${SOURCE_DIR}/index.js`;
 				let webpackServerOutput = `${DEPLOY_DIR}`;
@@ -171,36 +200,43 @@
 				webpackConfig.server.entry = path.resolve(webpackServerEntryPoint);
 				webpackConfig.server.output.path = path.resolve(webpackServerOutput);
 
-				webpack(webpackConfig.server, (err, stats) => {
-					if (err) {
-						console.error(err.stack || err);
-					if (err.details) {
-						console.error(err.details);
-					}
-						return;
-					}
-
-					const info = stats.toJson();
-
-					if (stats.hasErrors()) {
-						console.error(info.errors);
-					}
-
-					if (stats.hasWarnings()) {
-						console.warn(info.warnings);
-					}
-
-					});
+				webpack(webpackConfig.server, displayWebpackErrorMsg);
 
 				cb();
 
 			}
 
-			if(!(isBundle_client || isBundle_server)) {
+			if(!(isBundle_browser || isBundle_node)) {
 				cb(new Error('SPECIFY CLIENT OR SERVER TO BE BUNDLED'));
 			}
 			
 		}
+	}
+
+	function compileTemplates() {
+
+		var templateFiles = new fileList.FileList();
+		templateFiles.include(`${TEMPLATE_DIR}/pages/*`);
+
+		var templatePages = templateFiles.toArray();
+
+		var htmlConfigs = templatePages.map(function(page) {
+
+			var pageTemplate = `${page}/${TEMPLATE_FILENAME}`;
+
+			var pageData = fs.readFileSync(`${page}/${TEMPLATE_DATAFILE}`);
+			var parsedData = JSON.parse(pageData);
+
+			return new HtmlWebpackPlugin({
+				template: pageTemplate,
+				templateParameters: parsedData.templateParams,
+				filename: parsedData.metadata.outputFileName
+			});
+
+		});
+
+		return htmlConfigs;
+		
 	}
 
 	function copyServerFiles(cb) {
@@ -314,8 +350,6 @@
 
 	function runSolution(cb) {
 
-		var PORT = 3000;
-
 		fs.access(DEPLOY_DIR, fs.constants.F_OK, (err) => {
 			if (err) {
 				child_process.fork(`${SOURCE_DIR}`);
@@ -329,43 +363,44 @@
 
 	}
 
-	function watchServerFiles(cb) {
+	
+	// function watchServerFiles(cb) {
 
-		var sourceDir = path.resolve(SOURCE_DIR+'/*.js');
-		var serverDir = path.resolve(SERVER_DIR+'/**/*.js');
+	// 	var sourceDir = path.resolve(SOURCE_DIR+'/*.js');
+	// 	var serverDir = path.resolve(SERVER_DIR+'/**/*.js');
 
-		if(!program.dir) {
-			cb(new Error('NO FOLDER NAME SPECIFIED'));
-		}
-		else if(!fs.existsSync(SOURCE_DIR)) {
-			cb(new Error('FOLDER DOES NOT EXISTS'));
-		}
-		else {
-			watch([sourceDir, serverDir], series(lintSourceFiles, runServerTests, copyServerFiles));
-			cb();
-		}
+	// 	if(!program.dir) {
+	// 		cb(new Error('NO FOLDER NAME SPECIFIED'));
+	// 	}
+	// 	else if(!fs.existsSync(SOURCE_DIR)) {
+	// 		cb(new Error('FOLDER DOES NOT EXISTS'));
+	// 	}
+	// 	else {
+	// 		watch([sourceDir, serverDir], series(lintSourceFiles, runServerTests, copyServerFiles));
+	// 		cb();
+	// 	}
 		
-	}
+	// }
 
-	function watchClientFiles(cb) {
+	// function watchClientFiles(cb) {
 
-		if(!program.dir) {
-			cb(new Error('NO FOLDER NAME SPECIFIED'));
-		}
-		else if(!fs.existsSync(SOURCE_DIR)) {
-			cb(new Error('FOLDER DOES NOT EXISTS'));
-		}
-		else {
-			watch([CLIENT_DIR+'/**/*'], series(lintSourceFiles, runBrowserTests, bundle));
-			cb();
-		}
+	// 	if(!program.dir) {
+	// 		cb(new Error('NO FOLDER NAME SPECIFIED'));
+	// 	}
+	// 	else if(!fs.existsSync(SOURCE_DIR)) {
+	// 		cb(new Error('FOLDER DOES NOT EXISTS'));
+	// 	}
+	// 	else {
+	// 		watch([CLIENT_DIR+'/**/*'], series(lintSourceFiles, runBrowserTests, bundle));
+	// 		cb();
+	// 	}
 		
-	}
+	// }
 
-	function watchGlobalFiles(cb) {
-		watch(['**/*.js', '!node_modules/**', '!src/collection/**'], lintGlobalFiles);
-		cb();
-	}
+	// function watchGlobalFiles(cb) {
+	// 	watch(['**/*.js', '!node_modules/**', '!src/collection/**'], lintGlobalFiles);
+	// 	cb();
+	// }
 
 	const lint = parallel(lintGlobalFiles, lintSourceFiles);
 
@@ -376,8 +411,8 @@
 	exports.bundle = bundle;
 	exports.copyServerFiles = copyServerFiles;
 	exports.runSolution = runSolution;
-	exports.watchServerFiles = watchServerFiles;
-	exports.watchGlobalFiles = watchGlobalFiles;
+	// exports.watchServerFiles = watchServerFiles;
+	// exports.watchGlobalFiles = watchGlobalFiles;
 
 	const webTests = series(runServerTests, startAndCaptureTestBrowsers, runBrowserTests);
 	const webDefault = series(lint, bundle, copyServerFiles);
