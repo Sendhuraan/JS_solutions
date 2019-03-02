@@ -14,6 +14,7 @@
 	var shell = require('shelljs');
 	var child_process = require('child_process');
 	var HtmlWebpackPlugin = require('html-webpack-plugin');
+	var globby = require('globby');
 
 	program
 		.option('-d --dir <value>', 'Input folder name')
@@ -64,6 +65,27 @@
 	var eslintConfig = require('./build/config/eslint.config.js');
 	var webpackConfig = require('./build/config/webpack.config.js');
 
+	var commonConfigs = {
+		lintConfig: require('./build/config/eslint.config.js'),
+		nodeTestConfig: require('./build/config/mocha.config.js'),
+		browserTestConfig: { path: './build/config/karma.config.js' },
+		transpileConfig: require('./build/config/babel.config.js'),
+		bundleConfig: require('./build/config/webpack.config.js')
+	};
+
+
+
+	var { DefaultConfig } = require('./build/utilities/config-generator');
+	var pageConfig = require(`./src/collection/${program.dir}/config`);
+	var DEFAULTS = require(`./build/config/constants`).defaults;
+
+	function testSolution(cb) {
+		//console.log(JSON.stringify(new DefaultConfig(DEFAULTS, program.dir, commonConfigs, pageConfig), null, 4));
+		new DefaultConfig(DEFAULTS, program.dir, commonConfigs, pageConfig)
+		//console.log(new FolderNamesGenerator(DEFAULTS, program.dir, [], pageConfig));
+		cb();
+	}
+
 	function lintGlobalFiles(cb) {
 		return src([
 			'**/*.js',
@@ -95,6 +117,10 @@
 			if(fs.existsSync(DEPLOY_DIR)) {
 				sourceFiles.exclude(`${DEPLOY_DIR}/**/*.js`);
 			}
+
+			var globSource = globby.sync([`${SOURCE_DIR}/**/*.js`, `!${DEPLOY_DIR}/**/*.js`]);
+
+			console.log(globSource);
 
 			return src(sourceFiles.toArray())
 			.pipe(eslint(eslintConfig.es6Options))
@@ -282,10 +308,12 @@
 			overrideConfig.preprocessors[CLIENT_DIR + '/**/*.js'] = ['webpack'];
 			overrideConfig.preprocessors[CLIENT_DIR + '/**/*.jsx'] = ['webpack'];
 			overrideConfig.webpack = {
-				'module': webpackConfig.client.module
+				'module': webpackConfig.browser.module
 			};
 
 			var karmaConfig = cfg.parseConfig(path.resolve('./build/config/karma.config.js'), overrideConfig);
+
+			console.log(path.resolve('./build/config/karma.config.js'));
 
 			var serverInstance = new KarmaServer(karmaConfig, function(exitCode) {
 				console.log('Karma has exited with ' + exitCode);
@@ -316,16 +344,8 @@
 		else {
 			var overrideConfig = {
 				files: [
-							{
-								'pattern': CLIENT_DIR + '/**/*.js',
-								'included': false,
-								'watched': false
-							},
-							{
-								'pattern': CLIENT_DIR + '/**/*.jsx',
-								'included': false,
-								'watched': false
-							}
+						CLIENT_DIR + '/**/*.js',
+						CLIENT_DIR + '/**/*.jsx'
 					],
 				preprocessors: {}
 			};
@@ -411,18 +431,21 @@
 	exports.bundle = bundle;
 	exports.copyServerFiles = copyServerFiles;
 	exports.runSolution = runSolution;
+
+	exports.testSolution = testSolution;
+
 	// exports.watchServerFiles = watchServerFiles;
 	// exports.watchGlobalFiles = watchGlobalFiles;
 
-	const webTests = series(runServerTests, startAndCaptureTestBrowsers, runBrowserTests);
-	const webDefault = series(lint, bundle, copyServerFiles);
-	const webWatch = parallel(watchGlobalFiles, watchServerFiles, watchClientFiles);
+	// const webTests = series(runServerTests, startAndCaptureTestBrowsers, runBrowserTests);
+	// const webDefault = series(lint, bundle, copyServerFiles);
+	// const webWatch = parallel(watchGlobalFiles, watchServerFiles, watchClientFiles);
 
-	exports.webTests = webTests;
-	exports.webDefault = webDefault;
-	exports.webWatch = webWatch;
-	exports.webTestsWatch = series(webTests, webDefault, webWatch);
+	// exports.webTests = webTests;
+	// exports.webDefault = webDefault;
+	// exports.webWatch = webWatch;
+	// exports.webTestsWatch = series(webTests, webDefault, webWatch);
 
-	exports.default = parallel(watchGlobalFiles, watchServerFiles, watchClientFiles);
+	// exports.default = parallel(watchGlobalFiles, watchServerFiles, watchClientFiles);
 	
 })();

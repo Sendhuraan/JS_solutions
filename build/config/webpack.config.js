@@ -6,45 +6,9 @@
 	var HtmlWebpackPlugin = require('html-webpack-plugin');
 	var nodeExternals = require('webpack-node-externals');
 
-	var client = {
-		entry: '',
-		mode: 'development',
-		target: 'web',
-		output: {
-			path: '',
-			filename: 'bundle.js'
-		},
-		module: {
-			rules: [
-				{
-					test: /\.css$/,
-					use: [
-						'style-loader',
-						'css-loader'
-					]
-				},
-				{
-					test: /\.(js|jsx)$/,
-					use: {
-						loader: 'babel-loader',
-						options: {
-							presets: ['@babel/preset-react', '@babel/preset-env']
-						}
-					},
-					exclude: /node_modules/
-				}
-			]
-		},
-		plugins: [],
-		resolve: {
-			extensions: [
-				'.js',
-				'.jsx'
-			]
-		}
-	};
+	var transpileConfig = require('./babel.config.js');
 
-	var server = {
+	var node = {
 		entry: '',
 		mode: 'development',
 		target: 'node',
@@ -69,17 +33,7 @@
 					test: /\.(js|jsx)$/,
 					use: {
 						loader: 'babel-loader',
-						options: {
-							presets: [
-								['@babel/preset-react'],
-								['@babel/preset-env', {
-										'targets': {
-											node: 'current'
-										}
-									}
-								]
-							]
-						}
+						options: transpileConfig.node
 					}
 				}
 			]
@@ -93,9 +47,45 @@
 		}
 	};
 
+	var browser = {
+		entry: '',
+		mode: 'development',
+		target: 'web',
+		output: {
+			path: '',
+			filename: 'bundle.js'
+		},
+		module: {
+			rules: [
+				{
+					test: /\.css$/,
+					use: [
+						'style-loader',
+						'css-loader'
+					]
+				},
+				{
+					test: /\.(js|jsx)$/,
+					use: {
+						loader: 'babel-loader',
+						options: transpileConfig.browser
+					},
+					exclude: /node_modules/
+				}
+			]
+		},
+		plugins: [],
+		resolve: {
+			extensions: [
+				'.js',
+				'.jsx'
+			]
+		}
+	};
+
 	var publicAPI = {
-		server: server,
-		client: client
+		node,
+		browser
 	};
 
 	module.exports = publicAPI;

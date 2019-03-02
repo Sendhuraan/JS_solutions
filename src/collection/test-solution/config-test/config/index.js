@@ -1,44 +1,30 @@
 (function() {
 
-	const DB_NAME = 'resthub';
-
+	// Full possible custom override
 	var config = {
+
 		node: {
-			server: {
-				port: 3000,
-				serveDir: 'client'
-			},
-			data: {
-				mongoUri: process.env.MONGODB_URI || 
-					process.env.MONGO_HOST || 'mongodb://' +
-					(process.env.IP || 'localhost') + ':' +
-					(process.env.MONGO_PORT || '27017') + '/' +
-					DB_NAME
-			}
+			server: true,
+			test: false,
+			bundle: true
 		},
-		browser: true,
-		tests: {
-			node: {
-				dir: 'server',
-				pattern: ['**/*_test.js'],
+		browser: {
+			test: true,
+			bundle: {
+				entry: 'app.js',
+				output: 'main.js'
 			},
-			browser: {
-				dir: 'client',
-				pattern: ['**/*_test.js', '**/*_test.jsx']
-			}
-		},
-		bundle: {
-			node: {
-				entry: 'index.js',
-				output: 'deploy/index.js'
-			},
-			browser: {
-				entry: 'client/index.js' || 'client/index.jsx',
-				output: 'deploy/client/bundle.js'
+			template: {
+				dir: 'templates',
+				page: {
+					dir: 'pages',
+					file: 'index.js',
+					data: 'index.data.json'
+				}
+				
 			}
 		}
-
-	}
+	};
 
 	module.exports = config;
 	
