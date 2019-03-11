@@ -1,3 +1,5 @@
+'use strict';
+
 (function() {
 
 	const DEFAULT_FOLDER_STRING = 'src/collection';
@@ -8,16 +10,53 @@
 		'!node_modules/**',
 		'!src/collection/**'
 	];
+	const DEFAULT_PAGE_CONFIG = {
+
+		node: {
+			dir: '',
+			test: {
+				pattern: []
+			},
+			bundle: {
+				entry: '',
+				output: ''
+			},
+			server: {
+				port: 0,
+				render: false
+			}
+		},
+		browser: {
+			dir: '',
+			test: {
+				pattern: []
+			},
+			bundle: {
+				entry: '',
+				output: ''
+			},
+			template: {
+				dir: '',
+				page: {
+					dir: '',
+					file: '',
+					data: ''
+				}
+				
+			}
+		}
+	};
 
 	var defaults = {
 
+		DEFAULT_PAGE_CONFIG,
 		DEFAULT_FOLDER_STRING,
 		DEFAULT_DEPLOY_DIR__NODE,
 		DEFAULT_DEPLOY_DIR__BROWSER,
 
 		DEFAULT_LINT__GLOBAL,
 
-		DEFAULT_NODE_DIR: 'server',
+		DEFAULT_NODE_SERVER_DIR: 'server',
 
 		DEFAULT_NODE_SERVER_PORT: 3000,
 		DEFAULT_NODE_SERVER_RENDER: false,
@@ -39,7 +78,7 @@
 
 	var publicAPI = {
 		defaults
-	}
+	};
 
 	module.exports = publicAPI;
 	

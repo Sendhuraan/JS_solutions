@@ -1,29 +1,10 @@
 (function() {
 
-	// Full possible custom override
 	var config = {
-
 		node: {
-			server: true,
-			test: false,
-			bundle: true
+			test: true
 		},
-		browser: {
-			test: true,
-			bundle: {
-				entry: 'app.js',
-				output: 'main.js'
-			},
-			template: {
-				dir: 'templates',
-				page: {
-					dir: 'pages',
-					file: 'index.js',
-					data: 'index.data.json'
-				}
-				
-			}
-		}
+		browser: true
 	};
 
 	module.exports = config;

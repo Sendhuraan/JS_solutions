@@ -24,46 +24,46 @@
 		.option('--serverRender', 'Enable server render')
 		.parse(process.argv);
 
-	var COLLECTION_DIR = 'src/collection/';
+	// var COLLECTION_DIR = 'src/collection/';
 	var DIRNAME = program.dir;
-	var SOURCE_DIR = COLLECTION_DIR + DIRNAME;
-	var SERVER_DIR = SOURCE_DIR + '/server';
-	var CLIENT_DIR = SOURCE_DIR + '/client';
-	var GENERATED_DIR = SOURCE_DIR + '/generated';
-	var BROWSERIFY_DIR = GENERATED_DIR + '/bundle';
-	var DEPLOY_DIR = SOURCE_DIR + '/deploy';
-	var DEPLOY_SERVER_DIR = DEPLOY_DIR + '/server';
-	var DEPLOY_CLIENT_DIR = DEPLOY_DIR + '/client';
-	var SERVE_DIR = DEPLOY_DIR + '/client';
+	// var SOURCE_DIR = COLLECTION_DIR + DIRNAME;
+	// var SERVER_DIR = SOURCE_DIR + '/server';
+	// var CLIENT_DIR = SOURCE_DIR + '/client';
+	// var GENERATED_DIR = SOURCE_DIR + '/generated';
+	// var BROWSERIFY_DIR = GENERATED_DIR + '/bundle';
+	// var DEPLOY_DIR = SOURCE_DIR + '/deploy';
+	// var DEPLOY_SERVER_DIR = DEPLOY_DIR + '/server';
+	// var DEPLOY_CLIENT_DIR = DEPLOY_DIR + '/client';
+	// var SERVE_DIR = DEPLOY_DIR + '/client';
 
-	var TEMPLATE_DIR = CLIENT_DIR + '/templates';
-	var TEMPLATE_FILENAME = 'index.js';
-	var TEMPLATE_DATAFILE = 'index.data.json';
+	// var TEMPLATE_DIR = CLIENT_DIR + '/templates';
+	// var TEMPLATE_FILENAME = 'index.js';
+	// var TEMPLATE_DATAFILE = 'index.data.json';
 
 
-	var DEFAULT_BUNDLE_ENTRY__NODE 			= 'index';
-	var DEFAULT_BUNDLE_OUTPUT__NODE 		= DEPLOY_DIR + 'index.js';
-	//var DEFAULT_BUNDLE_EXTENSIONS__NODE 	= ['.js'];
+	// var DEFAULT_BUNDLE_ENTRY__NODE 			= 'index';
+	// var DEFAULT_BUNDLE_OUTPUT__NODE 		= DEPLOY_DIR + 'index.js';
+	// //var DEFAULT_BUNDLE_EXTENSIONS__NODE 	= ['.js'];
 
-	var DEFAULT_BUNDLE_ENTRY__BROWSER 		= CLIENT_DIR + 'index';
-	var DEFAULT_BUNDLE_OUTPUT_DIR__BROWSER 	= DEPLOY_CLIENT_DIR + 'bundle.js';
-	//var DEFAULT_BUNDLE_EXTENSIONS__BROWSER 	= ['.js', '.jsx'];
+	// var DEFAULT_BUNDLE_ENTRY__BROWSER 		= CLIENT_DIR + 'index';
+	// var DEFAULT_BUNDLE_OUTPUT_DIR__BROWSER 	= DEPLOY_CLIENT_DIR + 'bundle.js';
+	// //var DEFAULT_BUNDLE_EXTENSIONS__BROWSER 	= ['.js', '.jsx'];
 
-	var DEFAULT_TEST_DIR__NODE 				= SERVER_DIR;
-	var DEFAULT_TEST_PATTERN__NODE 			= '_test';
-	//var DEFAULT_TEST_EXTENSIONS__NODE 		= ['.js'];
+	// var DEFAULT_TEST_DIR__NODE 				= SERVER_DIR;
+	// var DEFAULT_TEST_PATTERN__NODE 			= '_test';
+	// //var DEFAULT_TEST_EXTENSIONS__NODE 		= ['.js'];
 
-	var DEFAULT_TEST_DIR__BROWSER 			= CLIENT_DIR;
-	var DEFAULT_TEST_PATTERN__BROWSER 		= '_test';
-	//var DEFAULT_TEST_EXTENSIONS__BROWSER 	= ['.js', '.jsx'];
+	// var DEFAULT_TEST_DIR__BROWSER 			= CLIENT_DIR;
+	// var DEFAULT_TEST_PATTERN__BROWSER 		= '_test';
+	// //var DEFAULT_TEST_EXTENSIONS__BROWSER 	= ['.js', '.jsx'];
 
-	var isBundle_browser = program.browser;
-	var isBundle_node = program.node;
-	var isEntryPoint_JSX = program.jsx;
-	var isServerRender = program.serverRender;
+	// var isBundle_browser = program.browser;
+	// var isBundle_node = program.node;
+	// var isEntryPoint_JSX = program.jsx;
+	// var isServerRender = program.serverRender;
 
-	var eslintConfig = require('./build/config/eslint.config.js');
-	var webpackConfig = require('./build/config/webpack.config.js');
+	// var eslintConfig = require('./build/config/eslint.config.js');
+	// var webpackConfig = require('./build/config/webpack.config.js');
 
 	var commonConfigs = {
 		lintConfig: require('./build/config/eslint.config.js'),
@@ -73,84 +73,85 @@
 		bundleConfig: require('./build/config/webpack.config.js')
 	};
 
-
-
-	var { DefaultConfig } = require('./build/utilities/config-generator');
-	var pageConfig = require(`./src/collection/${program.dir}/config`);
+	var { SolutionConfig } = require('./build/utilities/config-generator');
 	var DEFAULTS = require(`./build/config/constants`).defaults;
 
+	var pageConfig = (function(dir) {
+		var path = `./src/collection/${dir}/config`;
+
+		if(fs.existsSync(path)) {
+			return require(path);
+		}
+		else {
+			return {};
+		}
+	})(DIRNAME);
+
+	var sourceDir = (function(dir) {
+		var path = `./src/collection/${dir}`;
+
+		if(!dir) {
+			throw new Error('NO FOLDER NAME SPECIFIED');
+		}
+		else if(!fs.existsSync(path)) {
+			throw new Error('FOLDER DOES NOT EXISTS');
+		}
+		else {
+			return dir;
+		}
+	})(DIRNAME);
+
+	var { config } = new SolutionConfig(DEFAULTS, sourceDir, commonConfigs, pageConfig);
+	
+	
+
 	function testSolution(cb) {
-		//console.log(JSON.stringify(new DefaultConfig(DEFAULTS, program.dir, commonConfigs, pageConfig), null, 4));
-		new DefaultConfig(DEFAULTS, program.dir, commonConfigs, pageConfig)
+		console.log(JSON.stringify(config, null, 4));
+		//new SolutionConfig(DEFAULTS, program.dir, commonConfigs, pageConfig)
 		//console.log(new FolderNamesGenerator(DEFAULTS, program.dir, [], pageConfig));
 		cb();
 	}
 
 	function lintGlobalFiles(cb) {
-		return src([
-			'**/*.js',
-			'!node_modules/**',
-			'!src/collection/**'
-		])
-		.pipe(eslint(eslintConfig.es5Options))
+		var { lint } = config;
+
+		return src(globby.sync(lint.global.pattern))
+		.pipe(eslint(lint.global.options))
 		.pipe(eslint.format())
 		.pipe(eslint.failAfterError());
 
 		cb();
+		
 	}
 
 	function lintSourceFiles(cb) {
+		var { lint } = config;
 
-		if(!program.dir) {
-			cb(new Error('NO FOLDER NAME SPECIFIED'));
-		}
-		else if(!fs.existsSync(SOURCE_DIR)) {
-			cb(new Error('FOLDER DOES NOT EXISTS'));
-		}
-		else {
-			var sourceFiles = new fileList.FileList();
-			sourceFiles.include(`${SOURCE_DIR}/**/*.js`);
-			sourceFiles.include(`${SOURCE_DIR}/**/*.jsx`);
-			if(fs.existsSync(GENERATED_DIR)) {
-				sourceFiles.exclude(`${GENERATED_DIR}/**/*.js`);
-			}
-			if(fs.existsSync(DEPLOY_DIR)) {
-				sourceFiles.exclude(`${DEPLOY_DIR}/**/*.js`);
-			}
+		return src(lint.source.pattern)
+		.pipe(eslint(lint.source.options))
+		.pipe(eslint.format())
+		.pipe(eslint.failAfterError());
 
-			var globSource = globby.sync([`${SOURCE_DIR}/**/*.js`, `!${DEPLOY_DIR}/**/*.js`]);
-
-			console.log(globSource);
-
-			return src(sourceFiles.toArray())
-			.pipe(eslint(eslintConfig.es6Options))
-			.pipe(eslint.format())
-			.pipe(eslint.failAfterError());
-
-			cb();
-		}
+		cb();
+		
 	}
 
-	function runServerTests(cb){
+	function runNodeTests(cb){
+		var mochaRunner = require('./build/utilities/mocha-runner.js');
+		var { test } = config.node;
 
-		if(!program.dir) {
-			cb(new Error('NO FOLDER NAME SPECIFIED'));
-		}
-		else if(!fs.existsSync(SOURCE_DIR)) {
-			cb(new Error('FOLDER DOES NOT EXISTS'));
+		//console.log(globby.sync(test.pattern));
+
+		if(!test) {
+			cb(new Error('NODE TEST NOT CONFIGURED'))
 		}
 		else {
-			var mochaConfig = require('./build/config/mocha.config.js');
-			var mochaRunner = require('./build/utilities/mocha-runner.js');
-
-			var testFiles = new fileList.FileList();
-			testFiles.include(SOURCE_DIR + '/**/*_test.js');
-			testFiles.exclude('node_modules');
-
-			mochaRunner.runTests(mochaConfig, testFiles);
-
+			mochaRunner.runTests(globby.sync(test.pattern), test.options);
 			cb();
 		}
+		
+
+		
 	}
 
 	function displayWebpackErrorMsg(err, stats) {
@@ -396,7 +397,7 @@
 	// 		cb(new Error('FOLDER DOES NOT EXISTS'));
 	// 	}
 	// 	else {
-	// 		watch([sourceDir, serverDir], series(lintSourceFiles, runServerTests, copyServerFiles));
+	// 		watch([sourceDir, serverDir], series(lintSourceFiles, runNodeTests, copyServerFiles));
 	// 		cb();
 	// 	}
 		
@@ -425,7 +426,7 @@
 	const lint = parallel(lintGlobalFiles, lintSourceFiles);
 
 	exports.lint = lint;
-	exports.runServerTests = runServerTests;
+	exports.runNodeTests = runNodeTests;
 	exports.startAndCaptureTestBrowsers = startAndCaptureTestBrowsers;
 	exports.runBrowserTests = runBrowserTests;
 	exports.bundle = bundle;
@@ -437,7 +438,7 @@
 	// exports.watchServerFiles = watchServerFiles;
 	// exports.watchGlobalFiles = watchGlobalFiles;
 
-	// const webTests = series(runServerTests, startAndCaptureTestBrowsers, runBrowserTests);
+	// const webTests = series(runNodeTests, startAndCaptureTestBrowsers, runBrowserTests);
 	// const webDefault = series(lint, bundle, copyServerFiles);
 	// const webWatch = parallel(watchGlobalFiles, watchServerFiles, watchClientFiles);
 
