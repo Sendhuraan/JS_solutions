@@ -71,6 +71,12 @@
 						options: transpileConfig.browser
 					},
 					exclude: /node_modules/
+				},
+				{
+					test: /\.(html)$/,
+					use: {
+						loader: 'html-loader'
+					}
 				}
 			]
 		},

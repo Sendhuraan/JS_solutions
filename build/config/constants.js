@@ -15,11 +15,12 @@
 		node: {
 			dir: '',
 			test: {
-				pattern: []
+				pattern: false
 			},
 			bundle: {
 				entry: '',
-				output: ''
+				dir: '',
+				file: ''
 			},
 			server: {
 				port: 0,
@@ -29,11 +30,12 @@
 		browser: {
 			dir: '',
 			test: {
-				pattern: []
+				pattern: false
 			},
 			bundle: {
 				entry: '',
-				output: ''
+				dir: '',
+				file: ''
 			},
 			template: {
 				dir: '',
@@ -63,12 +65,15 @@
 
 		DEFAULT_NODE_TEST_PATTERN: ['**/*_test.js'],
 		DEFAULT_NODE_BUNDLE_ENTRY: 'index.js',
+		DEFAULT_NODE_BUNDLE_OUTPUT_DIR: DEFAULT_DEPLOY_DIR__NODE,
 		DEFAULT_NODE_BUNDLE_OUTPUT_FILE: 'index.js',
 
 		DEFAULT_BROWSER_DIR: 'client',
 		DEFAULT_BROWSER_TEST_PATTERN: ['**/*_test.js'],
 		DEFAULT_BROWSER_BUNDLE_ENTRY: 'index.js',
+		DEFAULT_BROWSER_BUNDLE_OUTPUT_DIR: DEFAULT_DEPLOY_DIR__BROWSER,
 		DEFAULT_BROWSER_BUNDLE_OUTPUT_FILE: 'bundle.js',
+
 		DEFAULT_BROWSER_TEMPLATE_DIR: 'templates',
 		DEFAULT_BROWSER_TEMPLATE_PAGE_DIR: 'pages',
 		DEFAULT_BROWSER_TEMPLATE_PAGE_FILE: 'index.js',

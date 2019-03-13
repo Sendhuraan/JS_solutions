@@ -1,10 +1,15 @@
 (function() {
 
 	var config = {
-		node: {
-			test: true
-		},
-		browser: true
+		browser: {
+			bundle: {
+				entry: 'index.jsx',
+				output: 'app.js'
+			},
+			test: {
+				pattern: ['**/*_test.jsx']
+			}
+		}
 	};
 
 	module.exports = config;

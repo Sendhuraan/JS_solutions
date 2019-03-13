@@ -25,6 +25,7 @@
 			DEFAULT_NODE_TEST_PATTERN,
 
 			DEFAULT_NODE_BUNDLE_ENTRY,
+			DEFAULT_NODE_BUNDLE_OUTPUT_DIR,
 			DEFAULT_NODE_BUNDLE_OUTPUT_FILE,
 
 			DEFAULT_NODE_SERVER_PORT,
@@ -36,6 +37,7 @@
 			DEFAULT_BROWSER_TEST_PATTERN,
 
 			DEFAULT_BROWSER_BUNDLE_ENTRY,
+			DEFAULT_BROWSER_BUNDLE_OUTPUT_DIR,
 			DEFAULT_BROWSER_BUNDLE_OUTPUT_FILE,
 
 			DEFAULT_BROWSER_TEMPLATE_DIR,
@@ -61,12 +63,12 @@
 
 			function isEmptyObject(obj) {
 				for(var prop in obj) {
-					if(obj.hasOwnProperty(prop))
-					return false;
+					if(obj.hasOwnProperty(prop)) {
+						return false;
+					}
 				}
 				return JSON.stringify(obj) === JSON.stringify({});
 			}
-
 			function isOnlyBrowser(obj) {
 				return (Object.keys(obj).length === 1 &&
 				obj.browser === true);
@@ -104,6 +106,20 @@
 
 				return deepMerge(config, override);
 			}
+			else if(isNodeAndBrowser(solutionConfig)) {
+				let override = {
+					node: {
+						server: true
+					},
+					browser: {
+						bundle: true
+					}
+				};
+
+				let config = Object.assign({}, defaultConfig);
+
+				return deepMerge(config, override);
+			}
 			else {
 				let config = Object.assign({}, defaultConfig);
 
@@ -114,12 +130,51 @@
 
 		console.log(JSON.stringify(processedConfig, null, 4));
 
-		
-		var isNodeTest 				= processedConfig.node.test;
-		var isBrowserTest 			= processedConfig.browser.test;
+		var isNodeTest = (function() {
+			if(typeof processedConfig.node.test === 'boolean') {
+				return processedConfig.node.test;
+			}
+			else  {
+				return Boolean(
+					processedConfig.node.test.pattern
+				);
+			}
+		})();
 
-		var isNodeBundle 			= processedConfig.node.bundle;
-		var isBrowserBundle 		= processedConfig.browser.bundle;
+		var isBrowserTest = (function() {
+			if(typeof processedConfig.browser.test === 'boolean') {
+				return processedConfig.browser.test;
+			}
+			else  {
+				return Boolean(
+					processedConfig.browser.test.pattern
+				);
+			}
+		})();
+
+		var isNodeBundle = (function() {
+			if(typeof processedConfig.node.bundle === 'boolean') {
+				return processedConfig.node.bundle;
+			}
+			else  {
+				return Boolean(
+					processedConfig.node.bundle.entry || 
+					processedConfig.node.bundle.output
+				);
+			}
+		})();
+
+		var isBrowserBundle = (function() {
+			if(typeof processedConfig.browser.bundle === 'boolean') {
+				return processedConfig.browser.bundle;
+			}
+			else  {
+				return Boolean(
+					processedConfig.browser.bundle.entry || 
+					processedConfig.browser.bundle.output
+				);
+			}
+		})();
 
 		var isNodeServer = (function() {
 			if(typeof processedConfig.node.server === 'boolean') {
@@ -163,8 +218,16 @@
 		var BROWSER_DIR = `${SOURCE_DIR}/${DEFAULT_BROWSER_DIR}`;
 		var DEPLOY_DIR = `${SOURCE_DIR}/${DEFAULT_DEPLOY_DIR__NODE}`;
 		
-
 		if(isNodeServer || isBrowser) {
+
+			NODE_DIR = (function(overrideParam, defaultParam, inputDir) {
+				if(overrideParam) {
+					return `${inputDir}/${overrideParam}`;
+				}
+				else {
+					return `${inputDir}/${defaultParam}`;
+				}
+			})(NODE_DIR__OVERRIDE, DEFAULT_NODE_SERVER_DIR, SOURCE_DIR);
 
 			var NODE_SERVER_PORT__OVERRIDE 	 = processedConfig.node.server.port;
 			var NODE_SERVER_RENDER__OVERRIDE = processedConfig.node.server.render;
@@ -172,9 +235,10 @@
 			var NODE_SERVER_PORT = NODE_SERVER_PORT__OVERRIDE || DEFAULT_NODE_SERVER_PORT;
 			var NODE_SERVER_RENDER = NODE_SERVER_RENDER__OVERRIDE || DEFAULT_NODE_SERVER_RENDER;
 
-			var DEPLOY_BROWSER_DIR = `${DEPLOY_DIR}/${DEFAULT_DEPLOY_DIR__BROWSER}`;
-			var NODE_SERVER_SERVEDIR = DEPLOY_BROWSER_DIR;
+			// var DEPLOY_BROWSER_DIR = `${DEPLOY_DIR}/${DEFAULT_DEPLOY_DIR__BROWSER}`;
 		}
+
+		console.log(NODE_DIR);
 
 		if(isNodeTest) {
 			var NODE_TEST_PATTERN__OVERRIDE = processedConfig.node.test.pattern;
@@ -191,8 +255,6 @@
 					});
 				}
 			})(NODE_TEST_PATTERN__OVERRIDE, DEFAULT_NODE_TEST_PATTERN, NODE_DIR);
-
-			console.log(NODE_TEST_PATTERN);
 
 		}
 
@@ -237,7 +299,8 @@
 
 		if(isNodeBundle) {
 			var NODE_BUNDLE_ENTRY__OVERRIDE 		= processedConfig.node.bundle.entry;
-			var NODE_BUNDLE_OUTPUT_FILE__OVERRIDE 	= processedConfig.node.bundle.output;
+			var NODE_BUNDLE_OUTPUT_DIR__OVERRIDE 	= processedConfig.node.bundle.dir;
+			var NODE_BUNDLE_OUTPUT_FILE__OVERRIDE 	= processedConfig.node.bundle.file;
 
 			var NODE_BUNDLE_ENTRY = (function(overrideParam, defaultParam, inputDir) {
 				if(overrideParam) {
@@ -248,16 +311,16 @@
 				}
 			})(NODE_BUNDLE_ENTRY__OVERRIDE, DEFAULT_NODE_BUNDLE_ENTRY, SOURCE_DIR);
 
-			var NODE_BUNDLE_OUTPUT_DIR = DEPLOY_DIR;
-
-			var NODE_BUNDLE_OUTPUT_FILE = (function(overrideParam, defaultParam, inputDir) {
+			var NODE_BUNDLE_OUTPUT_DIR = (function(overrideParam, defaultParam, inputDir) {
 				if(overrideParam) {
 					return `${inputDir}/${overrideParam}`;
 				}
 				else {
 					return `${inputDir}/${defaultParam}`;
 				}
-			})(NODE_BUNDLE_OUTPUT_FILE__OVERRIDE, DEFAULT_NODE_BUNDLE_OUTPUT_FILE, DEPLOY_DIR);
+			})(NODE_BUNDLE_OUTPUT_DIR__OVERRIDE, DEFAULT_NODE_BUNDLE_OUTPUT_DIR, SOURCE_DIR);
+
+			var NODE_BUNDLE_OUTPUT_FILE = NODE_BUNDLE_OUTPUT_FILE__OVERRIDE || DEFAULT_NODE_BUNDLE_OUTPUT_FILE;
 
 			var nodeBundleConfig = (function(config, entry, outputDir, outputFile) {
 
@@ -265,7 +328,7 @@
 
 				newConfig.entry = path.resolve(entry);
 				newConfig.output.path = path.resolve(outputDir);
-				newConfig.output.filename = path.resolve(outputFile);
+				newConfig.output.filename = outputFile;
 
 				return newConfig;
 
@@ -275,7 +338,8 @@
 
 		if(isBrowserBundle) {
 			var BROWSER_BUNDLE_ENTRY__OVERRIDE 		= processedConfig.browser.bundle.entry;
-			var BROWSER_BUNDLE_OUTPUT_FILE__OVERRIDE= processedConfig.browser.bundle.output;
+			var BROWSER_BUNDLE_OUTPUT_DIR__OVERRIDE = processedConfig.browser.bundle.dir;
+			var BROWSER_BUNDLE_OUTPUT_FILE__OVERRIDE= processedConfig.browser.bundle.file;
 
 			var BROWSER_TEMPLATE_DIR__OVERRIDE 		= processedConfig.browser.template.dir;
 			var BROWSER_TEMPLATE_PAGE_DIR__OVERRIDE = processedConfig.browser.template.page.dir;
@@ -291,16 +355,16 @@
 				}
 			})(BROWSER_BUNDLE_ENTRY__OVERRIDE, DEFAULT_BROWSER_BUNDLE_ENTRY, BROWSER_DIR);
 
-			var BROWSER_BUNDLE_OUTPUT_DIR = DEPLOY_BROWSER_DIR;
-
-			var BROWSER_BUNDLE_OUTPUT_FILE = (function(overrideParam, defaultParam, inputDir) {
+			var BROWSER_BUNDLE_OUTPUT_DIR = (function(overrideParam, defaultParam, inputDir) {
 				if(overrideParam) {
 					return `${inputDir}/${overrideParam}`;
 				}
 				else {
 					return `${inputDir}/${defaultParam}`;
 				}
-			})(BROWSER_BUNDLE_OUTPUT_FILE__OVERRIDE, DEFAULT_BROWSER_BUNDLE_OUTPUT_FILE, DEPLOY_BROWSER_DIR);
+			})(BROWSER_BUNDLE_OUTPUT_DIR__OVERRIDE, DEFAULT_BROWSER_BUNDLE_OUTPUT_DIR, DEPLOY_DIR);;
+
+			var BROWSER_BUNDLE_OUTPUT_FILE = BROWSER_BUNDLE_OUTPUT_FILE__OVERRIDE || DEFAULT_BROWSER_BUNDLE_OUTPUT_FILE;
 
 			if(!NODE_SERVER_RENDER) {
 
@@ -366,14 +430,13 @@
 
 			}
 			
-
 			var browserBundleConfig = (function(config, entry, outputDir, outputFile, templateConfigs) {
 
 				var newConfig = Object.assign({}, config);
 
 				newConfig.entry = path.resolve(entry);
 				newConfig.output.path = path.resolve(outputDir);
-				newConfig.output.filename = path.resolve(outputFile);
+				newConfig.output.filename = outputFile;
 
 				if(!NODE_SERVER_RENDER) {
 					templateConfigs.map(function(config) {
@@ -386,6 +449,12 @@
 			})(bundleConfig.browser, BROWSER_BUNDLE_ENTRY, BROWSER_BUNDLE_OUTPUT_DIR, BROWSER_BUNDLE_OUTPUT_FILE, browserTemplateConfig);
 
 		}
+
+		if(isNodeServer || isBrowser) {
+			var NODE_SERVER_SERVEDIR = BROWSER_BUNDLE_OUTPUT_DIR__OVERRIDE || DEFAULT_BROWSER_BUNDLE_OUTPUT_DIR;
+		}
+		
+		console.log(NODE_SERVER_SERVEDIR);
 
 		this.config = {
 
@@ -408,12 +477,7 @@
 					pattern: NODE_TEST_PATTERN ? NODE_TEST_PATTERN : false,
 					options: NODE_TEST_PATTERN ? nodeTestConfig : false
 				} : false,
-				bundle: nodeBundleConfig ? nodeBundleConfig : false,
-				server: isNodeServer ? {
-					port: NODE_SERVER_PORT ? NODE_SERVER_PORT : false,
-					serveDir: NODE_SERVER_SERVEDIR ? `${NODE_SERVER_SERVEDIR}` : false,
-					render: NODE_SERVER_RENDER
-				} : false
+				bundle: nodeBundleConfig ? nodeBundleConfig : false
 			} : false,
 			browser: isBrowser ? {
 				test: isBrowserTest ? {
@@ -421,7 +485,14 @@
 					options: BROWSER_TEST_OPTIONS ? BROWSER_TEST_OPTIONS : false
 				} : false,
 				bundle: browserBundleConfig ? browserBundleConfig : false
-			} : false
+			} : false,
+			run: {
+				dir: isNodeServer ? `${DEPLOY_DIR}` : `${SOURCE_DIR}`,
+				options: {
+					port: NODE_SERVER_PORT ? NODE_SERVER_PORT : false,
+					serveDir: NODE_SERVER_SERVEDIR ? `${NODE_SERVER_SERVEDIR}` : false,
+				}
+			}
 		};
 		
 	}

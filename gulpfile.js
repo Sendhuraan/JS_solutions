@@ -10,6 +10,7 @@
 	const eslint = require('gulp-eslint');
 	var webpack = require('webpack');
 	var KarmaServer = require('karma').Server;
+	var KarmaRunner = require('karma').runner;
 	var cfg = require('karma').config;
 	var shell = require('shelljs');
 	var child_process = require('child_process');
@@ -115,32 +116,40 @@
 	function lintGlobalFiles(cb) {
 		var { lint } = config;
 
-		return src(globby.sync(lint.global.pattern))
-		.pipe(eslint(lint.global.options))
-		.pipe(eslint.format())
-		.pipe(eslint.failAfterError());
+		if(!lint.global.pattern) {
+			cb(new Error('GLOBAL LINT NOT CONFIGURED'));
+		}
+		else {
+			return src(globby.sync(lint.global.pattern))
+			.pipe(eslint(lint.global.options))
+			.pipe(eslint.format())
+			.pipe(eslint.failAfterError());
 
-		cb();
+			cb();
+		}
+		
 		
 	}
 
 	function lintSourceFiles(cb) {
 		var { lint } = config;
 
-		return src(lint.source.pattern)
-		.pipe(eslint(lint.source.options))
-		.pipe(eslint.format())
-		.pipe(eslint.failAfterError());
+		if(!lint.global.pattern) {
+			cb(new Error('SOURCE LINT NOT CONFIGURED'));
+		}
+		else {
+			return src(lint.source.pattern)
+			.pipe(eslint(lint.source.options))
+			.pipe(eslint.format())
+			.pipe(eslint.failAfterError());
 
-		cb();
-		
+			cb();
+		}
 	}
 
 	function runNodeTests(cb){
 		var mochaRunner = require('./build/utilities/mocha-runner.js');
 		var { test } = config.node;
-
-		//console.log(globby.sync(test.pattern));
 
 		if(!test) {
 			cb(new Error('NODE TEST NOT CONFIGURED'))
@@ -149,9 +158,6 @@
 			mochaRunner.runTests(globby.sync(test.pattern), test.options);
 			cb();
 		}
-		
-
-		
 	}
 
 	function displayWebpackErrorMsg(err, stats) {
@@ -176,94 +182,34 @@
 
 	function bundle(cb) {
 
-		if(!program.dir) {
-			cb(new Error('NO FOLDER NAME SPECIFIED'));
+		var isBundle_node = config.node.bundle;
+		var isBundle_browser = config.browser.bundle;
+
+		if(!(isBundle_node || isBundle_browser)) {
+			cb(new Error('NODE AND BROWSER BUNDLE NOT CONFIGURED'));
 		}
-		else if(!fs.existsSync(SOURCE_DIR)) {
-			cb(new Error('FOLDER DOES NOT EXISTS'));
-		}
+
 		else {
 
-			shell.rm('-rf', DEPLOY_DIR);
+			if(isBundle_node) {
+				let { path } = config.node.bundle.output;
+				let { bundle } = config.node;
+				shell.rm('-rf', path);
+
+				webpack(bundle, displayWebpackErrorMsg);
+				cb();
+			}
 
 			if(isBundle_browser) {
+				let { path } = config.browser.bundle.output;
+				let { bundle } = config.browser;
+				shell.rm('-rf', path);
 
-				let webpackClientEntryPoint = isEntryPoint_JSX ? `${CLIENT_DIR}/index.jsx` : `${CLIENT_DIR}/index.js`;
-				let webpackClientOutput = `${DEPLOY_CLIENT_DIR}`;
-				
-
-				webpackConfig.client.entry = path.resolve(webpackClientEntryPoint);
-				webpackConfig.client.output.path = path.resolve(webpackClientOutput);
-
-				if(!isServerRender) {
-
-					if(fs.existsSync(TEMPLATE_DIR)) {
-						compileTemplates().map(function(config) {
-							webpackConfig.client.plugins.push(config);
-						});
-					}
-					else {
-						let simpleHtmlTitle = `${DIRNAME}`.replace('/', ' | ');
-						let generateSimpleHTML = new HtmlWebpackPlugin({
-													title: simpleHtmlTitle
-												});
-
-						webpackConfig.client.plugins.push(generateSimpleHTML);
-					}
-
-				}
-
-				webpack(webpackConfig.client, displayWebpackErrorMsg);
-
+				webpack(bundle, displayWebpackErrorMsg);
 				cb();
-
 			}
 
-			if(isBundle_node) {
-
-				let webpackServerEntryPoint = `${SOURCE_DIR}/index.js`;
-				let webpackServerOutput = `${DEPLOY_DIR}`;
-
-				webpackConfig.server.entry = path.resolve(webpackServerEntryPoint);
-				webpackConfig.server.output.path = path.resolve(webpackServerOutput);
-
-				webpack(webpackConfig.server, displayWebpackErrorMsg);
-
-				cb();
-
-			}
-
-			if(!(isBundle_browser || isBundle_node)) {
-				cb(new Error('SPECIFY CLIENT OR SERVER TO BE BUNDLED'));
-			}
-			
 		}
-	}
-
-	function compileTemplates() {
-
-		var templateFiles = new fileList.FileList();
-		templateFiles.include(`${TEMPLATE_DIR}/pages/*`);
-
-		var templatePages = templateFiles.toArray();
-
-		var htmlConfigs = templatePages.map(function(page) {
-
-			var pageTemplate = `${page}/${TEMPLATE_FILENAME}`;
-
-			var pageData = fs.readFileSync(`${page}/${TEMPLATE_DATAFILE}`);
-			var parsedData = JSON.parse(pageData);
-
-			return new HtmlWebpackPlugin({
-				template: pageTemplate,
-				templateParameters: parsedData.templateParams,
-				filename: parsedData.metadata.outputFileName
-			});
-
-		});
-
-		return htmlConfigs;
-		
 	}
 
 	function copyServerFiles(cb) {
@@ -290,33 +236,15 @@
 	}
 
 	function startAndCaptureTestBrowsers(cb) {
+		var { test } = config.browser;
 
-		if(!program.dir) {
-			cb(new Error('NO FOLDER NAME SPECIFIED'));
+		if(!test) {
+			cb(new Error('BROWSER TEST NOT CONFIGURED'));
 		}
-		else if(!fs.existsSync(SOURCE_DIR)) {
-			cb(new Error('FOLDER DOES NOT EXISTS'));
-		}
+
 		else {
-			var overrideConfig = {
-				files: [
-						CLIENT_DIR + '/**/*.js',
-						CLIENT_DIR + '/**/*.jsx'
-					],
-				preprocessors: {}
-			};
 
-			overrideConfig.preprocessors[CLIENT_DIR + '/**/*.js'] = ['webpack'];
-			overrideConfig.preprocessors[CLIENT_DIR + '/**/*.jsx'] = ['webpack'];
-			overrideConfig.webpack = {
-				'module': webpackConfig.browser.module
-			};
-
-			var karmaConfig = cfg.parseConfig(path.resolve('./build/config/karma.config.js'), overrideConfig);
-
-			console.log(path.resolve('./build/config/karma.config.js'));
-
-			var serverInstance = new KarmaServer(karmaConfig, function(exitCode) {
+			var serverInstance = new KarmaServer(test.options, function(exitCode) {
 				console.log('Karma has exited with ' + exitCode);
 			});
 
@@ -335,35 +263,15 @@
 	}
 
 	function runBrowserTests(cb) {
+		var { test } = config.browser;
 
-		if(!program.dir) {
-			cb(new Error('NO FOLDER NAME SPECIFIED'));
-		}
-		else if(!fs.existsSync(SOURCE_DIR)) {
-			cb(new Error('FOLDER DOES NOT EXISTS'));
+		if(!test) {
+			cb(new Error('BROWSER TEST NOT CONFIGURED'));
 		}
 		else {
-			var overrideConfig = {
-				files: [
-						CLIENT_DIR + '/**/*.js',
-						CLIENT_DIR + '/**/*.jsx'
-					],
-				preprocessors: {}
-			};
-
-			overrideConfig.preprocessors[CLIENT_DIR + '/**/*.js'] = ['webpack'];
-			overrideConfig.preprocessors[CLIENT_DIR + '/**/*.jsx'] = ['webpack'];
-			overrideConfig.webpack = {
-				'module': webpackConfig.client.module
-			};
-
-			var karmaConfig = cfg.parseConfig(path.resolve('./build/config/karma.config.js'), overrideConfig);
-
-			var runner = require('karma').runner;
-			runner.run(karmaConfig, function(exitCode) {
+			KarmaRunner.run(test.options, function(exitCode) {
 				console.log('Karma has exited with ' + exitCode);
 			});
-
 			cb();
 		}
 		
