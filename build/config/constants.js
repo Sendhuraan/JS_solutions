@@ -23,9 +23,40 @@
 				file: ''
 			},
 			server: {
-				port: 0,
-				render: false
+				render: false,
+				serveDir: '',
+				development: {
+					host: '',
+					port: 0
+				},
+				stage: {
+					host: '',
+					port: 0
+				},
+				production: {
+					host: '',
+					port: 0
+				}
+			},
+			db: {
+				protocol: '',
+				development: {
+					host: '',
+					port: 0,
+					dbName: ''
+				},
+				stage: {
+					host: '',
+					port: 0,
+					dbName: ''
+				},
+				production: {
+					host: '',
+					port: 0,
+					dbName: ''
+				}
 			}
+
 		},
 		browser: {
 			dir: '',
@@ -60,8 +91,15 @@
 
 		DEFAULT_NODE_SERVER_DIR: 'server',
 
-		DEFAULT_NODE_SERVER_PORT: 3000,
 		DEFAULT_NODE_SERVER_RENDER: false,
+
+		DEFAULT_NODE_SERVER_DEVELOPMENT_PORT: 3000,
+		DEFAULT_NODE_SERVER_STAGE_PORT: 8080,
+		DEFAULT_NODE_SERVER_PRODUCTION_PORT: 4200,
+
+		DEFAULT_NODE_SERVER_DEVELOPMENT_HOST: 'localhost',
+		DEFAULT_NODE_SERVER_STAGE_HOST: '',
+		DEFAULT_NODE_SERVER_PRODUCTION_HOST: '',
 
 		DEFAULT_NODE_TEST_PATTERN: ['**/*_test.js'],
 		DEFAULT_NODE_BUNDLE_ENTRY: 'index.js',

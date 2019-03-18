@@ -19,14 +19,12 @@
 
 	program
 		.option('-d --dir <value>', 'Input folder name')
-		.option('--node', 'Bundle client code')
-		.option('--browser', 'Bundle server code')
-		.option('--jsx', 'Entry point as JSX file')
-		.option('--serverRender', 'Enable server render')
+		.option('-env --environment <value>', 'Build environment')
 		.parse(process.argv);
 
 	// var COLLECTION_DIR = 'src/collection/';
 	var DIRNAME = program.dir;
+	var envType = program.environment;
 	// var SOURCE_DIR = COLLECTION_DIR + DIRNAME;
 	// var SERVER_DIR = SOURCE_DIR + '/server';
 	// var CLIENT_DIR = SOURCE_DIR + '/client';
@@ -75,7 +73,7 @@
 	};
 
 	var { SolutionConfig } = require('./build/utilities/config-generator');
-	var DEFAULTS = require(`./build/config/constants`).defaults;
+	var DEFAULTS = require('./build/config/constants').defaults;
 
 	var pageConfig = (function(dir) {
 		var path = `./src/collection/${dir}/config`;
@@ -102,7 +100,7 @@
 		}
 	})(DIRNAME);
 
-	var { config } = new SolutionConfig(DEFAULTS, sourceDir, commonConfigs, pageConfig);
+	var { config } = new SolutionConfig(DEFAULTS, sourceDir, commonConfigs, pageConfig, envType);
 	
 	
 
@@ -152,7 +150,7 @@
 		var { test } = config.node;
 
 		if(!test) {
-			cb(new Error('NODE TEST NOT CONFIGURED'))
+			cb();
 		}
 		else {
 			mochaRunner.runTests(globby.sync(test.pattern), test.options);
@@ -186,7 +184,7 @@
 		var isBundle_browser = config.browser.bundle;
 
 		if(!(isBundle_node || isBundle_browser)) {
-			cb(new Error('NODE AND BROWSER BUNDLE NOT CONFIGURED'));
+			cb();
 		}
 
 		else {
@@ -212,34 +210,26 @@
 		}
 	}
 
-	function copyServerFiles(cb) {
+	function copyServerFiles() {
+		var { source, node, deploy, serve } = config.build.dirs;
+		
+		shell.rm('-rf', `${deploy}/*.js`);
+		shell.mkdir('-p', deploy);
+		shell.mkdir('-p', serve);
 
-		if(!program.dir) {
-			cb(new Error('NO FOLDER NAME SPECIFIED'));
-		}
-		else if(!fs.existsSync(SOURCE_DIR)) {
-			cb(new Error('FOLDER DOES NOT EXISTS'));
-		}
-		else {
-			shell.rm('-rf', DEPLOY_SERVER_DIR + '/*');
-			shell.mkdir('-p', DEPLOY_DIR);
-			shell.mkdir('-p', DEPLOY_CLIENT_DIR);
-
-			shell.cp('-R',
-					SOURCE_DIR + '/server',
-					SOURCE_DIR + '/*.js',
-				DEPLOY_DIR
-			);
-
-			cb();
-		}
+		shell.cp('-R',
+				`${node}`,
+				`${source}/*.js`,
+			`${deploy}`
+		);
+		
 	}
 
 	function startAndCaptureTestBrowsers(cb) {
 		var { test } = config.browser;
 
 		if(!test) {
-			cb(new Error('BROWSER TEST NOT CONFIGURED'));
+			cb();
 		}
 
 		else {
@@ -266,7 +256,7 @@
 		var { test } = config.browser;
 
 		if(!test) {
-			cb(new Error('BROWSER TEST NOT CONFIGURED'));
+			cb();
 		}
 		else {
 			KarmaRunner.run(test.options, function(exitCode) {
@@ -277,19 +267,43 @@
 		
 	}
 
+	function build(cb) {
+
+		var { build } = config;
+
+		if(!build) {
+			cb();
+		}
+		else {
+			var { envs } = config.build;
+			var { deploy } = config.build.dirs;
+			var { bundle } = config.node;
+
+			if(!bundle) {
+				copyServerFiles();
+			}
+
+			shell.rm('-rf', `${deploy}/*.json`);
+
+			Object.keys(envs).map(function(env) {
+				if(envs[env]) {
+					fs.writeFileSync(`${deploy}/${env}.json`,
+									JSON.stringify(envs[env], null, 4)
+					);
+				}
+			});
+
+			cb();
+		}
+		
+	}
+
 	function runSolution(cb) {
+		var { dir } = config.run;
 
-		fs.access(DEPLOY_DIR, fs.constants.F_OK, (err) => {
-			if (err) {
-				child_process.fork(`${SOURCE_DIR}`);
-				cb();
-			}
-			else {
-				child_process.fork(`${DEPLOY_DIR}`);
-				cb();
-			}
-		});
+		child_process.fork(`${dir}`);
 
+		cb();
 	}
 
 	
@@ -338,6 +352,7 @@
 	exports.startAndCaptureTestBrowsers = startAndCaptureTestBrowsers;
 	exports.runBrowserTests = runBrowserTests;
 	exports.bundle = bundle;
+	exports.build = build;
 	exports.copyServerFiles = copyServerFiles;
 	exports.runSolution = runSolution;
 
@@ -355,6 +370,6 @@
 	// exports.webWatch = webWatch;
 	// exports.webTestsWatch = series(webTests, webDefault, webWatch);
 
-	// exports.default = parallel(watchGlobalFiles, watchServerFiles, watchClientFiles);
+	exports.default = series(lint, runNodeTests, startAndCaptureTestBrowsers, runBrowserTests, bundle, build, runSolution);
 	
 })();

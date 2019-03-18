@@ -1,13 +1,16 @@
 (function() {
 
 	var config = {
+		node: {
+			test: true
+		},
 		browser: {
-			bundle: {
-				entry: 'index.jsx',
-				output: 'app.js'
-			},
+			dir: 'client',
 			test: {
 				pattern: ['**/*_test.jsx']
+			},
+			bundle: {
+				entry: 'index.jsx'
 			}
 		}
 	};

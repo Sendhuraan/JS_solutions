@@ -9,7 +9,7 @@
 	var HtmlWebpackPlugin = require('html-webpack-plugin');
 	var deepMerge = require('deepmerge');
 
-	function SolutionConfig(DEFAULTS, pageDir, commonConfigs, pageConfig) {
+	function SolutionConfig(DEFAULTS, pageDir, commonConfigs, pageConfig, envType) {
 
 		var {
 
@@ -28,9 +28,15 @@
 			DEFAULT_NODE_BUNDLE_OUTPUT_DIR,
 			DEFAULT_NODE_BUNDLE_OUTPUT_FILE,
 
-			DEFAULT_NODE_SERVER_PORT,
 			DEFAULT_NODE_SERVER_RENDER,
 
+			DEFAULT_NODE_SERVER_DEVELOPMENT_PORT,
+			DEFAULT_NODE_SERVER_STAGE_PORT,
+			DEFAULT_NODE_SERVER_PRODUCTION_PORT,
+
+			DEFAULT_NODE_SERVER_DEVELOPMENT_HOST,
+			DEFAULT_NODE_SERVER_STAGE_HOST,
+			DEFAULT_NODE_SERVER_PRODUCTION_HOST,
 
 			DEFAULT_BROWSER_DIR,
 
@@ -73,9 +79,17 @@
 				return (Object.keys(obj).length === 1 &&
 				obj.browser === true);
 			}
+			function isOnlyBrowserParams(obj) {
+				return (Object.keys(obj).length === 1 &&
+				obj.browser);
+			}
 			function isNodeAndBrowser(obj) {
 				return (Object.keys(obj).length > 1 &&
 				obj.browser === true);
+			}
+			function isNodeAndBrowserParams(obj) {
+				return (Object.keys(obj).length > 1 &&
+				obj.browser);
 			}
 
 			if(isEmptyObject(solutionConfig)) {
@@ -86,7 +100,7 @@
 
 				let config = Object.assign({}, defaultConfig);
 
-				return deepMerge(config, override);
+				return deepMerge(override, config);
 			}
 			else if(isOnlyBrowser(solutionConfig)) {
 				let override = {
@@ -106,8 +120,21 @@
 
 				return deepMerge(config, override);
 			}
+			else if(isOnlyBrowserParams(solutionConfig)) {
+				let includeServer = {
+					node: {
+						server: true
+					}
+				};
+
+				let tempConfig = Object.assign({}, solutionConfig, includeServer);
+
+				let config = Object.assign({}, defaultConfig);
+
+				return deepMerge(config, tempConfig);
+			}
 			else if(isNodeAndBrowser(solutionConfig)) {
-				let override = {
+				let includeServer = {
 					node: {
 						server: true
 					},
@@ -116,9 +143,24 @@
 					}
 				};
 
+				let includeServerConfig = deepMerge(solutionConfig, includeServer);
+
 				let config = Object.assign({}, defaultConfig);
 
-				return deepMerge(config, override);
+				return deepMerge(config, includeServerConfig);
+			}
+			else if(isNodeAndBrowserParams(solutionConfig)) {
+				let includeServer = {
+					node: {
+						server: true
+					}
+				};
+
+				let tempConfig = deepMerge(includeServer, solutionConfig);
+
+				let config = Object.assign({}, defaultConfig);
+
+				return deepMerge(config, tempConfig);
 			}
 			else {
 				let config = Object.assign({}, defaultConfig);
@@ -130,55 +172,102 @@
 
 		console.log(JSON.stringify(processedConfig, null, 4));
 
-		var isNodeTest = (function() {
-			if(typeof processedConfig.node.test === 'boolean') {
-				return processedConfig.node.test;
+		var isNode = (function(defaultConfig) {
+			if(typeof processedConfig.node === 'boolean' &&
+				processedConfig.node) {
+
+				processedConfig.node = defaultConfig.node;
+				return true;
+			}
+			else if(typeof processedConfig.node === 'object') {
+				return true;
+			}
+			else {
+				return false;
+			}
+		})(DEFAULT_PAGE_CONFIG);
+
+		var isBrowser = (function(defaultConfig) {
+			if(typeof processedConfig.browser === 'boolean' &&
+				processedConfig.browser) {
+
+				processedConfig.browser = defaultConfig.browser;
+				return true;
+			}
+			else if(typeof processedConfig.browser === 'object') {
+				return true;
+			}
+			else {
+				return false;
+			}
+		})(DEFAULT_PAGE_CONFIG);
+
+		var isNodeTest = (function(defaultConfig) {
+			if(typeof processedConfig.node.test === 'boolean' &&
+				processedConfig.node.test) {
+
+				processedConfig.node.test = defaultConfig.node.test;
+				return true;
 			}
 			else  {
 				return Boolean(
 					processedConfig.node.test.pattern
 				);
 			}
-		})();
+		})(DEFAULT_PAGE_CONFIG);
 
-		var isBrowserTest = (function() {
-			if(typeof processedConfig.browser.test === 'boolean') {
-				return processedConfig.browser.test;
+		var isBrowserTest = (function(defaultConfig) {
+			if(typeof processedConfig.browser.test === 'boolean' &&
+				processedConfig.browser.test) {
+
+				processedConfig.browser.test = defaultConfig.browser.test;
+				return true;
 			}
 			else  {
 				return Boolean(
 					processedConfig.browser.test.pattern
 				);
 			}
-		})();
+		})(DEFAULT_PAGE_CONFIG);
 
-		var isNodeBundle = (function() {
-			if(typeof processedConfig.node.bundle === 'boolean') {
-				return processedConfig.node.bundle;
+		var isNodeBundle = (function(defaultConfig) {
+			if(typeof processedConfig.node.bundle === 'boolean' &&
+				processedConfig.node.bundle) {
+
+				processedConfig.node.bundle = defaultConfig.node.bundle;
+				return true;
 			}
 			else  {
 				return Boolean(
 					processedConfig.node.bundle.entry || 
-					processedConfig.node.bundle.output
+					processedConfig.node.bundle.dir ||
+					processedConfig.node.bundle.file
 				);
 			}
-		})();
+		})(DEFAULT_PAGE_CONFIG);
 
-		var isBrowserBundle = (function() {
-			if(typeof processedConfig.browser.bundle === 'boolean') {
-				return processedConfig.browser.bundle;
+		var isBrowserBundle = (function(defaultConfig) {
+			if(typeof processedConfig.browser.bundle === 'boolean' &&
+				processedConfig.browser.bundle) {
+
+				processedConfig.browser.bundle = defaultConfig.browser.bundle;
+				return true;
 			}
 			else  {
 				return Boolean(
 					processedConfig.browser.bundle.entry || 
-					processedConfig.browser.bundle.output
+					processedConfig.browser.bundle.dir ||
+					processedConfig.browser.bundle.file
 				);
 			}
-		})();
+		})(DEFAULT_PAGE_CONFIG);
 
-		var isNodeServer = (function() {
-			if(typeof processedConfig.node.server === 'boolean') {
-				return processedConfig.node.server;
+		var isNodeServer = (function(defaultConfig) {
+			if(typeof processedConfig.node.server === 'boolean' &&
+				processedConfig.node.server) {
+
+				processedConfig.node.server = defaultConfig.node.server;
+				return true;
 			}
 			else  {
 				return Boolean(
@@ -186,10 +275,7 @@
 					processedConfig.node.server.render
 				);
 			}
-		})();
-
-		var isNode 					= processedConfig.node;
-		var isBrowser 				= processedConfig.browser;
+		})(DEFAULT_PAGE_CONFIG);
 
 		var NODE_DIR__OVERRIDE 		= processedConfig.node.dir;
 		var BROWSER_DIR__OVERRIDE 	= processedConfig.browser.dir;
@@ -213,12 +299,40 @@
 			}
 		})(NODE_DIR__OVERRIDE, SOURCE_DIR);
 
-		console.log(NODE_DIR);
+		// var BROWSER_DIR = `${SOURCE_DIR}/${DEFAULT_BROWSER_DIR}`;
 
-		var BROWSER_DIR = `${SOURCE_DIR}/${DEFAULT_BROWSER_DIR}`;
-		var DEPLOY_DIR = `${SOURCE_DIR}/${DEFAULT_DEPLOY_DIR__NODE}`;
+		var BROWSER_DIR = (function(overrideParam, defaultParam, inputDir) {
+			if(overrideParam) {
+				return `${inputDir}/${overrideParam}`;
+			}
+			else {
+				return `${inputDir}`;
+			}
+		})(BROWSER_DIR__OVERRIDE, DEFAULT_BROWSER_DIR, SOURCE_DIR);
+
+		switch(envType) {
+			case 'development':
+				var ENV_DEVELOPMENT = true;
+				break;
+			case 'stage':
+				var ENV_STAGE = true;
+				break;
+			case 'production':
+				var ENV_PRODUCTION = true;
+				break;
+			default:
+				ENV_DEVELOPMENT = true;
+		}
+
+		var DEPLOY_DIR;
+		if(isNodeServer && !isNodeBundle) {
+			DEPLOY_DIR = `${SOURCE_DIR}/${DEFAULT_DEPLOY_DIR__NODE}`;
+		}
+		else if(!isNodeServer && !isNodeBundle) {
+			DEPLOY_DIR = SOURCE_DIR;
+		}
 		
-		if(isNodeServer || isBrowser) {
+		if(isNodeServer) {
 
 			NODE_DIR = (function(overrideParam, defaultParam, inputDir) {
 				if(overrideParam) {
@@ -229,16 +343,28 @@
 				}
 			})(NODE_DIR__OVERRIDE, DEFAULT_NODE_SERVER_DIR, SOURCE_DIR);
 
-			var NODE_SERVER_PORT__OVERRIDE 	 = processedConfig.node.server.port;
-			var NODE_SERVER_RENDER__OVERRIDE = processedConfig.node.server.render;
 
-			var NODE_SERVER_PORT = NODE_SERVER_PORT__OVERRIDE || DEFAULT_NODE_SERVER_PORT;
+			var NODE_SERVER_DEVELOPMENT_PORT___OVERRIDE = processedConfig.node.server.development.port;
+			var NODE_SERVER_STAGE_PORT___OVERRIDE = processedConfig.node.server.stage.port;
+			var NODE_SERVER_PRODUCTION_PORT___OVERRIDE = processedConfig.node.server.production.port;
+
+			var NODE_SERVER_DEVELOPMENT_HOST___OVERRIDE = processedConfig.node.server.development.host;
+			var NODE_SERVER_STAGE_HOST___OVERRIDE = processedConfig.node.server.stage.host;
+			var NODE_SERVER_PRODUCTION_HOST___OVERRIDE = processedConfig.node.server.production.host;
+
+			var NODE_SERVER_DEVELOPMENT_PORT = NODE_SERVER_DEVELOPMENT_PORT___OVERRIDE || DEFAULT_NODE_SERVER_DEVELOPMENT_PORT;
+			var NODE_SERVER_STAGE_PORT = NODE_SERVER_STAGE_PORT___OVERRIDE || DEFAULT_NODE_SERVER_STAGE_PORT;
+			var NODE_SERVER_PRODUCTION_PORT = NODE_SERVER_PRODUCTION_PORT___OVERRIDE || DEFAULT_NODE_SERVER_PRODUCTION_PORT;
+
+			var NODE_SERVER_DEVELOPMENT_HOST = NODE_SERVER_DEVELOPMENT_HOST___OVERRIDE || DEFAULT_NODE_SERVER_DEVELOPMENT_HOST;
+			var NODE_SERVER_STAGE_HOST = NODE_SERVER_STAGE_HOST___OVERRIDE || DEFAULT_NODE_SERVER_STAGE_HOST;
+			var NODE_SERVER_PRODUCTION_HOST = NODE_SERVER_PRODUCTION_HOST___OVERRIDE || DEFAULT_NODE_SERVER_PRODUCTION_HOST;
+
+			var NODE_SERVER_RENDER__OVERRIDE = processedConfig.node.server.render;
 			var NODE_SERVER_RENDER = NODE_SERVER_RENDER__OVERRIDE || DEFAULT_NODE_SERVER_RENDER;
 
 			// var DEPLOY_BROWSER_DIR = `${DEPLOY_DIR}/${DEFAULT_DEPLOY_DIR__BROWSER}`;
 		}
-
-		console.log(NODE_DIR);
 
 		if(isNodeTest) {
 			var NODE_TEST_PATTERN__OVERRIDE = processedConfig.node.test.pattern;
@@ -330,6 +456,10 @@
 				newConfig.output.path = path.resolve(outputDir);
 				newConfig.output.filename = outputFile;
 
+				if(ENV_PRODUCTION) {
+					newConfig.mode = 'production';
+				}
+
 				return newConfig;
 
 			})(bundleConfig.node, NODE_BUNDLE_ENTRY, NODE_BUNDLE_OUTPUT_DIR, NODE_BUNDLE_OUTPUT_FILE);
@@ -362,7 +492,7 @@
 				else {
 					return `${inputDir}/${defaultParam}`;
 				}
-			})(BROWSER_BUNDLE_OUTPUT_DIR__OVERRIDE, DEFAULT_BROWSER_BUNDLE_OUTPUT_DIR, DEPLOY_DIR);;
+			})(BROWSER_BUNDLE_OUTPUT_DIR__OVERRIDE, DEFAULT_BROWSER_BUNDLE_OUTPUT_DIR, NODE_BUNDLE_OUTPUT_DIR ? NODE_BUNDLE_OUTPUT_DIR : DEPLOY_DIR);
 
 			var BROWSER_BUNDLE_OUTPUT_FILE = BROWSER_BUNDLE_OUTPUT_FILE__OVERRIDE || DEFAULT_BROWSER_BUNDLE_OUTPUT_FILE;
 
@@ -438,6 +568,10 @@
 				newConfig.output.path = path.resolve(outputDir);
 				newConfig.output.filename = outputFile;
 
+				if(ENV_PRODUCTION) {
+					newConfig.mode = 'production';
+				}
+
 				if(!NODE_SERVER_RENDER) {
 					templateConfigs.map(function(config) {
 						newConfig.plugins.push(config);
@@ -450,11 +584,9 @@
 
 		}
 
-		if(isNodeServer || isBrowser) {
+		if(isNodeServer) {
 			var NODE_SERVER_SERVEDIR = BROWSER_BUNDLE_OUTPUT_DIR__OVERRIDE || DEFAULT_BROWSER_BUNDLE_OUTPUT_DIR;
 		}
-		
-		console.log(NODE_SERVER_SERVEDIR);
 
 		this.config = {
 
@@ -486,12 +618,34 @@
 				} : false,
 				bundle: browserBundleConfig ? browserBundleConfig : false
 			} : false,
-			run: {
-				dir: isNodeServer ? `${DEPLOY_DIR}` : `${SOURCE_DIR}`,
-				options: {
-					port: NODE_SERVER_PORT ? NODE_SERVER_PORT : false,
-					serveDir: NODE_SERVER_SERVEDIR ? `${NODE_SERVER_SERVEDIR}` : false,
+			build: isNodeServer ? {
+				dirs: {
+					source: SOURCE_DIR ? SOURCE_DIR : false,
+					node: NODE_DIR ? NODE_DIR : false,
+					browser: BROWSER_DIR ? BROWSER_DIR : false,
+					deploy: NODE_BUNDLE_OUTPUT_DIR ? NODE_BUNDLE_OUTPUT_DIR : DEPLOY_DIR,
+					serve: BROWSER_BUNDLE_OUTPUT_DIR ? BROWSER_BUNDLE_OUTPUT_DIR : false
+				},
+				envs: {
+					development: ENV_DEVELOPMENT ? {
+						host: NODE_SERVER_DEVELOPMENT_HOST ? NODE_SERVER_DEVELOPMENT_HOST : false,
+						port: NODE_SERVER_DEVELOPMENT_PORT ? NODE_SERVER_DEVELOPMENT_PORT : false,
+						serveDir: NODE_SERVER_SERVEDIR ? NODE_SERVER_SERVEDIR : false
+					} : false,
+					stage: ENV_STAGE ? {
+						host: NODE_SERVER_STAGE_HOST ? NODE_SERVER_STAGE_HOST : false,
+						port: NODE_SERVER_STAGE_PORT ? NODE_SERVER_STAGE_PORT : false,
+						serveDir: NODE_SERVER_SERVEDIR ? NODE_SERVER_SERVEDIR : false
+					} : false,
+					production: ENV_PRODUCTION ? {
+						host: NODE_SERVER_PRODUCTION_HOST ? NODE_SERVER_PRODUCTION_HOST : false,
+						port: NODE_SERVER_PRODUCTION_PORT ? NODE_SERVER_PRODUCTION_PORT : false,
+						serveDir: NODE_SERVER_SERVEDIR ? NODE_SERVER_SERVEDIR : false
+					} : false
 				}
+			} : false,
+			run: {
+				dir: DEPLOY_DIR
 			}
 		};
 		
