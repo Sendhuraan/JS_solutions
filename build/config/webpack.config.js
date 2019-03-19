@@ -65,6 +65,17 @@
 					]
 				},
 				{
+					test: /\.(png|jpg|gif|svg)$/,
+					use: [
+						{
+							loader: 'file-loader',
+							options: {
+								name: 'images/[hash].[ext]'
+							}
+						}
+					]
+				},
+				{
 					test: /\.(js|jsx)$/,
 					use: {
 						loader: 'babel-loader',
