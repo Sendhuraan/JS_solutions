@@ -263,6 +263,7 @@
 
 	exports.printConfig = printConfig;
 
-	exports.default = series(lint, runNodeTests, startAndCaptureTestBrowsers, runBrowserTests, bundle, build, runSolution);
+	exports.preqs = series(startAndCaptureTestBrowsers);
+	exports.default = series(lint, runNodeTests, runBrowserTests, bundle, build, runSolution);
 	
 })();
