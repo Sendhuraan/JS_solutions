@@ -4,7 +4,7 @@
 
 	var Mocha = require('mocha');
 
-	exports.runTests = function runTestFn(options, files) {
+	exports.runTests = function runTestFn(files, options) {
 
 		var mocha = new Mocha(options);
 

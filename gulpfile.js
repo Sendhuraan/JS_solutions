@@ -1,82 +1,97 @@
 'use strict';
 
 (function() {
+	var fs = require('fs');
+	var path = require('path');
 
 	const { src, series, parallel, watch } = require('gulp');
 	var program = require('commander');
-	var fileList = require('filelist');
-	var fs = require('fs');
-	var path = require('path');
 	const eslint = require('gulp-eslint');
 	var webpack = require('webpack');
 	var KarmaServer = require('karma').Server;
-	var cfg = require('karma').config;
+	var KarmaRunner = require('karma').runner;
 	var shell = require('shelljs');
 	var child_process = require('child_process');
-	var HtmlWebpackPlugin = require('html-webpack-plugin');
+	var globby = require('globby');
 
 	program
 		.option('-d --dir <value>', 'Input folder name')
-		.option('--client', 'Bundle client code')
-		.option('--server', 'Bundle server code')
-		.option('--jsx', 'Entry point as JSX file')
-		.option('--serverRender', 'Enable server render')
+		.option('-env --environment <value>', 'Build environment')
 		.parse(process.argv);
 
-	var COLLECTION_DIR = 'src/collection/';
 	var DIRNAME = program.dir;
-	var SOURCE_DIR = COLLECTION_DIR + DIRNAME;
-	var SERVER_DIR = SOURCE_DIR + '/server';
-	var CLIENT_DIR = SOURCE_DIR + '/client';
-	var GENERATED_DIR = SOURCE_DIR + '/generated';
-	var BROWSERIFY_DIR = GENERATED_DIR + '/bundle';
-	var DEPLOY_DIR = SOURCE_DIR + '/deploy';
-	var DEPLOY_SERVER_DIR = DEPLOY_DIR + '/server';
-	var DEPLOY_CLIENT_DIR = DEPLOY_DIR + '/client';
-	var SERVE_DIR = DEPLOY_DIR + '/client';
+	var envType = program.environment;
 
-	var isBundle_client = program.client;
-	var isBundle_server = program.server;
-	var isEntryPoint_JSX = program.jsx;
-	var isServerRender = program.serverRender;
+	var commonConfigs = {
+		lintConfig: require('./build/config/eslint.config.js'),
+		nodeTestConfig: require('./build/config/mocha.config.js'),
+		browserTestConfig: { path: './build/config/karma.config.js' },
+		transpileConfig: require('./build/config/babel.config.js'),
+		bundleConfig: require('./build/config/webpack.config.js')
+	};
 
-	var eslintConfig = require('./build/config/eslint.config.js');
-	var webpackConfig = require('./build/config/webpack.config.js');
+	var { SolutionConfig } = require('./build/utilities/config-generator');
+	var DEFAULTS = require('./build/config/constants').defaults;
 
-	function lintGlobalFiles(cb) {
-		return src([
-			'**/*.js',
-			'!node_modules/**',
-			'!src/collection/**'
-		])
-		.pipe(eslint(eslintConfig.es5Options))
-		.pipe(eslint.format())
-		.pipe(eslint.failAfterError());
+	var pageConfig = (function(dir) {
+		var path = `./src/collection/${dir}/config`;
 
+		if(fs.existsSync(path)) {
+			return require(path);
+		}
+		else {
+			throw new Error('NO CONFIG FOUND FOR SOLUTION');
+		}
+	})(DIRNAME);
+
+	var sourceDir = (function(dir) {
+		var path = `./src/collection/${dir}`;
+
+		if(!dir) {
+			throw new Error('NO FOLDER NAME SPECIFIED');
+		}
+		else if(!fs.existsSync(path)) {
+			throw new Error('FOLDER DOES NOT EXISTS');
+		}
+		else {
+			return dir;
+		}
+	})(DIRNAME);
+
+	var { config } = new SolutionConfig(DEFAULTS, sourceDir, commonConfigs, pageConfig.config, envType);
+	
+	function printConfig(cb) {
+		console.log(JSON.stringify(config, null, 4));
 		cb();
 	}
 
-	function lintSourceFiles(cb) {
+	function lintGlobalFiles(cb) {
+		var { lint } = config;
 
-		if(!program.dir) {
-			cb(new Error('NO FOLDER NAME SPECIFIED'));
-		}
-		else if(!fs.existsSync(SOURCE_DIR)) {
-			cb(new Error('FOLDER DOES NOT EXISTS'));
+		if(!lint.global.pattern) {
+			cb(new Error('GLOBAL LINT NOT CONFIGURED'));
 		}
 		else {
-			var sourceFiles = new fileList.FileList();
-			sourceFiles.include(`${SOURCE_DIR}/**/*.js`);
-			sourceFiles.include(`${SOURCE_DIR}/**/*.jsx`);
-			if(fs.existsSync(GENERATED_DIR)) {
-				sourceFiles.exclude(`${GENERATED_DIR}/**/*.js`);
-			}
-			if(fs.existsSync(DEPLOY_DIR)) {
-				sourceFiles.exclude(`${DEPLOY_DIR}/**/*.js`);
-			}
+			return src(globby.sync(lint.global.pattern))
+			.pipe(eslint(lint.global.options))
+			.pipe(eslint.format())
+			.pipe(eslint.failAfterError());
 
-			return src(sourceFiles.toArray())
-			.pipe(eslint(eslintConfig.es6Options))
+			cb();
+		}
+		
+		
+	}
+
+	function lintSourceFiles(cb) {
+		var { lint } = config;
+
+		if(!lint.global.pattern) {
+			cb(new Error('SOURCE LINT NOT CONFIGURED'));
+		}
+		else {
+			return src(lint.source.pattern)
+			.pipe(eslint(lint.source.options))
 			.pipe(eslint.format())
 			.pipe(eslint.failAfterError());
 
@@ -84,174 +99,89 @@
 		}
 	}
 
-	function runServerTests(cb){
+	function runNodeTests(cb){
+		var mochaRunner = require('./build/utilities/mocha-runner.js');
+		var { test } = config.node;
 
-		if(!program.dir) {
-			cb(new Error('NO FOLDER NAME SPECIFIED'));
-		}
-		else if(!fs.existsSync(SOURCE_DIR)) {
-			cb(new Error('FOLDER DOES NOT EXISTS'));
+		if(!test) {
+			cb();
 		}
 		else {
-			var mochaConfig = require('./build/config/mocha.config.js');
-			var mochaRunner = require('./build/utilities/mocha-runner.js');
-
-			var testFiles = new fileList.FileList();
-			testFiles.include(SOURCE_DIR + '/**/*_test.js');
-			testFiles.exclude('node_modules');
-
-			mochaRunner.runTests(mochaConfig, testFiles);
-
+			mochaRunner.runTests(globby.sync(test.pattern), test.options);
 			cb();
+		}
+	}
+
+	function displayWebpackErrorMsg(err, stats) {
+		if (err) {
+			console.error(err.stack || err);
+		if (err.details) {
+			console.error(err.details);
+		}
+			return;
+		}
+
+		const info = stats.toJson();
+
+		if (stats.hasErrors()) {
+			console.error(info.errors);
+		}
+
+		if (stats.hasWarnings()) {
+			console.warn(info.warnings);
 		}
 	}
 
 	function bundle(cb) {
 
-		if(!program.dir) {
-			cb(new Error('NO FOLDER NAME SPECIFIED'));
-		}
-		else if(!fs.existsSync(SOURCE_DIR)) {
-			cb(new Error('FOLDER DOES NOT EXISTS'));
+		var isBundle_node = config.node.bundle;
+		var isBundle_browser = config.browser.bundle;
+
+		if(!(isBundle_node || isBundle_browser)) {
+			cb();
 		}
 		else {
+			if(isBundle_node) {
+				let { path } = config.node.bundle.output;
+				let { bundle } = config.node;
+				shell.rm('-rf', path);
 
-			shell.rm('-rf', DEPLOY_DIR);
-
-			if(isBundle_client) {
-
-				let webpackHtmlTitle = `${DIRNAME}`.replace('/', ' | ');
-				let webpackClientEntryPoint = isEntryPoint_JSX ? `${CLIENT_DIR}/index.jsx` : `${CLIENT_DIR}/index.js`;
-				let webpackClientOutput = `${DEPLOY_CLIENT_DIR}`;
-				
-
-				webpackConfig.client.entry = path.resolve(webpackClientEntryPoint);
-				webpackConfig.client.output.path = path.resolve(webpackClientOutput);
-
-				if(!isServerRender) {
-
-					let webpackClientPlugins = new HtmlWebpackPlugin({
-													title: webpackHtmlTitle
-												});
-
-					webpackConfig.client.plugins.push(webpackClientPlugins);
-
-				}
-
-				webpack(webpackConfig.client, (err, stats) => {
-					if (err) {
-						console.error(err.stack || err);
-					if (err.details) {
-						console.error(err.details);
-					}
-						return;
-					}
-
-					const info = stats.toJson();
-
-					if (stats.hasErrors()) {
-						console.error(info.errors);
-					}
-
-					if (stats.hasWarnings()) {
-						console.warn(info.warnings);
-					}
-
-					});
-
+				webpack(bundle, displayWebpackErrorMsg);
 				cb();
-
 			}
+			if(isBundle_browser) {
+				let { path } = config.browser.bundle.output;
+				let { bundle } = config.browser;
+				shell.rm('-rf', path);
 
-			if(isBundle_server) {
-
-				let webpackServerEntryPoint = `${SOURCE_DIR}/index.js`;
-				let webpackServerOutput = `${DEPLOY_DIR}`;
-
-				webpackConfig.server.entry = path.resolve(webpackServerEntryPoint);
-				webpackConfig.server.output.path = path.resolve(webpackServerOutput);
-
-				webpack(webpackConfig.server, (err, stats) => {
-					if (err) {
-						console.error(err.stack || err);
-					if (err.details) {
-						console.error(err.details);
-					}
-						return;
-					}
-
-					const info = stats.toJson();
-
-					if (stats.hasErrors()) {
-						console.error(info.errors);
-					}
-
-					if (stats.hasWarnings()) {
-						console.warn(info.warnings);
-					}
-
-					});
-
+				webpack(bundle, displayWebpackErrorMsg);
 				cb();
-
 			}
-
-			if(!(isBundle_client || isBundle_server)) {
-				cb(new Error('SPECIFY CLIENT OR SERVER TO BE BUNDLED'));
-			}
-			
 		}
 	}
 
-	function copyServerFiles(cb) {
+	function copyServerFiles() {
+		var { source, node, deploy, serve } = config.build.dirs;
+		
+		shell.rm('-rf', `${deploy}/*.js`);
+		shell.mkdir('-p', deploy);
+		shell.mkdir('-p', serve);
 
-		if(!program.dir) {
-			cb(new Error('NO FOLDER NAME SPECIFIED'));
-		}
-		else if(!fs.existsSync(SOURCE_DIR)) {
-			cb(new Error('FOLDER DOES NOT EXISTS'));
-		}
-		else {
-			shell.rm('-rf', DEPLOY_SERVER_DIR + '/*');
-			shell.mkdir('-p', DEPLOY_DIR);
-			shell.mkdir('-p', DEPLOY_CLIENT_DIR);
-
-			shell.cp('-R',
-					SOURCE_DIR + '/server',
-					SOURCE_DIR + '/*.js',
-				DEPLOY_DIR
-			);
-
-			cb();
-		}
+		shell.cp('-R',
+				`${node}`,
+				`${source}/*.js`,
+			`${deploy}`
+		);
 	}
 
 	function startAndCaptureTestBrowsers(cb) {
+		var { test } = config.browser;
 
-		if(!program.dir) {
-			cb(new Error('NO FOLDER NAME SPECIFIED'));
-		}
-		else if(!fs.existsSync(SOURCE_DIR)) {
-			cb(new Error('FOLDER DOES NOT EXISTS'));
+		if(!test) {
+			cb();
 		}
 		else {
-			var overrideConfig = {
-				files: [
-						CLIENT_DIR + '/**/*.js',
-						CLIENT_DIR + '/**/*.jsx'
-					],
-				preprocessors: {}
-			};
-
-			overrideConfig.preprocessors[CLIENT_DIR + '/**/*.js'] = ['webpack'];
-			overrideConfig.preprocessors[CLIENT_DIR + '/**/*.jsx'] = ['webpack'];
-			overrideConfig.webpack = {
-				'module': webpackConfig.client.module
-			};
-
-			var karmaConfig = cfg.parseConfig(path.resolve('./build/config/karma.config.js'), overrideConfig);
-
-			var serverInstance = new KarmaServer(karmaConfig, function(exitCode) {
+			var serverInstance = new KarmaServer(test.options, function(exitCode) {
 				console.log('Karma has exited with ' + exitCode);
 			});
 
@@ -266,128 +196,74 @@
 				cb();
 			});
 		}
-		
 	}
 
 	function runBrowserTests(cb) {
+		var { test } = config.browser;
 
-		if(!program.dir) {
-			cb(new Error('NO FOLDER NAME SPECIFIED'));
-		}
-		else if(!fs.existsSync(SOURCE_DIR)) {
-			cb(new Error('FOLDER DOES NOT EXISTS'));
+		if(!test) {
+			cb();
 		}
 		else {
-			var overrideConfig = {
-				files: [
-							{
-								'pattern': CLIENT_DIR + '/**/*.js',
-								'included': false,
-								'watched': false
-							},
-							{
-								'pattern': CLIENT_DIR + '/**/*.jsx',
-								'included': false,
-								'watched': false
-							}
-					],
-				preprocessors: {}
-			};
-
-			overrideConfig.preprocessors[CLIENT_DIR + '/**/*.js'] = ['webpack'];
-			overrideConfig.preprocessors[CLIENT_DIR + '/**/*.jsx'] = ['webpack'];
-			overrideConfig.webpack = {
-				'module': webpackConfig.client.module
-			};
-
-			var karmaConfig = cfg.parseConfig(path.resolve('./build/config/karma.config.js'), overrideConfig);
-
-			var runner = require('karma').runner;
-			runner.run(karmaConfig, function(exitCode) {
+			KarmaRunner.run(test.options, function(exitCode) {
 				console.log('Karma has exited with ' + exitCode);
+			});
+			cb();
+		}
+	}
+
+	function build(cb) {
+
+		var { build } = config;
+
+		if(!build) {
+			cb();
+		}
+		else {
+			var { envs } = config.build;
+			var { deploy } = config.build.dirs;
+			var { bundle } = config.node;
+
+			if(!bundle) {
+				copyServerFiles();
+			}
+
+			shell.rm('-rf', `${deploy}/*.json`);
+
+			Object.keys(envs).map(function(env) {
+				if(envs[env]) {
+					fs.writeFileSync(`${deploy}/${env}.json`,
+									JSON.stringify(envs[env], null, 4)
+					);
+				}
 			});
 
 			cb();
 		}
-		
 	}
 
 	function runSolution(cb) {
+		var { dir } = config.run;
 
-		var PORT = 3000;
+		child_process.fork(`${dir}`);
 
-		fs.access(DEPLOY_DIR, fs.constants.F_OK, (err) => {
-			if (err) {
-				child_process.fork(`${SOURCE_DIR}`);
-				cb();
-			}
-			else {
-				child_process.fork(`${DEPLOY_DIR}`);
-				cb();
-			}
-		});
-
-	}
-
-	function watchServerFiles(cb) {
-
-		var sourceDir = path.resolve(SOURCE_DIR+'/*.js');
-		var serverDir = path.resolve(SERVER_DIR+'/**/*.js');
-
-		if(!program.dir) {
-			cb(new Error('NO FOLDER NAME SPECIFIED'));
-		}
-		else if(!fs.existsSync(SOURCE_DIR)) {
-			cb(new Error('FOLDER DOES NOT EXISTS'));
-		}
-		else {
-			watch([sourceDir, serverDir], series(lintSourceFiles, runServerTests, copyServerFiles));
-			cb();
-		}
-		
-	}
-
-	function watchClientFiles(cb) {
-
-		if(!program.dir) {
-			cb(new Error('NO FOLDER NAME SPECIFIED'));
-		}
-		else if(!fs.existsSync(SOURCE_DIR)) {
-			cb(new Error('FOLDER DOES NOT EXISTS'));
-		}
-		else {
-			watch([CLIENT_DIR+'/**/*'], series(lintSourceFiles, runBrowserTests, bundle));
-			cb();
-		}
-		
-	}
-
-	function watchGlobalFiles(cb) {
-		watch(['**/*.js', '!node_modules/**', '!src/collection/**'], lintGlobalFiles);
 		cb();
 	}
 
 	const lint = parallel(lintGlobalFiles, lintSourceFiles);
 
 	exports.lint = lint;
-	exports.runServerTests = runServerTests;
+	exports.runNodeTests = runNodeTests;
 	exports.startAndCaptureTestBrowsers = startAndCaptureTestBrowsers;
 	exports.runBrowserTests = runBrowserTests;
 	exports.bundle = bundle;
+	exports.build = build;
 	exports.copyServerFiles = copyServerFiles;
 	exports.runSolution = runSolution;
-	exports.watchServerFiles = watchServerFiles;
-	exports.watchGlobalFiles = watchGlobalFiles;
 
-	const webTests = series(runServerTests, startAndCaptureTestBrowsers, runBrowserTests);
-	const webDefault = series(lint, bundle, copyServerFiles);
-	const webWatch = parallel(watchGlobalFiles, watchServerFiles, watchClientFiles);
+	exports.printConfig = printConfig;
 
-	exports.webTests = webTests;
-	exports.webDefault = webDefault;
-	exports.webWatch = webWatch;
-	exports.webTestsWatch = series(webTests, webDefault, webWatch);
-
-	exports.default = parallel(watchGlobalFiles, watchServerFiles, watchClientFiles);
+	exports.preqs = series(startAndCaptureTestBrowsers);
+	exports.default = series(lint, runNodeTests, runBrowserTests, bundle, build, runSolution);
 	
 })();
