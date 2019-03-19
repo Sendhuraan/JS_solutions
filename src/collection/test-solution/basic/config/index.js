@@ -1,9 +1,14 @@
 (function() {
 
-	var config = {};
+	var config = {
+		node: true,
+		browser: false
+	};
 
-	module.exports = config;
+	var publicAPI = {
+		config
+	};
+
+	module.exports = publicAPI;
 	
 })();
-
-				
