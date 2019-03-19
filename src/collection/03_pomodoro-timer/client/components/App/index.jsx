@@ -5,6 +5,8 @@ import Content from '../Content';
 import Footer from '../Footer';
 import Timer from '../Pomodoro';
 
+import './index.css';
+
 class App extends Component {
 
 	render() {

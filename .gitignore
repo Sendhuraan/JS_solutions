@@ -1,5 +1,5 @@
 # Mac
 .DS_Store
 
-# Generated 
-src/collection/*/generated/*
+# Node Modules cache
+node_modules/.cache

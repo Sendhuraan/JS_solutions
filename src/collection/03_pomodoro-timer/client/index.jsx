@@ -1,11 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+
 import App from './components/App';
 
-var renderDiv = document.createElement('div');
-document.body.appendChild(renderDiv);
+import './index.css';
 
 ReactDOM.render(
-		<App />,
-		renderDiv
+	<App />,
+	document.getElementById('root')
 );
