@@ -132,31 +132,75 @@
 		}
 	}
 
-	function bundle(cb) {
+	function bundleNode(cb) {
 
 		var isBundle_node = config.node.bundle;
-		var isBundle_browser = config.browser.bundle;
 
-		if(!(isBundle_node || isBundle_browser)) {
+		if(!isBundle_node) {
 			cb();
 		}
 		else {
-			if(isBundle_node) {
-				let { path } = config.node.bundle.output;
-				let { bundle } = config.node;
-				shell.rm('-rf', path);
+			let { path } = config.node.bundle.output;
+			let { bundle } = config.node;
+			shell.rm('-rf', path);
 
-				webpack(bundle, displayWebpackErrorMsg);
-				cb();
-			}
-			if(isBundle_browser) {
-				let { path } = config.browser.bundle.output;
-				let { bundle } = config.browser;
-				shell.rm('-rf', path);
+			webpack(bundle, function(err, stats) {
+				if (err) {
+					console.error(err.stack || err);
+				if (err.details) {
+					console.error(err.details);
+				}
+					return;
+				}
 
-				webpack(bundle, displayWebpackErrorMsg);
+				const info = stats.toJson();
+
+				if (stats.hasErrors()) {
+					console.error(info.errors);
+				}
+
+				if (stats.hasWarnings()) {
+					console.warn(info.warnings);
+				}
+
 				cb();
-			}
+			});
+		}
+	}
+
+	function bundleBrowser(cb) {
+
+		var isBundle_browser = config.browser.bundle;
+
+		if(!isBundle_browser) {
+			cb();
+		}
+		else {
+			let { path } = config.browser.bundle.output;
+			let { bundle } = config.browser;
+			shell.rm('-rf', path);
+
+			webpack(bundle, function(err, stats) {
+				if (err) {
+					console.error(err.stack || err);
+				if (err.details) {
+					console.error(err.details);
+				}
+					return;
+				}
+
+				const info = stats.toJson();
+
+				if (stats.hasErrors()) {
+					console.error(info.errors);
+				}
+
+				if (stats.hasWarnings()) {
+					console.warn(info.warnings);
+				}
+
+				cb();
+			});
 		}
 	}
 
@@ -230,13 +274,11 @@
 
 			shell.rm('-rf', `${deploy}/*.json`);
 
-			Object.keys(envs).map(function(env) {
-				if(envs[env]) {
-					fs.writeFileSync(`${deploy}/${env}.json`,
-									JSON.stringify(envs[env], null, 4)
-					);
+			for(var key in envs) {
+				if(envs[key]) {
+					fs.writeFileSync(`${deploy}/${key}.json`, JSON.stringify(envs[key], null, 4));
 				}
-			});
+			}
 
 			cb();
 		}
@@ -251,6 +293,7 @@
 	}
 
 	const lint = parallel(lintGlobalFiles, lintSourceFiles);
+	const bundle = series(bundleNode, bundleBrowser);
 
 	exports.lint = lint;
 	exports.runNodeTests = runNodeTests;

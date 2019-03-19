@@ -25,7 +25,7 @@ const main = (req, res) => {
 		</head>
 		
 		<body>
-			<div id='app'>${compiledApp}</div>
+			<div id='root'>${compiledApp}</div>
 			<script src='./bundle.js'></script>
 		</body>
 		</html>`

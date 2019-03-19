@@ -1,16 +1,56 @@
 (function() {
 
-	const DB_NAME = 'resthub';
-
-	module.exports = {
-		env: process.env.NODE_ENV || 'development',
-		port: process.env.PORT || 3000,
-		mongoUri: process.env.MONGODB_URI || 
-					process.env.MONGO_HOST || 'mongodb://' +
-					(process.env.IP || 'localhost') + ':' +
-					(process.env.MONGO_PORT || '27017') + '/' +
-					DB_NAME,
-		serveDir: 'client'
+	var config = {
+		node: {
+			// remove dir to set source dir.
+			dir: 'server',
+			test: false,
+			bundle: {
+				entry: 'index.js',
+				output: {
+					file: 'index.js'
+				}
+			},
+			server: {
+				render: true,
+				serveDir: 'client',
+				development: {
+					host: 'localhost',
+					port: 3000
+				},
+				stage: false,
+				production: false
+			},
+			db: false,
+			deploy: 'deploy'
+		},
+		browser: {
+			// remove dir to set source dir.
+			dir: 'client',
+			test: false,
+			bundle: {
+				entry: 'index.jsx',
+				output: {
+					dir: 'client',
+					file: 'bundle.js'
+				}
+			},
+			template: {
+				dir: 'templates',
+				page: {
+					dir: 'pages',
+					file: 'index.js',
+					data: 'index.data.json'
+				}
+				
+			}
+		}
 	};
+
+	var publicAPI = {
+		config
+	};
+
+	module.exports = publicAPI;
 	
 })();

@@ -134,17 +134,6 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var reac
 
 /***/ }),
 
-/***/ "./src/collection/test-solution/server-render-route/config/index.js":
-/*!**************************************************************************!*\
-  !*** ./src/collection/test-solution/server-render-route/config/index.js ***!
-  \**************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-eval("(function () {\n  const DB_NAME = 'resthub';\n  module.exports = {\n    env: \"development\" || false,\n    port: process.env.PORT || 3000,\n    mongoUri: process.env.MONGODB_URI || process.env.MONGO_HOST || 'mongodb://' + (process.env.IP || 'localhost') + ':' + (process.env.MONGO_PORT || '27017') + '/' + DB_NAME,\n    serveDir: 'client'\n  };\n})();\n\n//# sourceURL=webpack:///./src/collection/test-solution/server-render-route/config/index.js?");
-
-/***/ }),
-
 /***/ "./src/collection/test-solution/server-render-route/index.js":
 /*!*******************************************************************!*\
   !*** ./src/collection/test-solution/server-render-route/index.js ***!
@@ -153,7 +142,7 @@ eval("(function () {\n  const DB_NAME = 'resthub';\n  module.exports = {\n    en
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! path */ \"path\");\n/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var _server_server__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./server/server */ \"./src/collection/test-solution/server-render-route/server/server.js\");\n/* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./config */ \"./src/collection/test-solution/server-render-route/config/index.js\");\n/* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_config__WEBPACK_IMPORTED_MODULE_2__);\n\n\n\n\n(async function () {\n  const CONTENT_DIR = path__WEBPACK_IMPORTED_MODULE_0___default.a.join(__dirname, _config__WEBPACK_IMPORTED_MODULE_2___default.a.serveDir);\n  const server = new _server_server__WEBPACK_IMPORTED_MODULE_1__[\"default\"]();\n  await server.start(CONTENT_DIR, _config__WEBPACK_IMPORTED_MODULE_2___default.a.port);\n  console.log(`Server Running at localhost:${_config__WEBPACK_IMPORTED_MODULE_2___default.a.port}`);\n})();\n\n//# sourceURL=webpack:///./src/collection/test-solution/server-render-route/index.js?");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! fs */ \"fs\");\n/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(fs__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! path */ \"path\");\n/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_1__);\n/* harmony import */ var _server_server__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./server/server */ \"./src/collection/test-solution/server-render-route/server/server.js\");\n\n\n\n\n(async function () {\n  const configEnv = '/development.json';\n  const configPath = path__WEBPACK_IMPORTED_MODULE_1___default.a.join(__dirname, configEnv);\n  const serverConfig = JSON.parse(fs__WEBPACK_IMPORTED_MODULE_0___default.a.readFileSync(configPath));\n  const PORT = serverConfig.port;\n  const SERVE_DIR = serverConfig.serveDir;\n  const CONTENT_DIR = path__WEBPACK_IMPORTED_MODULE_1___default.a.join(__dirname, SERVE_DIR);\n  const server = new _server_server__WEBPACK_IMPORTED_MODULE_2__[\"default\"]();\n  await server.start(CONTENT_DIR, PORT);\n  console.log(`Server Running at localhost:${PORT}`);\n})();\n\n//# sourceURL=webpack:///./src/collection/test-solution/server-render-route/index.js?");
 
 /***/ }),
 
@@ -165,7 +154,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var path
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ \"react\");\n/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var react_dom_server__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-dom/server */ \"react-dom/server\");\n/* harmony import */ var react_dom_server__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom_server__WEBPACK_IMPORTED_MODULE_1__);\n/* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react-router-dom */ \"react-router-dom\");\n/* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react_router_dom__WEBPACK_IMPORTED_MODULE_2__);\n/* harmony import */ var _client_components_App__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../client/components/App */ \"./src/collection/test-solution/server-render-route/client/components/App/index.jsx\");\n\n\n\n // Handle index actions\n\nconst main = (req, res) => {\n  const context = {};\n  const compiledApp = Object(react_dom_server__WEBPACK_IMPORTED_MODULE_1__[\"renderToString\"])(react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_2__[\"StaticRouter\"], {\n    context: context,\n    location: req.url\n  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_client_components_App__WEBPACK_IMPORTED_MODULE_3__[\"default\"], null)));\n  res.writeHead(200, {\n    'Content-Type': 'text/html'\n  });\n  res.end(`\n\t\t<!DOCTYPE html>\n\t\t<html>\n\t\t<head>\n\t\t\t<meta charset='utf-8'>\n\t\t\t<title>React SSR</title>\n\t\t</head>\n\t\t\n\t\t<body>\n\t\t\t<div id='app'>${compiledApp}</div>\n\t\t\t<script src='./bundle.js'></script>\n\t\t</body>\n\t\t</html>`);\n};\n\n/* harmony default export */ __webpack_exports__[\"default\"] = ({\n  main\n});\n\n//# sourceURL=webpack:///./src/collection/test-solution/server-render-route/server/controllers/main.controller.js?");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ \"react\");\n/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var react_dom_server__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-dom/server */ \"react-dom/server\");\n/* harmony import */ var react_dom_server__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom_server__WEBPACK_IMPORTED_MODULE_1__);\n/* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react-router-dom */ \"react-router-dom\");\n/* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react_router_dom__WEBPACK_IMPORTED_MODULE_2__);\n/* harmony import */ var _client_components_App__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../client/components/App */ \"./src/collection/test-solution/server-render-route/client/components/App/index.jsx\");\n\n\n\n // Handle index actions\n\nconst main = (req, res) => {\n  const context = {};\n  const compiledApp = Object(react_dom_server__WEBPACK_IMPORTED_MODULE_1__[\"renderToString\"])(react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_2__[\"StaticRouter\"], {\n    context: context,\n    location: req.url\n  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_client_components_App__WEBPACK_IMPORTED_MODULE_3__[\"default\"], null)));\n  res.writeHead(200, {\n    'Content-Type': 'text/html'\n  });\n  res.end(`\n\t\t<!DOCTYPE html>\n\t\t<html>\n\t\t<head>\n\t\t\t<meta charset='utf-8'>\n\t\t\t<title>React SSR</title>\n\t\t</head>\n\t\t\n\t\t<body>\n\t\t\t<div id='root'>${compiledApp}</div>\n\t\t\t<script src='./bundle.js'></script>\n\t\t</body>\n\t\t</html>`);\n};\n\n/* harmony default export */ __webpack_exports__[\"default\"] = ({\n  main\n});\n\n//# sourceURL=webpack:///./src/collection/test-solution/server-render-route/server/controllers/main.controller.js?");
 
 /***/ }),
 
@@ -213,6 +202,17 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) *
 /***/ (function(module, exports) {
 
 eval("module.exports = require(\"express\");\n\n//# sourceURL=webpack:///external_%22express%22?");
+
+/***/ }),
+
+/***/ "fs":
+/*!*********************!*\
+  !*** external "fs" ***!
+  \*********************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+eval("module.exports = require(\"fs\");\n\n//# sourceURL=webpack:///external_%22fs%22?");
 
 /***/ }),
 
