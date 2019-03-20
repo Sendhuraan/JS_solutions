@@ -1,8 +1,16 @@
 (function() {
 
 	var config = {
-		node: true,
-		browser: false
+		node: {
+			test: {
+				pattern: ['**/*_test.js']
+			}
+		},
+		browser: {
+			test: {
+				pattern: ['**/*_test.js']
+			}
+		}
 	};
 
 	var publicAPI = {

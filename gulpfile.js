@@ -107,28 +107,50 @@
 			cb();
 		}
 		else {
-			mochaRunner.runTests(globby.sync(test.pattern), test.options);
-			cb();
+			mochaRunner.runTests(globby.sync(test.pattern), test.options, cb);
 		}
 	}
 
-	function displayWebpackErrorMsg(err, stats) {
-		if (err) {
-			console.error(err.stack || err);
-		if (err.details) {
-			console.error(err.details);
-		}
-			return;
-		}
+	function startAndCaptureTestBrowsers(cb) {
+		var { test } = config.browser;
 
-		const info = stats.toJson();
-
-		if (stats.hasErrors()) {
-			console.error(info.errors);
+		if(!test) {
+			cb();
 		}
+		else {
+			var serverInstance = new KarmaServer(test.options, function(exitCode) {
+				console.log('Karma has exited with ' + exitCode);
+			});
 
-		if (stats.hasWarnings()) {
-			console.warn(info.warnings);
+			serverInstance.start();
+
+			serverInstance.on('listening', function (browser) {
+				console.log('CAPTURE THE REQUIRED BROWSERS...');
+			});
+
+			serverInstance.on('browser_register', function (browser) {
+				console.log(`${browser.name} was registered.`);
+				cb();
+			});
+		}
+	}
+
+	function runBrowserTests(cb) {
+		var { test } = config.browser;
+
+		if(!test) {
+			cb();
+		}
+		else {
+			KarmaRunner.run(test.options, function(exitCode) {
+				if(exitCode) {
+					cb(new Error('Browser Tests Failed'));
+				}
+				else {
+					cb();
+				}
+				
+			});
 		}
 	}
 
@@ -216,44 +238,6 @@
 				`${source}/*.js`,
 			`${deploy}`
 		);
-	}
-
-	function startAndCaptureTestBrowsers(cb) {
-		var { test } = config.browser;
-
-		if(!test) {
-			cb();
-		}
-		else {
-			var serverInstance = new KarmaServer(test.options, function(exitCode) {
-				console.log('Karma has exited with ' + exitCode);
-			});
-
-			serverInstance.start();
-
-			serverInstance.on('listening', function (browser) {
-				console.log('CAPTURE THE REQUIRED BROWSERS...');
-			});
-
-			serverInstance.on('browser_register', function (browser) {
-				console.log(`${browser.name} was registered.`);
-				cb();
-			});
-		}
-	}
-
-	function runBrowserTests(cb) {
-		var { test } = config.browser;
-
-		if(!test) {
-			cb();
-		}
-		else {
-			KarmaRunner.run(test.options, function(exitCode) {
-				console.log('Karma has exited with ' + exitCode);
-			});
-			cb();
-		}
 	}
 
 	function build(cb) {
