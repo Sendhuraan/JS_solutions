@@ -1,11 +1,11 @@
-(function() {
+import { assert } from 'chai';
 
-	var assert = require('chai').assert;
+(function() {
 
 	describe('Simple Test Suite', function() {
 
 		it('test for equality', function() {
-			assert.equal(3,3);
+			assert.equal(3,4);
 		});
 		
 	});

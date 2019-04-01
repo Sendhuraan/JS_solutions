@@ -154,6 +154,10 @@
 
 			var NODE_BUNDLE_OUTPUT_FILE = NODE_BUNDLE_OUTPUT_FILE__PARAM;
 
+			var NODE_MAIN_FILE = (function(param, inputDir) {
+				return `${inputDir}/${param}`;
+			})(NODE_BUNDLE_OUTPUT_FILE, DEPLOY_DIR);
+
 
 			var nodeBundleConfig = (function(config, entry, outputDir, outputFile) {
 
@@ -318,7 +322,7 @@
 				}
 			} : false,
 			run: {
-				dir: DEPLOY_DIR
+				dir: NODE_MAIN_FILE ? NODE_MAIN_FILE : DEPLOY_DIR
 			}
 		};
 		

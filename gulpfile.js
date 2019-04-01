@@ -4,7 +4,7 @@
 	var fs = require('fs');
 	var path = require('path');
 
-	const { src, series, parallel, watch } = require('gulp');
+	const { src, series, parallel, watch, dest } = require('gulp');
 	var program = require('commander');
 	const eslint = require('gulp-eslint');
 	var webpack = require('webpack');
@@ -17,10 +17,12 @@
 	program
 		.option('-d --dir <value>', 'Input folder name')
 		.option('-env --environment <value>', 'Build environment')
+		.option('--debug <value>', 'Build environment')
 		.parse(process.argv);
 
 	var DIRNAME = program.dir;
-	var envType = program.environment;
+	var ENV_TYPE = program.environment;
+	var DEBUG_PORT = Number(program.debug);
 
 	var commonConfigs = {
 		lintConfig: require('./build/config/eslint.config.js'),
@@ -58,7 +60,7 @@
 		}
 	})(DIRNAME);
 
-	var { config } = new SolutionConfig(DEFAULTS, sourceDir, commonConfigs, pageConfig.config, envType);
+	var { config } = new SolutionConfig(DEFAULTS, sourceDir, commonConfigs, pageConfig.config, ENV_TYPE);
 	
 	function printConfig(cb) {
 		console.log(JSON.stringify(config, null, 4));
@@ -79,8 +81,6 @@
 
 			cb();
 		}
-		
-		
 	}
 
 	function lintSourceFiles(cb) {
@@ -270,10 +270,37 @@
 
 	function runSolution(cb) {
 		var { dir } = config.run;
+		var solutionProcess;
 
-		child_process.fork(`${dir}`);
+		if(!DEBUG_PORT) {
+			solutionProcess = child_process.fork(`${dir}`);
+		}
+		else {
+			solutionProcess = child_process.fork(`${dir}`, [], {
+				execArgv: [`--inspect-brk=${DEBUG_PORT}`]
+			});
+			console.log(`Open chrome://inspect. If no target was found, click configure and add localhost:${DEBUG_PORT}`);
+		}
+
+		solutionProcess.on('exit', function() {
+			cb();
+		});
+
+	}
+
+	function transformFiles(cb) {
+		var { test } = config.node;
+		var { dir } = config.run;
+
+		var { transpileFiles } = require('./build/utilities/transpile-runner');
+		var { browser } = require('./build/config/babel.config.js');
+
+		return src(test.pattern)
+		.pipe(transpileFiles(browser))
+		.pipe(dest(`${dir}/output`));
 
 		cb();
+		
 	}
 
 	const lint = parallel(lintGlobalFiles, lintSourceFiles);
@@ -287,6 +314,7 @@
 	exports.build = build;
 	exports.copyServerFiles = copyServerFiles;
 	exports.runSolution = runSolution;
+	exports.transformFiles = transformFiles;
 
 	exports.printConfig = printConfig;
 

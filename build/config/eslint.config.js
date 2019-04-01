@@ -41,7 +41,7 @@
 				'no-global-assign': ERROR,
 				'no-implicit-globals': ERROR,
 				'no-implied-eval': ERROR,
-				'no-invalid-this': ERROR,
+				// 'no-invalid-this': ERROR,
 				'no-iterator': ERROR,
 				'no-loop-func': ERROR,
 				'no-octal': ERROR,

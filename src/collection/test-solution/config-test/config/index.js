@@ -4,10 +4,13 @@
 		node: {
 			// remove dir to set source dir.
 			dir: 'server',
-			test: {
-				pattern: ['**/*_test.js']
+			test: false,
+			bundle: {
+				entry: 'index.js',
+				output: {
+					file: 'server.js'
+				}
 			},
-			bundle: false,
 			server: {
 				render: false,
 				serveDir: 'client',
