@@ -1,16 +1,13 @@
 (function() {
 
+	var dependencies = require('./dependencies.json').dependencies;
+
 	var config = {
 		node: {
 			// remove dir to set source dir.
 			dir: 'server',
 			test: false,
-			bundle: {
-				entry: 'index.js',
-				output: {
-					file: 'server.js'
-				}
-			},
+			bundle: false,
 			server: {
 				render: false,
 				serveDir: 'client',
@@ -50,7 +47,8 @@
 	};
 
 	var publicAPI = {
-		config
+		config,
+		dependencies
 	};
 
 	module.exports = publicAPI;

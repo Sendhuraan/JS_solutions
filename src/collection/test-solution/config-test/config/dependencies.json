@@ -1,0 +1,8 @@
+{
+	"dependencies": [
+		"react",
+		"react-dom",
+		"finalhandler",
+		"serve-static"
+	]
+}

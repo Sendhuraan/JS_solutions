@@ -9,7 +9,7 @@
 	var HtmlWebpackPlugin = require('html-webpack-plugin');
 	var deepMerge = require('deepmerge');
 
-	function SolutionConfig(DEFAULTS, solutionDir, commonConfigs, solutionConfig, envType) {
+	function SolutionConfig(DEFAULTS, solutionDir, commonConfigs, solutionConfig, solutionDeps, envType) {
 
 		var {
 			DEFAULT_FOLDER_STRING,
@@ -25,6 +25,8 @@
 			bundleConfig
 
 		} = commonConfigs;
+
+		console.log(solutionDeps);
 
 		var isNode = solutionConfig.node;
 		var isBrowser = solutionConfig.browser;
@@ -273,10 +275,16 @@
 					options: lintConfig.es5Options
 				},
 				source: {
-					pattern: [
+					pattern: isNodeServer ?
+					[
 						`${SOURCE_DIR}/**/*.js`,
 						`${SOURCE_DIR}/**/*.jsx`,
 						`!${DEPLOY_DIR}/**/*.js`
+					]
+					:
+					[
+						`${SOURCE_DIR}/**/*.js`,
+						`${SOURCE_DIR}/**/*.jsx`
 					],
 					options: lintConfig.es6Options
 				}

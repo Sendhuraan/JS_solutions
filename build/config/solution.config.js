@@ -2,6 +2,8 @@
 
 (function() {
 
+	var npmDependencies = JSON.parse(require('./dependencies.json')).dependencies;
+
 	var config = {
 		node: {
 			// remove dir to set source dir.
@@ -88,7 +90,8 @@
 	};
 
 	var publicAPI = {
-		config
+		config,
+		npmDependencies
 	};
 
 	module.exports = publicAPI;

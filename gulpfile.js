@@ -60,7 +60,7 @@
 		}
 	})(DIRNAME);
 
-	var { config } = new SolutionConfig(DEFAULTS, sourceDir, commonConfigs, pageConfig.config, ENV_TYPE);
+	var { config } = new SolutionConfig(DEFAULTS, sourceDir, commonConfigs, pageConfig.config, pageConfig.dependencies, ENV_TYPE);
 	
 	function printConfig(cb) {
 		console.log(JSON.stringify(config, null, 4));
