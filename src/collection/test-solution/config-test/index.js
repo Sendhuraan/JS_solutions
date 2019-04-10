@@ -8,7 +8,7 @@
 	const Server = require('./server/server.js');
 
 	try {
-		const configEnv = '/development.json';
+		const configEnv = '/env.json';
 		const configPath = path.join(__dirname, configEnv);
 
 		const serverConfig = JSON.parse(await readFile(configPath));

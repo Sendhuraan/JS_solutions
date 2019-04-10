@@ -12,14 +12,28 @@
 				render: false,
 				serveDir: 'client',
 				development: {
-					host: 'localhost',
 					port: 3000
 				},
-				stage: false,
-				production: false
+				stage: {
+					port: '/Server/Stage/Port'
+				}
 			},
-			db: false,
-			deploy: 'deploy'
+			db: {
+				protocol: 'mongodb://',
+				development: {
+					username: 'local',
+					password: 'pass',
+					port: 27017,
+					dbName: 'mongodb-cookbook-examples_01_inserting-records_users'
+				},
+				stage: {
+					username: '/DB/Mongo/Stage/Username',
+					password: '/DB/Mongo/Stage/Password',
+					port: '/DB/Mongo/Stage/Port',
+					dbName: 'mongodb-cookbook-examples_01_inserting-records_users'
+				}
+			},
+			outputDir: 'deploy'
 		},
 		browser: {
 			// remove dir to set source dir.
@@ -41,8 +55,18 @@
 					file: 'index.js',
 					data: 'index.data.json'
 				}
-				
 			}
+		},
+		deploy: {
+			cloudService: 'aws',
+			environmentTags: ['server', 'stage'],
+			getParameters: [
+				'node.server.stage.port',
+				'node.db.stage.username',
+				'node.db.stage.password',
+				'node.db.stage.port'
+			],
+			includeDependencies: false
 		}
 	};
 

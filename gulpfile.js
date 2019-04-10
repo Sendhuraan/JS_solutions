@@ -227,16 +227,16 @@
 	}
 
 	function copyServerFiles() {
-		var { source, node, deploy, serve } = config.build.dirs;
+		var { source, node, output, serve } = config.build.dirs;
 		
-		shell.rm('-rf', `${deploy}/*.js`);
-		shell.mkdir('-p', deploy);
+		shell.rm('-rf', `${output}/*.js`);
+		shell.mkdir('-p', output);
 		shell.mkdir('-p', serve);
 
 		shell.cp('-R',
 				`${node}`,
 				`${source}/*.js`,
-			`${deploy}`
+			`${output}`
 		);
 	}
 
@@ -249,18 +249,18 @@
 		}
 		else {
 			var { envs } = config.build;
-			var { deploy } = config.build.dirs;
+			var { output } = config.build.dirs;
 			var { bundle } = config.node;
 
 			if(!bundle) {
 				copyServerFiles();
 			}
 
-			shell.rm('-rf', `${deploy}/*.json`);
+			shell.rm('-rf', `${output}/*.json`);
 
 			for(var key in envs) {
 				if(envs[key]) {
-					fs.writeFileSync(`${deploy}/${key}.json`, JSON.stringify(envs[key], null, 4));
+					fs.writeFileSync(`${output}/env.json`, JSON.stringify(envs[key], null, 4));
 				}
 			}
 

@@ -77,26 +77,21 @@
 				ENV_DEVELOPMENT = true;
 		}
 
-		var DEPLOY_DIR__PARAM = solutionConfig.node.deploy;
-		var DEPLOY_DIR = (function(param, inputDir) {
+		var OUTPUT_DIR__PARAM = solutionConfig.node.outputDir;
+		var OUTPUT_DIR = (function(param, inputDir) {
 			if(param) {
 				return `${inputDir}/${param}`;
 			}
 			else {
 				return `${inputDir}`;
 			}
-		})(DEPLOY_DIR__PARAM, SOURCE_DIR);
+		})(OUTPUT_DIR__PARAM, SOURCE_DIR);
 		
 		if(isNodeServer) {
 
 			var NODE_SERVER_DEVELOPMENT_PORT = solutionConfig.node.server.development.port;
 			var NODE_SERVER_STAGE_PORT = solutionConfig.node.server.stage.port;
 			var NODE_SERVER_PRODUCTION_PORT = solutionConfig.node.server.production.port;
-
-			var NODE_SERVER_DEVELOPMENT_HOST = solutionConfig.node.server.development.host;
-			var NODE_SERVER_STAGE_HOST = solutionConfig.node.server.stage.host;
-			var NODE_SERVER_PRODUCTION_HOST = solutionConfig.node.server.production.host;
-
 			var NODE_SERVER_RENDER = solutionConfig.node.server.render;
 		}
 
@@ -152,13 +147,13 @@
 				return `${inputDir}/${param}`;
 			})(NODE_BUNDLE_ENTRY__PARAM, SOURCE_DIR);
 
-			var NODE_BUNDLE_OUTPUT_DIR = DEPLOY_DIR;
+			var NODE_BUNDLE_OUTPUT_DIR = OUTPUT_DIR;
 
 			var NODE_BUNDLE_OUTPUT_FILE = NODE_BUNDLE_OUTPUT_FILE__PARAM;
 
 			var NODE_MAIN_FILE = (function(param, inputDir) {
 				return `${inputDir}/${param}`;
-			})(NODE_BUNDLE_OUTPUT_FILE, DEPLOY_DIR);
+			})(NODE_BUNDLE_OUTPUT_FILE, OUTPUT_DIR);
 
 
 			var nodeBundleConfig = (function(config, entry, outputDir, outputFile) {
@@ -190,7 +185,7 @@
 
 			var BROWSER_BUNDLE_OUTPUT_DIR = (function(param, inputDir) {
 				return `${inputDir}/${param}`;
-			})(BROWSER_BUNDLE_OUTPUT_DIR__PARAM, DEPLOY_DIR);
+			})(BROWSER_BUNDLE_OUTPUT_DIR__PARAM, OUTPUT_DIR);
 
 			var BROWSER_BUNDLE_OUTPUT_FILE = BROWSER_BUNDLE_OUTPUT_FILE__PARAM;
 
@@ -275,11 +270,11 @@
 					options: lintConfig.es5Options
 				},
 				source: {
-					pattern: isNodeServer ?
+					pattern: OUTPUT_DIR__PARAM ?
 					[
 						`${SOURCE_DIR}/**/*.js`,
 						`${SOURCE_DIR}/**/*.jsx`,
-						`!${DEPLOY_DIR}/**/*.js`
+						`!${OUTPUT_DIR}/**/*.js`
 					]
 					:
 					[
@@ -308,29 +303,40 @@
 					source: SOURCE_DIR ? SOURCE_DIR : false,
 					node: NODE_DIR ? NODE_DIR : false,
 					browser: BROWSER_DIR ? BROWSER_DIR : false,
-					deploy: NODE_BUNDLE_OUTPUT_DIR ? NODE_BUNDLE_OUTPUT_DIR : DEPLOY_DIR,
+					output: NODE_BUNDLE_OUTPUT_DIR ? NODE_BUNDLE_OUTPUT_DIR : OUTPUT_DIR,
 					serve: BROWSER_BUNDLE_OUTPUT_DIR ? BROWSER_BUNDLE_OUTPUT_DIR : false
 				},
 				envs: {
 					development: ENV_DEVELOPMENT ? {
-						host: NODE_SERVER_DEVELOPMENT_HOST ? NODE_SERVER_DEVELOPMENT_HOST : false,
-						port: NODE_SERVER_DEVELOPMENT_PORT ? NODE_SERVER_DEVELOPMENT_PORT : false,
-						serveDir: NODE_SERVER_SERVEDIR ? NODE_SERVER_SERVEDIR : false
+						server: isNodeServer ? {
+							host: 'localhost',
+							port: NODE_SERVER_DEVELOPMENT_PORT ? NODE_SERVER_DEVELOPMENT_PORT : false,
+							serveDir: NODE_SERVER_SERVEDIR ? NODE_SERVER_SERVEDIR : false
+						} : false,
+						db: isNodeDB ? {
+							host: 'localhost',
+							connectionString: ''
+						} : false
 					} : false,
 					stage: ENV_STAGE ? {
-						host: NODE_SERVER_STAGE_HOST ? NODE_SERVER_STAGE_HOST : false,
-						port: NODE_SERVER_STAGE_PORT ? NODE_SERVER_STAGE_PORT : false,
-						serveDir: NODE_SERVER_SERVEDIR ? NODE_SERVER_SERVEDIR : false
+						server: isNodeServer ? {
+							host: '',
+							port: NODE_SERVER_DEVELOPMENT_PORT ? NODE_SERVER_DEVELOPMENT_PORT : false,
+							serveDir: NODE_SERVER_SERVEDIR ? NODE_SERVER_SERVEDIR : false
+						} : false,
+						db: isNodeDB ? {
+							host: '',
+							connectionString: ''
+						} : false
 					} : false,
 					production: ENV_PRODUCTION ? {
-						host: NODE_SERVER_PRODUCTION_HOST ? NODE_SERVER_PRODUCTION_HOST : false,
 						port: NODE_SERVER_PRODUCTION_PORT ? NODE_SERVER_PRODUCTION_PORT : false,
 						serveDir: NODE_SERVER_SERVEDIR ? NODE_SERVER_SERVEDIR : false
 					} : false
 				}
 			} : false,
 			run: {
-				dir: NODE_MAIN_FILE ? NODE_MAIN_FILE : DEPLOY_DIR
+				dir: NODE_MAIN_FILE ? NODE_MAIN_FILE : OUTPUT_DIR
 			}
 		};
 		
