@@ -11,10 +11,10 @@
 		const configEnv = '/env.json';
 		const configPath = path.join(__dirname, configEnv);
 
-		const serverConfig = JSON.parse(await readFile(configPath));
+		const appConfig = JSON.parse(await readFile(configPath));
 
-		const PORT = serverConfig.port;
-		const SERVE_DIR = serverConfig.serveDir;
+		const PORT = appConfig.server.port;
+		const SERVE_DIR = appConfig.server.serveDir;
 		const CONTENT_DIR = path.join(__dirname, SERVE_DIR);
 
 		const server = new Server();

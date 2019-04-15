@@ -1,10 +1,6 @@
 (function() {
 
-	var solution = require('./solution').solution;
-	var dependencies = require('./dependencies').dependencies;
-	var environments = require('./environments').environments;
-
-	var config = {
+	var solution = {
 		node: {
 			// remove dir to set source dir.
 			dir: 'server',
@@ -39,9 +35,7 @@
 	};
 
 	var publicAPI = {
-		solution,
-		dependencies,
-		environments
+		solution
 	};
 
 	module.exports = publicAPI;

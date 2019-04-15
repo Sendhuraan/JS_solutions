@@ -9,7 +9,7 @@
 	var HtmlWebpackPlugin = require('html-webpack-plugin');
 	var deepMerge = require('deepmerge');
 
-	function SolutionConfig(DEFAULTS, solutionDir, commonConfigs, solutionConfig, solutionDeps, envType) {
+	function SolutionConfig(DEFAULTS, solutionDir, commonConfigs, solutionConfig, solutionDependencies, solutionEnvironments) {
 
 		var {
 			DEFAULT_FOLDER_STRING,
@@ -26,8 +26,6 @@
 
 		} = commonConfigs;
 
-		console.log(solutionDeps);
-
 		var isNode = solutionConfig.node;
 		var isBrowser = solutionConfig.browser;
 
@@ -39,6 +37,8 @@
 
 		var isNodeServer = solutionConfig.node.server;
 		var isNodeDB = solutionConfig.node.db;
+
+		var isDeploy = solutionEnvironments.cloud.env.stage.enabled;
 
 		var SOURCE_DIR = `${DEFAULT_FOLDER_STRING}/${solutionDir}`;
 
@@ -63,20 +63,6 @@
 			}
 		})(BROWSER_DIR__PARAM, SOURCE_DIR);
 
-		switch(envType) {
-			case 'development':
-				var ENV_DEVELOPMENT = true;
-				break;
-			case 'stage':
-				var ENV_STAGE = true;
-				break;
-			case 'production':
-				var ENV_PRODUCTION = true;
-				break;
-			default:
-				ENV_DEVELOPMENT = true;
-		}
-
 		var OUTPUT_DIR__PARAM = solutionConfig.node.outputDir;
 		var OUTPUT_DIR = (function(param, inputDir) {
 			if(param) {
@@ -89,9 +75,9 @@
 		
 		if(isNodeServer) {
 
-			var NODE_SERVER_DEVELOPMENT_PORT = solutionConfig.node.server.development.port;
-			var NODE_SERVER_STAGE_PORT = solutionConfig.node.server.stage.port;
-			var NODE_SERVER_PRODUCTION_PORT = solutionConfig.node.server.production.port;
+			var NODE_SERVER_DEVELOPMENT_PORT = solutionEnvironments.workstation.env.development.port;
+			//var NODE_SERVER_STAGE_PORT = solutionConfig.node.server.stage.port;
+			//var NODE_SERVER_PRODUCTION_PORT = solutionConfig.node.server.production.port;
 			var NODE_SERVER_RENDER = solutionConfig.node.server.render;
 		}
 
@@ -262,6 +248,28 @@
 			var NODE_SERVER_SERVEDIR = BROWSER_BUNDLE_OUTPUT_DIR__PARAM;
 		}
 
+		if(isDeploy) {
+
+			var appPackages = solutionDependencies;
+			var globalAppConfig = require('../../package.json');
+
+			var appConfig = (function(config, name, listings) {
+
+				var dependenciesObj = {};
+
+				listings.map(function(listing) {
+					dependenciesObj[listing] = config['dependencies'][listing];
+				});
+
+				delete config.devDependencies;
+				config.dependencies = dependenciesObj;
+				config.name = name;
+				
+				return config;
+
+			})(globalAppConfig, solutionDir, appPackages);
+		}
+
 		this.config = {
 
 			lint: {
@@ -337,7 +345,10 @@
 			} : false,
 			run: {
 				dir: NODE_MAIN_FILE ? NODE_MAIN_FILE : OUTPUT_DIR
-			}
+			},
+			deploy: isDeploy ? {
+				appConfig: appConfig ? appConfig : false
+			} : false
 		};
 		
 	}
