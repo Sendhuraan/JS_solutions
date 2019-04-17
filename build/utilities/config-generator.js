@@ -13,6 +13,7 @@
 
 		var {
 			DEFAULT_FOLDER_STRING,
+			DEFAULT_DEV_MACHINE_NAME,
 			DEFAULT_LINT__GLOBAL
 
 		} = DEFAULTS;
@@ -38,7 +39,7 @@
 		var isNodeServer = solutionConfig.node.server;
 		var isNodeDB = solutionConfig.node.db;
 
-		var isDeploy = solutionEnvironments.cloud.env.stage.enabled;
+		var isCloudDeploy = solutionEnvironments.cloud.enabled;
 
 		var SOURCE_DIR = `${DEFAULT_FOLDER_STRING}/${solutionDir}`;
 
@@ -64,21 +65,31 @@
 		})(BROWSER_DIR__PARAM, SOURCE_DIR);
 
 		var OUTPUT_DIR__PARAM = solutionConfig.node.outputDir;
-		var OUTPUT_DIR = (function(param, inputDir) {
+		var OUTPUT_DIR = (function(param, inputDir, destDir) {
 			if(param) {
-				return `${inputDir}/${param}`;
+				return `${inputDir}/${param}/${destDir}`;
 			}
 			else {
 				return `${inputDir}`;
 			}
-		})(OUTPUT_DIR__PARAM, SOURCE_DIR);
+		})(OUTPUT_DIR__PARAM, SOURCE_DIR, DEFAULT_DEV_MACHINE_NAME);
 		
 		if(isNodeServer) {
+			var NODE_SERVER_SOLUTION_PARAMS = solutionConfig.node.server;
+			var NODE_SERVER_RENDER = NODE_SERVER_SOLUTION_PARAMS.render;
+		}
 
-			var NODE_SERVER_DEVELOPMENT_PORT = solutionEnvironments.workstation.env.development.port;
-			//var NODE_SERVER_STAGE_PORT = solutionConfig.node.server.stage.port;
-			//var NODE_SERVER_PRODUCTION_PORT = solutionConfig.node.server.production.port;
-			var NODE_SERVER_RENDER = solutionConfig.node.server.render;
+		if(isNodeDB) {
+
+			var NODE_DB_ENV_PARAMS = solutionEnvironments.workstation.instance.parameters.db;
+			var NODE_DB_SOLUTION_PARAMS = solutionConfig.node.db;
+
+			var NODE_DB_PARAMS = (function(envParams, solutionParams) {
+				return {
+					connectionString: `${envParams.protocol}${envParams.username}:${envParams.password}@localhost:${envParams.port}/${solutionParams.name}`
+				};
+			})(NODE_DB_ENV_PARAMS, NODE_DB_SOLUTION_PARAMS);
+
 		}
 
 		if(isNodeTest) {
@@ -150,8 +161,8 @@
 				newConfig.output.path = path.resolve(outputDir);
 				newConfig.output.filename = outputFile;
 
-				if(ENV_PRODUCTION) {
-					newConfig.mode = 'production';
+				if(isCloudDeploy) {
+					newConfig.mode = solutionEnvironments.cloud.mode;
 				}
 
 				return newConfig;
@@ -228,8 +239,8 @@
 				newConfig.output.path = path.resolve(outputDir);
 				newConfig.output.filename = outputFile;
 
-				if(ENV_PRODUCTION) {
-					newConfig.mode = 'production';
+				if(isCloudDeploy) {
+					newConfig.mode = solutionEnvironments.cloud.mode;
 				}
 
 				if(!NODE_SERVER_RENDER) {
@@ -245,10 +256,21 @@
 		}
 
 		if(isNodeServer) {
-			var NODE_SERVER_SERVEDIR = BROWSER_BUNDLE_OUTPUT_DIR__PARAM;
+
+			var NODE_SERVER_ENV_PARAMS = solutionEnvironments.workstation.instance.parameters.server;
+			
+			
+			NODE_SERVER_ENV_PARAMS.serveDir = BROWSER_BUNDLE_OUTPUT_DIR__PARAM;
+
+			var NODE_SERVER_PARAMS = (function(envParams, solutionParams) {
+				return {
+					port: envParams.port,
+					serveDir: envParams.serveDir
+				};
+			})(NODE_SERVER_ENV_PARAMS, NODE_SERVER_SOLUTION_PARAMS);
 		}
 
-		if(isDeploy) {
+		if(isCloudDeploy) {
 
 			var appPackages = solutionDependencies;
 			var globalAppConfig = require('../../package.json');
@@ -314,39 +336,19 @@
 					output: NODE_BUNDLE_OUTPUT_DIR ? NODE_BUNDLE_OUTPUT_DIR : OUTPUT_DIR,
 					serve: BROWSER_BUNDLE_OUTPUT_DIR ? BROWSER_BUNDLE_OUTPUT_DIR : false
 				},
-				envs: {
-					development: ENV_DEVELOPMENT ? {
-						server: isNodeServer ? {
-							host: 'localhost',
-							port: NODE_SERVER_DEVELOPMENT_PORT ? NODE_SERVER_DEVELOPMENT_PORT : false,
-							serveDir: NODE_SERVER_SERVEDIR ? NODE_SERVER_SERVEDIR : false
-						} : false,
-						db: isNodeDB ? {
-							host: 'localhost',
-							connectionString: ''
-						} : false
-					} : false,
-					stage: ENV_STAGE ? {
-						server: isNodeServer ? {
-							host: '',
-							port: NODE_SERVER_DEVELOPMENT_PORT ? NODE_SERVER_DEVELOPMENT_PORT : false,
-							serveDir: NODE_SERVER_SERVEDIR ? NODE_SERVER_SERVEDIR : false
-						} : false,
-						db: isNodeDB ? {
-							host: '',
-							connectionString: ''
-						} : false
-					} : false,
-					production: ENV_PRODUCTION ? {
-						port: NODE_SERVER_PRODUCTION_PORT ? NODE_SERVER_PRODUCTION_PORT : false,
-						serveDir: NODE_SERVER_SERVEDIR ? NODE_SERVER_SERVEDIR : false
-					} : false
+				env: {
+					workstation: {
+						parameters: {
+							server: NODE_SERVER_PARAMS ? NODE_SERVER_PARAMS : false,
+							db: NODE_DB_PARAMS ? NODE_DB_PARAMS : false
+						}
+					}
 				}
 			} : false,
 			run: {
 				dir: NODE_MAIN_FILE ? NODE_MAIN_FILE : OUTPUT_DIR
 			},
-			deploy: isDeploy ? {
+			deploy: isCloudDeploy ? {
 				appConfig: appConfig ? appConfig : false
 			} : false
 		};

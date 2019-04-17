@@ -248,7 +248,7 @@
 			cb();
 		}
 		else {
-			var { envs } = config.build;
+			var { parameters } = config.build.env.workstation;
 			var { output } = config.build.dirs;
 			var { bundle } = config.node;
 
@@ -258,13 +258,14 @@
 
 			shell.rm('-rf', `${output}/*.json`);
 
-			for(var key in envs) {
-				if(envs[key]) {
-					fs.writeFileSync(`${output}/env.json`, JSON.stringify(envs[key], null, 4));
+			fs.appendFile(`${output}/env.json`, JSON.stringify(parameters, null, 4), function(err) {
+				if(err) {
+					throw err;
 				}
-			}
-
-			cb();
+				else {
+					cb();
+				}
+			});
 		}
 	}
 

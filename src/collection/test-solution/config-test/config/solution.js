@@ -7,10 +7,12 @@
 			test: false,
 			bundle: false,
 			server: {
-				render: false,
-				serveDir: 'client'
+				render: false
 			},
-			outputDir: 'deploy'
+			db: {
+				name: 'mongodb-cookbook-examples_01_inserting-records_users'
+			},
+			outputDir: 'output'
 		},
 		browser: {
 			// remove dir to set source dir.
@@ -19,7 +21,7 @@
 			bundle: {
 				entry: 'index.jsx',
 				output: {
-					dir: 'client',
+					dir: 'dist',
 					file: 'bundle.js'
 				}
 			},
