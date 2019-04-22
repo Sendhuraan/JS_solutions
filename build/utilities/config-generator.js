@@ -9,7 +9,7 @@
 	var HtmlWebpackPlugin = require('html-webpack-plugin');
 	var deepMerge = require('deepmerge');
 
-	function SolutionConfig(DEFAULTS, solutionDir, commonConfigs, solutionConfig, solutionDependencies, solutionEnvironments) {
+	function SolutionConfig(DEFAULTS, solutionDir, commonConfigs, solutionConfigOptions) {
 
 		var {
 			DEFAULT_FOLDER_STRING,
@@ -27,6 +27,11 @@
 
 		} = commonConfigs;
 
+		var solutionConfig = solutionConfigOptions.solution;
+		var solutionDependencies = solutionConfigOptions.dependencies;
+		var solutionEnvironments = solutionConfigOptions.environments;
+		var solutionMetadata = solutionConfigOptions.metadata;
+
 		var isNode = solutionConfig.node;
 		var isBrowser = solutionConfig.browser;
 
@@ -40,6 +45,8 @@
 		var isNodeDB = solutionConfig.node.db;
 
 		var isCloudDeploy = solutionEnvironments.cloud.enabled;
+
+		var isDependencies = solutionEnvironments.cloud.includeDependencies;
 
 		var SOURCE_DIR = `${DEFAULT_FOLDER_STRING}/${solutionDir}`;
 
@@ -64,15 +71,22 @@
 			}
 		})(BROWSER_DIR__PARAM, SOURCE_DIR);
 
-		var OUTPUT_DIR__PARAM = solutionConfig.node.outputDir;
-		var OUTPUT_DIR = (function(param, inputDir, destDir) {
-			if(param) {
-				return `${inputDir}/${param}/${destDir}`;
+		var OUTPUT_DIR__PARAM = solutionConfig.dirs.outputDir;
+		var OUTPUT_DIR__GROUP = (function(param, inputDir) {
+			return `${inputDir}/${param}`;
+		})(OUTPUT_DIR__PARAM, SOURCE_DIR);
+
+		var DEVELOPMENT_DIR__PARAM = solutionConfig.dirs.developmentDir;
+		var DEPLOY_DIR__PARAM = solutionConfig.dirs.deployDir;
+
+		var OUTPUT_DIR = (function(outputDir, inputDir, devDir, deployDir, cloud) {
+			if(!cloud) {
+				return `${inputDir}/${outputDir}/${devDir}`;
 			}
 			else {
-				return `${inputDir}`;
+				return `${inputDir}/${outputDir}/${deployDir}`;
 			}
-		})(OUTPUT_DIR__PARAM, SOURCE_DIR, DEFAULT_DEV_MACHINE_NAME);
+		})(OUTPUT_DIR__PARAM, SOURCE_DIR, DEVELOPMENT_DIR__PARAM, DEPLOY_DIR__PARAM, isCloudDeploy);
 		
 		if(isNodeServer) {
 			var NODE_SERVER_SOLUTION_PARAMS = solutionConfig.node.server;
@@ -272,10 +286,10 @@
 
 		if(isCloudDeploy) {
 
-			var appPackages = solutionDependencies;
-			var globalAppConfig = require('../../package.json');
+			var solutionPackages = solutionDependencies;
+			var globalSolutionConfig = require('../../package.json');
 
-			var appConfig = (function(config, name, listings) {
+			var solutionPkgConfig = (function(config, metadata, listings) {
 
 				var dependenciesObj = {};
 
@@ -285,11 +299,11 @@
 
 				delete config.devDependencies;
 				config.dependencies = dependenciesObj;
-				config.name = name;
+				config.name = metadata.name;
 				
 				return config;
 
-			})(globalAppConfig, solutionDir, appPackages);
+			})(globalSolutionConfig, solutionMetadata, solutionPackages);
 		}
 
 		this.config = {
@@ -304,7 +318,7 @@
 					[
 						`${SOURCE_DIR}/**/*.js`,
 						`${SOURCE_DIR}/**/*.jsx`,
-						`!${OUTPUT_DIR}/**/*.js`
+						`!${OUTPUT_DIR__GROUP}/**/*.js`
 					]
 					:
 					[
@@ -337,19 +351,22 @@
 					serve: BROWSER_BUNDLE_OUTPUT_DIR ? BROWSER_BUNDLE_OUTPUT_DIR : false
 				},
 				env: {
-					workstation: {
+					workstation: !isCloudDeploy ? {
 						parameters: {
 							server: NODE_SERVER_PARAMS ? NODE_SERVER_PARAMS : false,
 							db: NODE_DB_PARAMS ? NODE_DB_PARAMS : false
 						}
-					}
+					} : false
 				}
 			} : false,
-			run: {
+			run: !isCloudDeploy ? {
 				dir: NODE_MAIN_FILE ? NODE_MAIN_FILE : OUTPUT_DIR
-			},
+			} : false,
 			deploy: isCloudDeploy ? {
-				appConfig: appConfig ? appConfig : false
+				prepare: {
+					includeDependencies: isDependencies ? isDependencies : false,
+					solutionPkgConfig: solutionPkgConfig ? solutionPkgConfig : false
+				}
 			} : false
 		};
 		

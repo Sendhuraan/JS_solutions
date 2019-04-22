@@ -5,7 +5,7 @@
 	"main": "index.js",
 	"scripts": {
 		"start": "pm2 start index.js",
-		"stop": "pm2 stop --all"
+		"stop": "pm2 stop all"
 	},
 	"author": "Sendhuraan NKK",
 	"license": "ISC",

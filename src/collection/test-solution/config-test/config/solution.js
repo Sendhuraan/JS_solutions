@@ -11,8 +11,7 @@
 			},
 			db: {
 				name: 'mongodb-cookbook-examples_01_inserting-records_users'
-			},
-			outputDir: 'output'
+			}
 		},
 		browser: {
 			// remove dir to set source dir.
@@ -33,6 +32,11 @@
 					data: 'index.data.json'
 				}
 			}
+		},
+		dirs: {
+			outputDir: 'output',
+			developmentDir: 'workstation',
+			deployDir: 'deploy'
 		}
 	};
 

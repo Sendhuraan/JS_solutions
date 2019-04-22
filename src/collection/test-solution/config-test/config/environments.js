@@ -20,8 +20,8 @@
 			}
 		},
 		cloud: {
-			enabled: false,
-			includeDependencies: true,
+			enabled: true,
+			includeDependencies: false,
 			mode: 'production',
 			instances: [
 				{

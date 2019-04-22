@@ -35,7 +35,7 @@
 	var { SolutionConfig } = require('./build/utilities/config-generator');
 	var DEFAULTS = require('./build/config/constants').defaults;
 
-	var pageConfig = (function(dir) {
+	var pageConfigOptions = (function(dir) {
 		var path = `./src/collection/${dir}/config`;
 
 		if(fs.existsSync(path)) {
@@ -60,7 +60,7 @@
 		}
 	})(DIRNAME);
 
-	var { config } = new SolutionConfig(DEFAULTS, sourceDir, commonConfigs, pageConfig.solution, pageConfig.dependencies, pageConfig.environments);
+	var { config } = new SolutionConfig(DEFAULTS, sourceDir, commonConfigs, pageConfigOptions);
 	
 	function printConfig(cb) {
 		console.log(JSON.stringify(config, null, 4));
@@ -154,6 +154,14 @@
 		}
 	}
 
+	function cleanOutputDir(cb) {
+		var { output } = config.build.dirs;
+
+		shell.rm('-rf', `${output}/*`);
+
+		cb();
+	}
+
 	function bundleNode(cb) {
 
 		var isBundle_node = config.node.bundle;
@@ -200,6 +208,7 @@
 		else {
 			let { path } = config.browser.bundle.output;
 			let { bundle } = config.browser;
+
 			shell.rm('-rf', path);
 
 			webpack(bundle, function(err, stats) {
@@ -243,6 +252,7 @@
 	function build(cb) {
 
 		var { build } = config;
+		var { deploy } = config;
 
 		if(!build) {
 			cb();
@@ -256,16 +266,20 @@
 				copyServerFiles();
 			}
 
-			shell.rm('-rf', `${output}/*.json`);
+			if(!deploy) {
+				shell.rm('-rf', `${output}/*.json`);
 
-			fs.appendFile(`${output}/env.json`, JSON.stringify(parameters, null, 4), function(err) {
-				if(err) {
-					throw err;
-				}
-				else {
-					cb();
-				}
-			});
+				fs.writeFile(`${output}/env.json`, JSON.stringify(parameters, null, 4), function(err) {
+					if(err) {
+						throw err;
+					}
+					else {
+						cb();
+					}
+				});
+			}
+
+			cb();
 		}
 	}
 
@@ -286,7 +300,78 @@
 		solutionProcess.on('exit', function() {
 			cb();
 		});
+	}
 
+
+
+	function prepareDeployment(cb) {
+		var { solutionPkgConfig } = config.deploy.prepare;
+		var { includeDependencies } = config.deploy.prepare;
+		var { output } = config.build.dirs;
+
+		shell.cp('package-lock.json', `${output}`);
+		fs.writeFileSync(`${output}/package.json`, JSON.stringify(solutionPkgConfig, null, 4));
+
+		if(includeDependencies) {
+			shell.cp('-rf', 'node_modules/', `${output}`);
+			child_process.execSync('npm prune --production', {
+				cwd: path.resolve(`${output}`)
+			});
+		}
+
+		child_process.execSync('rm -rf *', {
+			cwd: path.resolve('../JS_deploy')
+		});
+
+		child_process.execSync('rm -rf .git', {
+			cwd: path.resolve('../JS_deploy')
+		});
+
+		child_process.execSync('git init', {
+			cwd: path.resolve('../JS_deploy')
+		});
+
+		child_process.execSync('git remote add origin git@github.com:Sendhuraan/JS_deploy.git', {
+			cwd: path.resolve('../JS_deploy')
+		});
+
+		shell.cp('-rf', `${output}/*`, '../JS_deploy');
+
+		child_process.execSync('git add .', {
+			cwd: path.resolve('../JS_deploy')
+		});
+
+		child_process.execSync('git commit -m "Solution Deployment"', {
+			cwd: path.resolve('../JS_deploy')
+		});
+
+		child_process.execSync('git push origin master -f', {
+			cwd: path.resolve('../JS_deploy')
+		});
+
+		cb();
+	}
+
+	function validateSolution(cb) {
+		var { deploy } = config;
+
+		if(deploy) {
+			cb(new Error('DEPLOYMENT CONFIGURED FOR DEVELOPMENT. DISABLE CLOUD CONFIG TO PROCEED'));
+		}
+		else {
+			cb();
+		}
+	}
+
+	function validateDeployment(cb) {
+		var { deploy } = config;
+
+		if(!deploy) {
+			cb(new Error('DEPLOYMENT NOT CONFIGURED'));
+		}
+		else {
+			cb();
+		}
 	}
 
 	function transformFiles(cb) {
@@ -306,6 +391,8 @@
 
 	const lint = parallel(lintGlobalFiles, lintSourceFiles);
 	const bundle = series(bundleNode, bundleBrowser);
+	const prepareSolution = series(lint, runNodeTests, runBrowserTests, cleanOutputDir, bundle, build);
+	const deploy = series(validateDeployment, prepareSolution, prepareDeployment);
 
 	exports.lint = lint;
 	exports.runNodeTests = runNodeTests;
@@ -315,11 +402,12 @@
 	exports.build = build;
 	exports.copyServerFiles = copyServerFiles;
 	exports.runSolution = runSolution;
+	exports.deploy = deploy;
 	exports.transformFiles = transformFiles;
 
 	exports.printConfig = printConfig;
 
 	exports.preqs = series(startAndCaptureTestBrowsers);
-	exports.default = series(lint, runNodeTests, runBrowserTests, bundle, build, runSolution);
+	exports.default = series(validateSolution, prepareSolution, runSolution);
 	
 })();
