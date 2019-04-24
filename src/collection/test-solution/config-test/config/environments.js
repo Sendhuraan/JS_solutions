@@ -22,6 +22,9 @@
 		cloud: {
 			enabled: true,
 			includeDependencies: false,
+			metadata: {
+				name: 'config-test'
+			},
 			mode: 'production',
 			instances: [
 				{

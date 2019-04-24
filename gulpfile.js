@@ -155,11 +155,17 @@
 	}
 
 	function cleanOutputDir(cb) {
-		var { output } = config.build.dirs;
+		var isBundle_node = config.node.bundle;
+		var isBundle_browser = config.browser.bundle;
 
-		shell.rm('-rf', `${output}/*`);
-
-		cb();
+		if(isBundle_node || isBundle_browser) {
+			var { output } = config.build.dirs;
+			shell.rm('-rf', `${output}/*`);
+			cb();
+		}
+		else {
+			cb();
+		}
 	}
 
 	function bundleNode(cb) {
@@ -278,8 +284,9 @@
 					}
 				});
 			}
-
-			cb();
+			else {
+				cb();
+			}
 		}
 	}
 

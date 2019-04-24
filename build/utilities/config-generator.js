@@ -30,7 +30,7 @@
 		var solutionConfig = solutionConfigOptions.solution;
 		var solutionDependencies = solutionConfigOptions.dependencies;
 		var solutionEnvironments = solutionConfigOptions.environments;
-		var solutionMetadata = solutionConfigOptions.metadata;
+		
 
 		var isNode = solutionConfig.node;
 		var isBrowser = solutionConfig.browser;
@@ -44,9 +44,11 @@
 		var isNodeServer = solutionConfig.node.server;
 		var isNodeDB = solutionConfig.node.db;
 
-		var isCloudDeploy = solutionEnvironments.cloud.enabled;
-
-		var isDependencies = solutionEnvironments.cloud.includeDependencies;
+		if(solutionEnvironments) {
+			var isCloudDeploy = solutionEnvironments.cloud.enabled;
+			var isDependencies = solutionEnvironments.cloud.includeDependencies;
+			var solutionMetadata = solutionEnvironments.cloud.metadata;
+		}
 
 		var SOURCE_DIR = `${DEFAULT_FOLDER_STRING}/${solutionDir}`;
 
@@ -80,13 +82,17 @@
 		var DEPLOY_DIR__PARAM = solutionConfig.dirs.deployDir;
 
 		var OUTPUT_DIR = (function(outputDir, inputDir, devDir, deployDir, cloud) {
-			if(!cloud) {
+			if(outputDir && devDir) {
 				return `${inputDir}/${outputDir}/${devDir}`;
 			}
-			else {
+			else if(outputDir && deployDir && cloud) {
 				return `${inputDir}/${outputDir}/${deployDir}`;
 			}
+			else {
+				return `${inputDir}`;
+			}
 		})(OUTPUT_DIR__PARAM, SOURCE_DIR, DEVELOPMENT_DIR__PARAM, DEPLOY_DIR__PARAM, isCloudDeploy);
+
 		
 		if(isNodeServer) {
 			var NODE_SERVER_SOLUTION_PARAMS = solutionConfig.node.server;
@@ -304,6 +310,16 @@
 				return config;
 
 			})(globalSolutionConfig, solutionMetadata, solutionPackages);
+
+			var getSSMParameters = (function(instances) {
+				instances.map(function(instance) {
+					for(var key in instance.parameters) {
+						for(var param in instance.parameters[key]) {
+							console.log(instance.parameters[key][param]);
+						}
+					}
+				})
+			})(solutionEnvironments.cloud.instances);
 		}
 
 		this.config = {

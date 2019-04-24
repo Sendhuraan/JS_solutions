@@ -1,14 +1,15 @@
 (function() {
 
-	var metadata = {
-		name: 'test'
+	var solution = {
+		node: true,
+		browser: false,
+		dirs: false
 	};
 
 	var publicAPI = {
-		metadata
+		solution
 	};
 
 	module.exports = publicAPI;
 	
 })();
-
