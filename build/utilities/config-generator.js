@@ -311,15 +311,74 @@
 
 			})(globalSolutionConfig, solutionMetadata, solutionPackages);
 
-			var getSSMParameters = (function(instances) {
-				instances.map(function(instance) {
-					for(var key in instance.parameters) {
-						for(var param in instance.parameters[key]) {
-							console.log(instance.parameters[key][param]);
-						}
+			var isCloudServer = solutionEnvironments.cloud.parameters.server;
+			var isCloudDB = solutionEnvironments.cloud.parameters.db;
+
+			var ssmParameterCache = (function(dir) {
+
+				var cacheFile = path.resolve(`${dir}/.tmp/aws.cache.json`);
+
+				if(fs.existsSync(cacheFile)) {
+					return require(cacheFile);
+				}
+				else {
+					return false;
+				}
+				
+			})(SOURCE_DIR);
+
+			function replaceWithSSM(parameter) {
+
+				var ssmTagPattern = /(ssm:)(\W\w+)/;
+
+				if(ssmTagPattern.test(parameter)) {
+					let ssmParameterName = parameter.replace(ssmTagPattern, '$2');
+					return ssmParameterCache[ssmParameterName];
+				}
+				else {
+					return parameter;
+				}
+			}
+
+			if(isCloudServer) {
+
+				var NODE_CLOUD_SERVER_ENV_PARAMS = solutionEnvironments.cloud.parameters.server;
+				
+				NODE_CLOUD_SERVER_ENV_PARAMS.serveDir = BROWSER_BUNDLE_OUTPUT_DIR__PARAM;
+
+				var NODE_CLOUD_SERVER_PARAMS = (function(envParams) {
+					let ssmResolvedParams = {};
+					
+					for(let param in envParams) {
+						ssmResolvedParams[param] = replaceWithSSM(envParams[param]);
 					}
-				})
-			})(solutionEnvironments.cloud.instances);
+
+					return {
+						port: ssmResolvedParams.port,
+						serveDir: ssmResolvedParams.serveDir
+					};
+				})(NODE_CLOUD_SERVER_ENV_PARAMS);
+			}
+
+			if(isCloudDB) {
+
+				var NODE_CLOUD_DB_ENV_PARAMS = solutionEnvironments.cloud.parameters.db;
+				var NODE_CLOUD_DB_SOLUTION_PARAMS = solutionConfig.node.db;
+
+				var NODE_CLOUD_DB_PARAMS = (function(envParams, solutionParams) {
+					let ssmResolvedParams = {};
+
+					for(let param in envParams) {
+						ssmResolvedParams[param] = replaceWithSSM(envParams[param]);
+					}
+
+					return {
+						connectionString: `${ssmResolvedParams.protocol}${ssmResolvedParams.username}:${ssmResolvedParams.password}@localhost:${ssmResolvedParams.port}/${solutionParams.name}`
+					};
+				})(NODE_CLOUD_DB_ENV_PARAMS, NODE_CLOUD_DB_SOLUTION_PARAMS);
+
+			}
+
 		}
 
 		this.config = {
@@ -382,7 +441,12 @@
 				prepare: {
 					includeDependencies: isDependencies ? isDependencies : false,
 					solutionPkgConfig: solutionPkgConfig ? solutionPkgConfig : false
+				},
+				parameters: {
+					server: NODE_CLOUD_SERVER_PARAMS ? NODE_CLOUD_SERVER_PARAMS : false,
+					db: NODE_CLOUD_DB_PARAMS ? NODE_CLOUD_DB_PARAMS : false
 				}
+
 			} : false
 		};
 		

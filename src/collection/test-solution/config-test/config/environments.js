@@ -26,13 +26,19 @@
 				name: 'config-test'
 			},
 			mode: 'production',
+			parameters: {
+				server: {
+					port: 'ssm:/Server/Stage/Port'
+				},
+				db: {
+					protocol: 'mongodb://',
+					username: 'ssm:/DB/Mongo/Stage/Username',
+					password: 'ssm:/DB/Mongo/Stage/Password',
+					port: 'ssm:/DB/Mongo/Stage/Port'
+				}
+			},
 			instances: [
 				{
-					parameters: {
-						server: {
-							port: 'ssm:/Server/Stage/Port'
-						}
-					},
 					config: {
 						type: 'aws',
 						tags: [
@@ -48,14 +54,6 @@
 					}
 				},
 				{
-					parameters: {
-						db: {
-							protocol: 'mongodb://',
-							username: 'ssm:/DB/Mongo/Stage/Username',
-							password: 'ssm:/DB/Mongo/Stage/Password',
-							port: 'ssm:/DB/Mongo/Stage/Port'
-						}
-					},
 					config: {
 						type: 'aws',
 						tags: [
