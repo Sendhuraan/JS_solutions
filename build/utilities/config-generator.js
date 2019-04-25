@@ -9,6 +9,19 @@
 	var HtmlWebpackPlugin = require('html-webpack-plugin');
 	var deepMerge = require('deepmerge');
 
+	function replaceWithSSM(parameter, cache) {
+
+		var ssmTagPattern = /(ssm:)(\W\w+)/;
+
+		if(ssmTagPattern.test(parameter)) {
+			let ssmParameterName = parameter.replace(ssmTagPattern, '$2');
+			return cache[ssmParameterName];
+		}
+		else {
+			return parameter;
+		}
+	}
+
 	function SolutionConfig(DEFAULTS, solutionDir, commonConfigs, solutionConfigOptions) {
 
 		var {
@@ -327,19 +340,6 @@
 				
 			})(SOURCE_DIR);
 
-			function replaceWithSSM(parameter) {
-
-				var ssmTagPattern = /(ssm:)(\W\w+)/;
-
-				if(ssmTagPattern.test(parameter)) {
-					let ssmParameterName = parameter.replace(ssmTagPattern, '$2');
-					return ssmParameterCache[ssmParameterName];
-				}
-				else {
-					return parameter;
-				}
-			}
-
 			if(isCloudServer) {
 
 				var NODE_CLOUD_SERVER_ENV_PARAMS = solutionEnvironments.cloud.parameters.server;
@@ -350,7 +350,7 @@
 					let ssmResolvedParams = {};
 					
 					for(let param in envParams) {
-						ssmResolvedParams[param] = replaceWithSSM(envParams[param]);
+						ssmResolvedParams[param] = replaceWithSSM(envParams[param], ssmParameterCache);
 					}
 
 					return {
@@ -369,7 +369,7 @@
 					let ssmResolvedParams = {};
 
 					for(let param in envParams) {
-						ssmResolvedParams[param] = replaceWithSSM(envParams[param]);
+						ssmResolvedParams[param] = replaceWithSSM(envParams[param], ssmParameterCache);
 					}
 
 					return {
