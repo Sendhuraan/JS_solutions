@@ -1,10 +1,21 @@
 (async function() {
 
-	var AWS = require('aws-sdk');
+	const inquirer = require('inquirer');
+	const AWS = require('aws-sdk');
 
 	AWS.config.update({
 		region: 'ap-south-1'
 	});
+
+	var interactions = [
+		{
+			type: 'input',
+			name: 'security_group_id',
+			message: 'Enter Security Group ID : '
+		}
+	];
+
+	const userInput = await inquirer.prompt(interactions);
 
 	var instanceParams = 
 	{
@@ -14,8 +25,11 @@
 		MinCount: 1,
 		MaxCount: 1,
 		SecurityGroupIds: [
-			'sg-0f441d0d4273d94d6'
+			`${userInput.security_group_id}`
 		],
+		IamInstanceProfile: {
+			Name: 'JS_solutions_admin'
+		},
 		TagSpecifications: [
 			{
 				ResourceType: 'instance',
@@ -37,12 +51,11 @@
 		apiVersion: '2016-11-15'
 	});
 
-	var ec2_instance = await ec2_service.runInstances(instanceParams).promise();
+	var ec2_instances = await ec2_service.runInstances(instanceParams).promise();
 
-	console.log('Instance Created');
-	ec2_instance.Instances.map(function(instance) {
-		console.log(instance);
-	})
+	ec2_instances.Instances.map(function(instance) {
+		console.log(`Instance (ID: ${instance.InstanceId}) Created`);
+	});
 	
 })();
 

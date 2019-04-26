@@ -39,8 +39,58 @@
 			},
 			instances: [
 				{
+					setup: {
+						securityGroup: {
+							metadata: {
+								Description: 'Security Group for JS_solutions Server',
+								GroupName: 'JS_solutions_server_securityGroup',
+							},
+							parameters: {
+								IpPermissions:[
+									{
+										IpProtocol: 'tcp',
+										FromPort: 3000,
+										ToPort: 3000,
+										IpRanges: [
+											{
+												'CidrIp':'0.0.0.0/0'
+											}
+										]
+									},
+									{
+										IpProtocol: 'tcp',
+										FromPort: 22,
+										ToPort: 22,
+										IpRanges: [
+											{
+												'CidrIp':'0.0.0.0/0'
+											}
+										]
+									}
+								]
+							}
+						},
+						compute: {
+							parameters: {
+								ImageId: 'ami-0889b8a448de4fc44', 
+								InstanceType: 't2.micro',
+								KeyName: 'Sendhuraan-key-pair-ap-mumbai',
+								MinCount: 1,
+								MaxCount: 1,
+								SecurityGroupIds: [],
+								TagSpecifications: [
+									{
+										ResourceType: 'instance',
+										Tags: []
+									}
+								]	
+							}
+						}
+
+					},
 					config: {
-						type: 'aws',
+						type: 'server',
+						service: 'aws',
 						tags: [
 							{
 								Key: 'Name',
@@ -54,8 +104,58 @@
 					}
 				},
 				{
+					setup: {
+						securityGroup: {
+							metadata: {
+								Description: 'Security Group for JS_solutions DB',
+								GroupName: 'JS_solutions_DB_securityGroup',
+							},
+							parameters: {
+								IpPermissions:[
+									{
+										IpProtocol: 'tcp',
+										FromPort: 8089,
+										ToPort: 8089,
+										IpRanges: [
+											{
+												'CidrIp':'0.0.0.0/0'
+											}
+										]
+									},
+									{
+										IpProtocol: 'tcp',
+										FromPort: 22,
+										ToPort: 22,
+										IpRanges: [
+											{
+												'CidrIp':'0.0.0.0/0'
+											}
+										]
+									}
+								]
+							}
+						},
+						compute: {
+							parameters: {
+								ImageId: 'ami-0889b8a448de4fc44', 
+								InstanceType: 't2.micro',
+								KeyName: 'Sendhuraan-key-pair-ap-mumbai',
+								MinCount: 1,
+								MaxCount: 1,
+								SecurityGroupIds: [],
+								TagSpecifications: [
+									{
+										ResourceType: 'instance',
+										Tags: []
+									}
+								]	
+							}
+						}
+
+					},
 					config: {
-						type: 'aws',
+						type: 'db',
+						service: 'aws',
 						tags: [
 							{
 								Key: 'Name',

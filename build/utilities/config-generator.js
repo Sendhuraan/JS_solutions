@@ -324,6 +324,8 @@
 
 			})(globalSolutionConfig, solutionMetadata, solutionPackages);
 
+			var cloudInstancesDetails = solutionEnvironments.cloud.instances;
+
 			var isCloudServer = solutionEnvironments.cloud.parameters.server;
 			var isCloudDB = solutionEnvironments.cloud.parameters.db;
 
@@ -438,6 +440,9 @@
 				dir: NODE_MAIN_FILE ? NODE_MAIN_FILE : OUTPUT_DIR
 			} : false,
 			deploy: isCloudDeploy ? {
+				preqs: {
+					instances: cloudInstancesDetails ? cloudInstancesDetails : false
+				},
 				prepare: {
 					includeDependencies: isDependencies ? isDependencies : false,
 					solutionPkgConfig: solutionPkgConfig ? solutionPkgConfig : false

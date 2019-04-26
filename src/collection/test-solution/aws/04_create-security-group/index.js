@@ -14,7 +14,7 @@
 
 	var paramsSecurityGroup = {
 		Description: 'Security Group for JS_solutions',
-		GroupName: 'JS_solutions_securityGroup',
+		GroupName: 'JS_solutions_security-group',
 		VpcId: describeVpcs_Response.Vpcs[0].VpcId
 	};
 

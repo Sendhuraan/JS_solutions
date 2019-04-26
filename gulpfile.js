@@ -381,6 +381,10 @@
 		}
 	}
 
+	function startCloudInstances(cb) {
+		
+	}
+
 	function transformFiles(cb) {
 		var { test } = config.node;
 		var { dir } = config.run;
@@ -414,7 +418,8 @@
 
 	exports.printConfig = printConfig;
 
-	exports.preqs = series(startAndCaptureTestBrowsers);
+	exports.developmentPreqs = series(startAndCaptureTestBrowsers);
+	exports.deploymentPreqs = series(startCloudInstances);
 	exports.default = series(validateSolution, prepareSolution, runSolution);
 	
 })();

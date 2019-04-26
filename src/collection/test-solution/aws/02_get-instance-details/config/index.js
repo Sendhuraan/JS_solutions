@@ -1,14 +1,12 @@
 (function() {
 
-	var config = {
-		node: true,
-		browser: false
-	};
+	var solution = require('./solution').solution;
 
 	var publicAPI = {
-		config
+		solution
 	};
 
 	module.exports = publicAPI;
 	
 })();
+
