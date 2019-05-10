@@ -17,8 +17,7 @@
 
 	const userInput = await inquirer.prompt(interactions);
 
-	var instanceParams = 
-	{
+	var instanceParams = {
 		ImageId: 'ami-0889b8a448de4fc44', 
 		InstanceType: 't2.micro',
 		KeyName: 'Sendhuraan-key-pair-ap-mumbai',

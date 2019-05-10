@@ -448,8 +448,10 @@
 					solutionPkgConfig: solutionPkgConfig ? solutionPkgConfig : false
 				},
 				parameters: {
-					server: NODE_CLOUD_SERVER_PARAMS ? NODE_CLOUD_SERVER_PARAMS : false,
-					db: NODE_CLOUD_DB_PARAMS ? NODE_CLOUD_DB_PARAMS : false
+					env: {
+						server: NODE_CLOUD_SERVER_PARAMS ? NODE_CLOUD_SERVER_PARAMS : false,
+						db: NODE_CLOUD_DB_PARAMS ? NODE_CLOUD_DB_PARAMS : false	
+					}
 				}
 
 			} : false

@@ -43,7 +43,7 @@
 						securityGroup: {
 							metadata: {
 								Description: 'Security Group for JS_solutions Server',
-								GroupName: 'JS_solutions_server_securityGroup',
+								GroupName: 'JS_solutions_server_security-group',
 							},
 							parameters: {
 								IpPermissions:[
@@ -53,7 +53,7 @@
 										ToPort: 3000,
 										IpRanges: [
 											{
-												'CidrIp':'0.0.0.0/0'
+												'CidrIp': '0.0.0.0/0'
 											}
 										]
 									},
@@ -63,7 +63,7 @@
 										ToPort: 22,
 										IpRanges: [
 											{
-												'CidrIp':'0.0.0.0/0'
+												'CidrIp': '0.0.0.0/0'
 											}
 										]
 									}
@@ -78,27 +78,67 @@
 								MinCount: 1,
 								MaxCount: 1,
 								SecurityGroupIds: [],
+								IamInstanceProfile: {
+									Name: 'JS_solutions_admin'
+								},
 								TagSpecifications: [
 									{
 										ResourceType: 'instance',
-										Tags: []
+										Tags: [
+											{
+												Key: 'Name',
+												Value: 'Node JS App Server'
+											},
+											{
+												Key: 'Environment',
+												Value: 'Stage'
+											}		
+										]
 									}
 								]	
 							}
 						}
-
+					},
+					commands: {
+						pushToInstance: {
+							execute: [
+								'cd /var',
+								'mkdir www',
+								'cd www',
+								'mkdir JS_app',
+								'git clone git@github.com:Sendhuraan/JS_deploy.git'
+							]
+						},
+						createAppEnvironment: {
+							interpolate: true,
+							execute: [
+								'cd /var/www/JS_app',
+								'touch env.json',
+								'echo calc:{appParams} > env.json'
+							]
+						},
+						startAppServer: {
+							execute: [
+								'cd /var/www/JS_app',
+								'npm start'
+							],
+						}
 					},
 					config: {
 						type: 'server',
 						service: 'aws',
-						tags: [
+						filters: [
 							{
-								Key: 'Name',
-								Value: 'Node JS App Server'
+								Name: 'tag:Name',
+								Values: [
+									'Node JS App Server'
+								]
 							},
 							{
-								Key: 'Environment',
-								Value: 'Stage'
+								Name: 'tag:Environment',
+								Values: [
+									'Stage'
+								]
 							}
 						]
 					}
@@ -108,7 +148,7 @@
 						securityGroup: {
 							metadata: {
 								Description: 'Security Group for JS_solutions DB',
-								GroupName: 'JS_solutions_DB_securityGroup',
+								GroupName: 'JS_solutions_DB_security-group',
 							},
 							parameters: {
 								IpPermissions:[
@@ -118,7 +158,7 @@
 										ToPort: 8089,
 										IpRanges: [
 											{
-												'CidrIp':'0.0.0.0/0'
+												'CidrIp': '0.0.0.0/0'
 											}
 										]
 									},
@@ -128,7 +168,7 @@
 										ToPort: 22,
 										IpRanges: [
 											{
-												'CidrIp':'0.0.0.0/0'
+												'CidrIp': '0.0.0.0/0'
 											}
 										]
 									}
@@ -146,7 +186,16 @@
 								TagSpecifications: [
 									{
 										ResourceType: 'instance',
-										Tags: []
+										Tags: [
+											{
+												Key: 'Name',
+												Value: 'DB Server'
+											},
+											{
+												Key: 'Environment',
+												Value: 'Stage'
+											}
+										]
 									}
 								]	
 							}
@@ -156,14 +205,18 @@
 					config: {
 						type: 'db',
 						service: 'aws',
-						tags: [
+						filters: [
 							{
-								Key: 'Name',
-								Value: 'DB Server'
+								Name: 'tag:Name',
+								Values: [
+									'DB Server'
+								]
 							},
 							{
-								Key: 'Environment',
-								Value: 'Stage'
+								Name: 'tag:Environment',
+								Values: [
+									'Stage'
+								]
 							}
 						]
 					}

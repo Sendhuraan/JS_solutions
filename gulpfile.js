@@ -13,6 +13,10 @@
 	var shell = require('shelljs');
 	var child_process = require('child_process');
 	var globby = require('globby');
+	const AWS = require('aws-sdk');
+	AWS.config.update({
+		region: 'ap-south-1'
+	});
 
 	program
 		.option('-d --dir <value>', 'Input folder name')
@@ -383,6 +387,40 @@
 
 	function startCloudInstances(cb) {
 		
+		var { instances } = config.deploy.preqs;
+
+		var ec2_service = new AWS.EC2({
+			apiVersion: '2016-11-15'
+		});
+
+		instances.map(async function(instance) {
+
+			var instanceFilters = {
+				Filters: instance.config.filters
+			};
+
+			var instanceDetails = await ec2_service.describeInstances(instanceFilters).promise();
+
+			if(instanceDetails.Reservations.length) {
+				var instanceId = instanceDetails.Reservations[0].Instances.map(function(instance) {
+					return instance.InstanceId;
+				});
+
+				var startInstanceDetails = {
+					InstanceIds: instanceId
+				};
+
+				var startedInstanceDetails = await ec2_service.startInstances(startInstanceDetails).promise();
+
+				console.log(startedInstanceDetails);
+			}
+			else {
+				console.log('Instance not Found');
+			}
+		});
+
+		cb();
+
 	}
 
 	function transformFiles(cb) {
