@@ -31,7 +31,7 @@
 				ToPort: 3000,
 				IpRanges: [
 					{
-						'CidrIp':'0.0.0.0/0'
+						'CidrIp': '0.0.0.0/0'
 					}
 				]
 			},
@@ -41,7 +41,7 @@
 				ToPort: 22,
 				IpRanges: [
 					{
-						'CidrIp':'0.0.0.0/0'
+						'CidrIp': '0.0.0.0/0'
 					}
 				]
 			}

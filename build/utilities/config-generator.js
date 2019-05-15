@@ -9,6 +9,11 @@
 	var HtmlWebpackPlugin = require('html-webpack-plugin');
 	var deepMerge = require('deepmerge');
 
+	const AWS = require('aws-sdk');
+	AWS.config.update({
+		region: 'ap-south-1'
+	});
+
 	function replaceWithSSM(parameter, cache) {
 
 		var ssmTagPattern = /(ssm:)(\W\w+)/;
@@ -381,6 +386,31 @@
 
 			}
 
+			var { instances } = solutionEnvironments.cloud;
+
+			var solutionCommands = (function(instances) {
+
+				var commandsObj = {};
+
+				instances.map(function(instance) {
+
+					var instanceTags = instance.config.filters;
+					var instanceCommands = instance.commands;
+
+					for(var command in instanceCommands) {
+						commandsObj[command] = {};
+						commandsObj[command]['DocumentName'] = instanceCommands[command]['documentType']; 
+						commandsObj[command]['Parameters'] = {};
+						commandsObj[command]['Parameters']['commands'] = instanceCommands[command]['commands'];
+						commandsObj[command]['instanceTags'] = instanceTags;
+					}
+					
+				});
+
+				return commandsObj;
+				
+			})(instances);
+
 		}
 
 		this.config = {
@@ -452,7 +482,8 @@
 						server: NODE_CLOUD_SERVER_PARAMS ? NODE_CLOUD_SERVER_PARAMS : false,
 						db: NODE_CLOUD_DB_PARAMS ? NODE_CLOUD_DB_PARAMS : false	
 					}
-				}
+				},
+				commands: solutionCommands ? solutionCommands : false
 
 			} : false
 		};

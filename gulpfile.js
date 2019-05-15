@@ -385,7 +385,7 @@
 		}
 	}
 
-	function startCloudInstances(cb) {
+	function startOrCreateCloudInstances(cb) {
 		
 		var { instances } = config.deploy.preqs;
 
@@ -415,7 +415,45 @@
 				console.log(startedInstanceDetails);
 			}
 			else {
+
 				console.log('Instance not Found');
+				console.log('Creating new instance');
+
+				var describeVpcs_Response = await ec2_service.describeVpcs().promise();
+
+				console.log(describeVpcs_Response.Vpcs[0].VpcId);
+
+				var paramsSecurityGroup = instance.setup.securityGroup.metadata;
+				paramsSecurityGroup.VpcId = describeVpcs_Response.Vpcs[0].VpcId;
+
+				var createSecurityGroup_Response = await ec2_service.createSecurityGroup(paramsSecurityGroup).promise();
+
+				console.log(`Security Group (${createSecurityGroup_Response.GroupId}) Created!`);
+
+				var paramsIngress = {
+					GroupId: createSecurityGroup_Response.GroupId,
+					IpPermissions: instance.setup.securityGroup.parameters.IpPermissions
+				};
+
+				var securityGroup = await ec2_service.authorizeSecurityGroupIngress(paramsIngress).promise();
+
+				console.log('Rules Added to Security Group');
+
+				var instanceParams = instance.setup.compute.parameters;
+
+				instanceParams.SecurityGroupIds.push(createSecurityGroup_Response.GroupId);
+
+				if(instanceParams.UserData) {
+					instanceParams.UserData = new Buffer(instanceParams.UserData.join('\n')).toString('base64');
+				}
+				
+				console.log(instanceParams);
+
+				var ec2_instances = await ec2_service.runInstances(instanceParams).promise();
+
+				ec2_instances.Instances.map(function(instance) {
+					console.log(`Instance (ID: ${instance.InstanceId}) Created`);
+				});
 			}
 		});
 
@@ -457,7 +495,7 @@
 	exports.printConfig = printConfig;
 
 	exports.developmentPreqs = series(startAndCaptureTestBrowsers);
-	exports.deploymentPreqs = series(startCloudInstances);
+	exports.deploymentPreqs = series(startOrCreateCloudInstances);
 	exports.default = series(validateSolution, prepareSolution, runSolution);
 	
 })();

@@ -95,13 +95,28 @@
 											}		
 										]
 									}
-								]	
+								],
+								UserData: [
+									'#!/usr/bin/env bash',
+									'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash',
+									'export NVM_DIR="$HOME/.nvm"',
+									'[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"',
+									'nvm install 8.11.3',
+									'nvm use 8.11.3',
+									'cat <<EOF >> /home/ec2-user/.bashrc',
+									'export NVM_DIR="/.nvm"',
+									'[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"',
+									'EOF',
+									'yum install git',
+									'npm install pm2 -g'
+								]
 							}
 						}
 					},
 					commands: {
 						pushToInstance: {
-							execute: [
+							documentType: 'AWS-RunShellScript',
+							commands: [
 								'cd /var',
 								'mkdir www',
 								'cd www',
@@ -110,15 +125,17 @@
 							]
 						},
 						createAppEnvironment: {
-							interpolate: true,
-							execute: [
+							inject: true,
+							documentType: 'AWS-RunShellScript',
+							commands: [
 								'cd /var/www/JS_app',
 								'touch env.json',
 								'echo calc:{appParams} > env.json'
 							]
 						},
 						startAppServer: {
-							execute: [
+							documentType: 'AWS-RunShellScript',
+							commands: [
 								'cd /var/www/JS_app',
 								'npm start'
 							],
@@ -132,84 +149,6 @@
 								Name: 'tag:Name',
 								Values: [
 									'Node JS App Server'
-								]
-							},
-							{
-								Name: 'tag:Environment',
-								Values: [
-									'Stage'
-								]
-							}
-						]
-					}
-				},
-				{
-					setup: {
-						securityGroup: {
-							metadata: {
-								Description: 'Security Group for JS_solutions DB',
-								GroupName: 'JS_solutions_DB_security-group',
-							},
-							parameters: {
-								IpPermissions:[
-									{
-										IpProtocol: 'tcp',
-										FromPort: 8089,
-										ToPort: 8089,
-										IpRanges: [
-											{
-												'CidrIp': '0.0.0.0/0'
-											}
-										]
-									},
-									{
-										IpProtocol: 'tcp',
-										FromPort: 22,
-										ToPort: 22,
-										IpRanges: [
-											{
-												'CidrIp': '0.0.0.0/0'
-											}
-										]
-									}
-								]
-							}
-						},
-						compute: {
-							parameters: {
-								ImageId: 'ami-0889b8a448de4fc44', 
-								InstanceType: 't2.micro',
-								KeyName: 'Sendhuraan-key-pair-ap-mumbai',
-								MinCount: 1,
-								MaxCount: 1,
-								SecurityGroupIds: [],
-								TagSpecifications: [
-									{
-										ResourceType: 'instance',
-										Tags: [
-											{
-												Key: 'Name',
-												Value: 'DB Server'
-											},
-											{
-												Key: 'Environment',
-												Value: 'Stage'
-											}
-										]
-									}
-								]	
-							}
-						}
-
-					},
-					config: {
-						type: 'db',
-						service: 'aws',
-						filters: [
-							{
-								Name: 'tag:Name',
-								Values: [
-									'DB Server'
 								]
 							},
 							{
