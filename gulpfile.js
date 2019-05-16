@@ -13,6 +13,7 @@
 	var shell = require('shelljs');
 	var child_process = require('child_process');
 	var globby = require('globby');
+	const inquirer = require('inquirer');
 	const AWS = require('aws-sdk');
 	AWS.config.update({
 		region: 'ap-south-1'
@@ -461,6 +462,37 @@
 
 	}
 
+	function executeCommand() {
+		console.log('Command Executed');
+	}
+
+	async function listCommands(cb) {
+		executeCommand();
+
+		var interactions = [
+			{
+				type: 'input',
+				name: 'reinitiate',
+				message: 'Do you want to run another command (y/n) : '
+			}
+		];
+
+		const userInput = await inquirer.prompt(interactions);
+
+		if(userInput.reinitiate === 'y') {
+			listCommands();
+			return;
+		}
+		else if (userInput.reinitiate === 'n') {
+			console.log('Exiting Command Menu');
+		}
+		else {
+			console.log('Please enter y for Yes / n for No');
+		}
+
+	}
+
+	
 	function transformFiles(cb) {
 		var { test } = config.node;
 		var { dir } = config.run;
@@ -479,7 +511,7 @@
 	const lint = parallel(lintGlobalFiles, lintSourceFiles);
 	const bundle = series(bundleNode, bundleBrowser);
 	const prepareSolution = series(lint, runNodeTests, runBrowserTests, cleanOutputDir, bundle, build);
-	const deploy = series(validateDeployment, prepareSolution, prepareDeployment);
+	const deploy = series(validateDeployment, prepareSolution, prepareDeployment, listCommands);
 
 	exports.lint = lint;
 	exports.runNodeTests = runNodeTests;
@@ -493,6 +525,7 @@
 	exports.transformFiles = transformFiles;
 
 	exports.printConfig = printConfig;
+	exports.listCommands = listCommands;
 
 	exports.developmentPreqs = series(startAndCaptureTestBrowsers);
 	exports.deploymentPreqs = series(startOrCreateCloudInstances);
