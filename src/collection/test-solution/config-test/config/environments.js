@@ -130,7 +130,7 @@
 							commands: [
 								'cd /var/www/JS_app',
 								'touch env.json',
-								'echo calc:{appParams} > env.json'
+								'echo calc:{env} > env.json'
 							]
 						},
 						startAppServer: {

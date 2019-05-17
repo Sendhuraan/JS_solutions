@@ -386,6 +386,10 @@
 
 			}
 
+			var ec2_service = new AWS.EC2({
+				apiVersion: '2016-11-15'
+			});
+
 			var { instances } = solutionEnvironments.cloud;
 
 			var solutionCommands = (function(instances) {

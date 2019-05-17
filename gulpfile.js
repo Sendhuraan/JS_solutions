@@ -19,6 +19,14 @@
 		region: 'ap-south-1'
 	});
 
+	var ec2_service = new AWS.EC2({
+		apiVersion: '2016-11-15'
+	});
+
+	var ssm_service = new AWS.SSM({
+		apiVersion: '2014-11-06'
+	});
+
 	program
 		.option('-d --dir <value>', 'Input folder name')
 		.option('-env --environment <value>', 'Build environment')
@@ -386,13 +394,49 @@
 		}
 	}
 
-	function startOrCreateCloudInstances(cb) {
-		
+	async function prepareInstancesConfig() {
+
 		var { instances } = config.deploy.preqs;
 
-		var ec2_service = new AWS.EC2({
-			apiVersion: '2016-11-15'
-		});
+		config.deploy.instances = {};
+		var instancesConfig = config.deploy.instances;
+
+		instancesConfig.start = [];
+		instancesConfig.create = [];
+
+		for(var instance=0; instance < instances.length; instance++) {
+
+			var instanceFilters = {
+				Filters: instances[instance].config.filters
+			};
+
+			var instanceDetails = await ec2_service.describeInstances(instanceFilters).promise();
+
+			if(instanceDetails.Reservations.length) {
+				var instanceId = instanceDetails.Reservations[0].Instances[0].InstanceId;
+
+				instancesConfig.start.push(instanceId);
+			}
+			else {
+
+				var instanceParams = instances[instance].setup.compute.parameters;
+
+				if(instanceParams.UserData) {
+					instanceParams.UserData = new Buffer(instanceParams.UserData.join('\n')).toString('base64');
+				}
+
+				instancesConfig.create.push(instances[instance].setup);
+			}
+
+		}
+
+		console.log(JSON.stringify(config, null, 4));
+		
+	}
+
+	function executeInstancesConfig(cb) {
+		
+		var { instances } = config.deploy.preqs;
 
 		instances.map(async function(instance) {
 
@@ -462,6 +506,70 @@
 
 	}
 
+	async function prepareCommandsConfig() {
+
+		var { instances } = config.deploy.preqs;
+
+		config.deploy.commands = {};
+		var commandsConfig = config.deploy.commands;
+
+		for(var instance=0; instance < instances.length; instance++) {
+
+			var instanceFilters = {
+				Filters: instances[instance].config.filters
+			};
+
+			var instanceDetails = await ec2_service.describeInstances(instanceFilters).promise();
+
+			if(instanceDetails.Reservations.length) {
+				var instanceId = instanceDetails.Reservations[0].Instances[0].InstanceId;
+				var instanceCommands = instances[instance].commands;
+
+				for(var command in instanceCommands) {
+
+					commandsConfig[command] = {};
+					commandsConfig[command]['Parameters'] = {};
+					commandsConfig[command]['InstanceIds'] = [];
+					
+
+					if(instanceCommands[command]['inject'] === true) {
+						
+						var paramResolvedCommand = instanceCommands[command]['commands'].map(function(command) {
+							var injectParamPattern = /(calc:{)(\w+)(})/;
+							var injectParams = config.deploy.parameters;
+
+							if(injectParamPattern.test(command)) {
+								var injectParamName = command.match(injectParamPattern)[2];
+								var injectParamResolved = `'${JSON.stringify(injectParams[injectParamName])}'`;
+								//var injectParamResolvedStr = `'${injectParamResolved.replace(/(\\+)/, '')}'`;
+								command = command.replace(injectParamPattern, injectParamResolved);
+								console.log(command);
+							}
+
+							return command;
+						});
+
+						console.log(paramResolvedCommand);
+
+						commandsConfig[command]['Parameters']['commands'] = paramResolvedCommand;
+					}
+					else {
+						commandsConfig[command]['Parameters']['commands'] = instanceCommands[command]['commands'];
+					}
+
+					commandsConfig[command]['DocumentName'] = instanceCommands[command]['documentType'];
+					commandsConfig[command]['InstanceIds'].push(instanceId);
+				}
+			}
+			else {
+				console.log('Instance not found');
+			}
+
+		}
+
+		//console.log(JSON.stringify(config, null, 4));
+	}
+
 	function executeCommand() {
 		console.log('Command Executed');
 	}
@@ -510,8 +618,10 @@
 
 	const lint = parallel(lintGlobalFiles, lintSourceFiles);
 	const bundle = series(bundleNode, bundleBrowser);
+	const startOrCreateCloudInstances = series(prepareInstancesConfig, executeInstancesConfig);
 	const prepareSolution = series(lint, runNodeTests, runBrowserTests, cleanOutputDir, bundle, build);
-	const deploy = series(validateDeployment, prepareSolution, prepareDeployment, listCommands);
+	const runCommands = series(prepareCommandsConfig, listCommands);
+	const deploy = series(validateDeployment, prepareSolution, prepareDeployment, runCommands);
 
 	exports.lint = lint;
 	exports.runNodeTests = runNodeTests;
@@ -525,7 +635,9 @@
 	exports.transformFiles = transformFiles;
 
 	exports.printConfig = printConfig;
-	exports.listCommands = listCommands;
+	exports.runCommands = runCommands;
+	exports.prepareInstancesConfig = prepareInstancesConfig;
+	exports.prepareCommandsConfig = prepareCommandsConfig;
 
 	exports.developmentPreqs = series(startAndCaptureTestBrowsers);
 	exports.deploymentPreqs = series(startOrCreateCloudInstances);
