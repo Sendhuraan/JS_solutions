@@ -14,6 +14,14 @@
 		region: 'ap-south-1'
 	});
 
+	var ec2_service = new AWS.EC2({
+		apiVersion: '2016-11-15'
+	});
+
+	var ssm_service = new AWS.SSM({
+		apiVersion: '2014-11-06'
+	});
+
 	function replaceWithSSM(parameter, cache) {
 
 		var ssmTagPattern = /(ssm:)(\W\w+)/;
@@ -386,35 +394,22 @@
 
 			}
 
-			var ec2_service = new AWS.EC2({
-				apiVersion: '2016-11-15'
-			});
+		}
 
-			var { instances } = solutionEnvironments.cloud;
+		this.getAsyncData = async function() {
 
-			var solutionCommands = (function(instances) {
+			var asyncData = {};
 
-				var commandsObj = {};
+			var getSSMParameters_params = {
+				Names: [ 
+					'/DB/Mongo/Stage/Username'
+				],
+				WithDecryption: true
+			};
 
-				instances.map(function(instance) {
+			var parameterDetails = await ssm_service.getParameters(getSSMParameters_params).promise();
 
-					var instanceTags = instance.config.filters;
-					var instanceCommands = instance.commands;
-
-					for(var command in instanceCommands) {
-						commandsObj[command] = {};
-						commandsObj[command]['DocumentName'] = instanceCommands[command]['documentType']; 
-						commandsObj[command]['Parameters'] = {};
-						commandsObj[command]['Parameters']['commands'] = instanceCommands[command]['commands'];
-						commandsObj[command]['instanceTags'] = instanceTags;
-					}
-					
-				});
-
-				return commandsObj;
-				
-			})(instances);
-
+			return asyncData;
 		}
 
 		this.config = {
@@ -486,12 +481,16 @@
 						server: NODE_CLOUD_SERVER_PARAMS ? NODE_CLOUD_SERVER_PARAMS : false,
 						db: NODE_CLOUD_DB_PARAMS ? NODE_CLOUD_DB_PARAMS : false	
 					}
-				},
-				commands: solutionCommands ? solutionCommands : false
-
+				}
 			} : false
-		};
+		};		
+	}
+
+	SolutionConfig.prototype.getConfig = async function() {
 		
+		var asyncDataResolved = await this.getAsyncData();
+
+		return this.config;
 	}
 
 	var publicAPI = {

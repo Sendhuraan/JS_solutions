@@ -73,8 +73,13 @@
 		}
 	})(DIRNAME);
 
-	var { config } = new SolutionConfig(DEFAULTS, sourceDir, commonConfigs, pageConfigOptions);
-	
+	var solutionConfig = new SolutionConfig(DEFAULTS, sourceDir, commonConfigs, pageConfigOptions);
+	var config;
+
+	async function getConfig(cb) {
+		config = await solutionConfig.getConfig();
+	}
+
 	function printConfig(cb) {
 		console.log(JSON.stringify(config, null, 4));
 		cb();
@@ -434,35 +439,27 @@
 		
 	}
 
-	function executeInstancesConfig(cb) {
+	async function executeInstancesConfig(cb) {
 		
-		var { instances } = config.deploy.preqs;
+		var { start } = config.deploy.instances;
+		var { create } = config.deploy.instances;
 
-		instances.map(async function(instance) {
-
-			var instanceFilters = {
-				Filters: instance.config.filters
+		if(start.length) {
+			var startInstanceDetails = {
+				InstanceIds: start
 			};
 
-			var instanceDetails = await ec2_service.describeInstances(instanceFilters).promise();
+			var startedInstanceDetails = await ec2_service.startInstances(startInstanceDetails).promise();
 
-			if(instanceDetails.Reservations.length) {
-				var instanceId = instanceDetails.Reservations[0].Instances.map(function(instance) {
-					return instance.InstanceId;
-				});
+			console.log(startedInstanceDetails);
+		}
 
-				var startInstanceDetails = {
-					InstanceIds: instanceId
-				};
+		if(create.length) {
 
-				var startedInstanceDetails = await ec2_service.startInstances(startInstanceDetails).promise();
+			console.log('Instance not Found');
+			console.log('Creating new instance');
 
-				console.log(startedInstanceDetails);
-			}
-			else {
-
-				console.log('Instance not Found');
-				console.log('Creating new instance');
+			create.map(async function(instance) {
 
 				var describeVpcs_Response = await ec2_service.describeVpcs().promise();
 
@@ -499,8 +496,8 @@
 				ec2_instances.Instances.map(function(instance) {
 					console.log(`Instance (ID: ${instance.InstanceId}) Created`);
 				});
-			}
-		});
+			});
+		}
 
 		cb();
 
@@ -540,16 +537,12 @@
 
 							if(injectParamPattern.test(command)) {
 								var injectParamName = command.match(injectParamPattern)[2];
-								var injectParamResolved = `'${JSON.stringify(injectParams[injectParamName])}'`;
-								//var injectParamResolvedStr = `'${injectParamResolved.replace(/(\\+)/, '')}'`;
+								var injectParamResolved = `"${JSON.stringify(injectParams[injectParamName]).replace(/"/g, '\\"')}"`;
 								command = command.replace(injectParamPattern, injectParamResolved);
-								console.log(command);
 							}
 
 							return command;
 						});
-
-						console.log(paramResolvedCommand);
 
 						commandsConfig[command]['Parameters']['commands'] = paramResolvedCommand;
 					}
@@ -562,20 +555,57 @@
 				}
 			}
 			else {
-				console.log('Instance not found');
+				console.log('Instance not found. Please start the instance and try again');
 			}
-
 		}
-
-		//console.log(JSON.stringify(config, null, 4));
 	}
 
-	function executeCommand() {
-		console.log('Command Executed');
+	async function executeCommands() {
+		var { commands } = config.deploy;
+
+		var commandsList = (function(nameList) {
+			var commandNames = [];
+
+			for(var name in nameList) {
+				commandNames.push(name);
+			}
+
+			return commandNames;
+		})(commands);
+
+		console.log(commandsList);
+
+		var interactions = [
+			{
+				type: 'list',
+				name: 'command_name',
+				choices: commandsList,
+				message: 'Select command to execute #'
+			}
+		];
+
+		const userInput = await inquirer.prompt(interactions);
+
+		var sendCommand_params = commands[userInput.command_name];
+
+		try {
+			var sendCommand_Response = await ssm_service.sendCommand(sendCommand_params).promise();	
+		}
+		catch(error) {
+			console.log(error.message);
+		}
+		finally {
+			if(sendCommand_Response) {
+				console.log(`Command (ID : ${sendCommand_Response.Command.CommandId}) executed  successfully`);
+			}
+			else {
+				console.log('Command did not execute properly. Please check the parameters and try again');
+			}
+		}
 	}
 
 	async function listCommands(cb) {
-		executeCommand();
+		await executeCommands();
 
 		var interactions = [
 			{
@@ -634,7 +664,7 @@
 	exports.deploy = deploy;
 	exports.transformFiles = transformFiles;
 
-	exports.printConfig = printConfig;
+	exports.printConfig = series(getConfig, printConfig);
 	exports.runCommands = runCommands;
 	exports.prepareInstancesConfig = prepareInstancesConfig;
 	exports.prepareCommandsConfig = prepareCommandsConfig;

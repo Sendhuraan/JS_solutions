@@ -114,6 +114,17 @@
 						}
 					},
 					commands: {
+						createAppFolder: {
+							documentType: 'AWS-RunShellScript',
+							commands: [
+								'cd /var',
+								'mkdir www',
+								'cd www',
+								'mkdir JS_app',
+								'cd JS_app',
+								'touch file.txt'
+							]
+						},
 						pushToInstance: {
 							documentType: 'AWS-RunShellScript',
 							commands: [
@@ -130,7 +141,8 @@
 							commands: [
 								'cd /var/www/JS_app',
 								'touch env.json',
-								'echo calc:{env} > env.json'
+								'APP_PARAMS=calc:{env}',
+								'echo $APP_PARAMS > env.json'
 							]
 						},
 						startAppServer: {
