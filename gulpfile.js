@@ -439,7 +439,7 @@
 		
 	}
 
-	async function executeInstancesConfig(cb) {
+	async function startOrCreateCloudInstances(cb) {
 		
 		var { start } = config.deploy.instances;
 		var { create } = config.deploy.instances;
@@ -463,33 +463,27 @@
 
 				var describeVpcs_Response = await ec2_service.describeVpcs().promise();
 
-				console.log(describeVpcs_Response.Vpcs[0].VpcId);
+				console.log(`VPC ID : ${describeVpcs_Response.Vpcs[0].VpcId}`);
 
-				var paramsSecurityGroup = instance.setup.securityGroup.metadata;
+				var paramsSecurityGroup = instance.securityGroup.metadata;
 				paramsSecurityGroup.VpcId = describeVpcs_Response.Vpcs[0].VpcId;
 
 				var createSecurityGroup_Response = await ec2_service.createSecurityGroup(paramsSecurityGroup).promise();
 
-				console.log(`Security Group (${createSecurityGroup_Response.GroupId}) Created!`);
+				console.log(`Security Group (ID : ${createSecurityGroup_Response.GroupId}) Created!`);
 
 				var paramsIngress = {
 					GroupId: createSecurityGroup_Response.GroupId,
-					IpPermissions: instance.setup.securityGroup.parameters.IpPermissions
+					IpPermissions: instance.securityGroup.parameters.IpPermissions
 				};
 
 				var securityGroup = await ec2_service.authorizeSecurityGroupIngress(paramsIngress).promise();
 
 				console.log('Rules Added to Security Group');
 
-				var instanceParams = instance.setup.compute.parameters;
+				var instanceParams = instance.compute.parameters;
 
 				instanceParams.SecurityGroupIds.push(createSecurityGroup_Response.GroupId);
-
-				if(instanceParams.UserData) {
-					instanceParams.UserData = new Buffer(instanceParams.UserData.join('\n')).toString('base64');
-				}
-				
-				console.log(instanceParams);
 
 				var ec2_instances = await ec2_service.runInstances(instanceParams).promise();
 
@@ -501,63 +495,6 @@
 
 		cb();
 
-	}
-
-	async function prepareCommandsConfig() {
-
-		var { instances } = config.deploy.preqs;
-
-		config.deploy.commands = {};
-		var commandsConfig = config.deploy.commands;
-
-		for(var instance=0; instance < instances.length; instance++) {
-
-			var instanceFilters = {
-				Filters: instances[instance].config.filters
-			};
-
-			var instanceDetails = await ec2_service.describeInstances(instanceFilters).promise();
-
-			if(instanceDetails.Reservations.length) {
-				var instanceId = instanceDetails.Reservations[0].Instances[0].InstanceId;
-				var instanceCommands = instances[instance].commands;
-
-				for(var command in instanceCommands) {
-
-					commandsConfig[command] = {};
-					commandsConfig[command]['Parameters'] = {};
-					commandsConfig[command]['InstanceIds'] = [];
-					
-
-					if(instanceCommands[command]['inject'] === true) {
-						
-						var paramResolvedCommand = instanceCommands[command]['commands'].map(function(command) {
-							var injectParamPattern = /(calc:{)(\w+)(})/;
-							var injectParams = config.deploy.parameters;
-
-							if(injectParamPattern.test(command)) {
-								var injectParamName = command.match(injectParamPattern)[2];
-								var injectParamResolved = `"${JSON.stringify(injectParams[injectParamName]).replace(/"/g, '\\"')}"`;
-								command = command.replace(injectParamPattern, injectParamResolved);
-							}
-
-							return command;
-						});
-
-						commandsConfig[command]['Parameters']['commands'] = paramResolvedCommand;
-					}
-					else {
-						commandsConfig[command]['Parameters']['commands'] = instanceCommands[command]['commands'];
-					}
-
-					commandsConfig[command]['DocumentName'] = instanceCommands[command]['documentType'];
-					commandsConfig[command]['InstanceIds'].push(instanceId);
-				}
-			}
-			else {
-				console.log('Instance not found. Please start the instance and try again');
-			}
-		}
 	}
 
 	async function executeCommands() {
@@ -604,7 +541,7 @@
 		}
 	}
 
-	async function listCommands(cb) {
+	async function runCommands(cb) {
 		await executeCommands();
 
 		var interactions = [
@@ -618,7 +555,7 @@
 		const userInput = await inquirer.prompt(interactions);
 
 		if(userInput.reinitiate === 'y') {
-			listCommands();
+			runCommands();
 			return;
 		}
 		else if (userInput.reinitiate === 'n') {
@@ -648,10 +585,8 @@
 
 	const lint = parallel(lintGlobalFiles, lintSourceFiles);
 	const bundle = series(bundleNode, bundleBrowser);
-	const startOrCreateCloudInstances = series(prepareInstancesConfig, executeInstancesConfig);
 	const prepareSolution = series(lint, runNodeTests, runBrowserTests, cleanOutputDir, bundle, build);
-	const runCommands = series(prepareCommandsConfig, listCommands);
-	const deploy = series(validateDeployment, prepareSolution, prepareDeployment, runCommands);
+	const deploy = series(getConfig, validateDeployment, prepareSolution, prepareDeployment, runCommands);
 
 	exports.lint = lint;
 	exports.runNodeTests = runNodeTests;
@@ -665,12 +600,10 @@
 	exports.transformFiles = transformFiles;
 
 	exports.printConfig = series(getConfig, printConfig);
-	exports.runCommands = runCommands;
-	exports.prepareInstancesConfig = prepareInstancesConfig;
-	exports.prepareCommandsConfig = prepareCommandsConfig;
+	exports.runCommands = series(getConfig, runCommands);
 
-	exports.developmentPreqs = series(startAndCaptureTestBrowsers);
-	exports.deploymentPreqs = series(startOrCreateCloudInstances);
-	exports.default = series(validateSolution, prepareSolution, runSolution);
+	exports.developmentPreqs = series(getConfig, startAndCaptureTestBrowsers);
+	exports.deploymentPreqs = series(getConfig, startOrCreateCloudInstances);
+	exports.default = series(getConfig, validateSolution, prepareSolution, runSolution);
 	
 })();

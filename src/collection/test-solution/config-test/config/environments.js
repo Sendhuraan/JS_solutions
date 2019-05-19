@@ -1,3 +1,5 @@
+/* eslint-disable no-useless-escape */
+
 (function() {
 
 	var environments = {
@@ -43,14 +45,14 @@
 						securityGroup: {
 							metadata: {
 								Description: 'Security Group for JS_solutions Server',
-								GroupName: 'JS_solutions_server_security-group',
+								GroupName: 'JS_solutions_server_security-group'
 							},
 							parameters: {
 								IpPermissions:[
 									{
 										IpProtocol: 'tcp',
-										FromPort: 3000,
-										ToPort: 3000,
+										FromPort: 49152,
+										ToPort: 49152,
 										IpRanges: [
 											{
 												'CidrIp': '0.0.0.0/0'
@@ -107,24 +109,13 @@
 									'export NVM_DIR="/.nvm"',
 									'[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"',
 									'EOF',
-									'yum install git',
+									'yum install git -y',
 									'npm install pm2 -g'
 								]
 							}
 						}
 					},
 					commands: {
-						createAppFolder: {
-							documentType: 'AWS-RunShellScript',
-							commands: [
-								'cd /var',
-								'mkdir www',
-								'cd www',
-								'mkdir JS_app',
-								'cd JS_app',
-								'touch file.txt'
-							]
-						},
 						pushToInstance: {
 							documentType: 'AWS-RunShellScript',
 							commands: [
@@ -132,7 +123,10 @@
 								'mkdir www',
 								'cd www',
 								'mkdir JS_app',
-								'git clone git@github.com:Sendhuraan/JS_deploy.git'
+								'chmod o+rwx JS_app',
+								'cd JS_app',
+								'git clone https://github.com/Sendhuraan/JS_deploy.git .',
+								'npm install'
 							]
 						},
 						createAppEnvironment: {
@@ -150,7 +144,7 @@
 							commands: [
 								'cd /var/www/JS_app',
 								'npm start'
-							],
+							]
 						}
 					},
 					config: {

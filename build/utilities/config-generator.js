@@ -396,22 +396,6 @@
 
 		}
 
-		this.getAsyncData = async function() {
-
-			var asyncData = {};
-
-			var getSSMParameters_params = {
-				Names: [ 
-					'/DB/Mongo/Stage/Username'
-				],
-				WithDecryption: true
-			};
-
-			var parameterDetails = await ssm_service.getParameters(getSSMParameters_params).promise();
-
-			return asyncData;
-		}
-
 		this.config = {
 
 			lint: {
@@ -483,15 +467,129 @@
 					}
 				}
 			} : false
-		};		
+		};
+
+
+
+		this.getAsyncData = async function() {
+
+			var instancesConfig = {};
+			var commandsConfig = {};
+
+			if(isCloudDeploy) {
+
+				var { instances } = solutionEnvironments.cloud;
+
+				instancesConfig.start = [];
+				instancesConfig.create = [];
+
+				for(let instance=0; instance < instances.length; instance++) {
+
+					let instanceFilters = {
+						Filters: instances[instance].config.filters
+					};
+
+					let instanceDetails = await ec2_service.describeInstances(instanceFilters).promise();
+
+					if(instanceDetails.Reservations.length) {
+						let instanceState = instanceDetails.Reservations[0].Instances[0].State.Name;
+						let instanceId = instanceDetails.Reservations[0].Instances[0].InstanceId;
+
+						if(instanceState === 'stopped') {
+							instancesConfig.start.push(instanceId);
+						}
+						else {
+							console.log(`${instanceId} cannot be started, as it is in ${instanceState} state`);
+						}
+						
+					}
+					else {
+
+						let instanceParams = instances[instance].setup.compute.parameters;
+
+						if(instanceParams.UserData) {
+							instanceParams.UserData = new Buffer(instanceParams.UserData.join('\n')).toString('base64');
+						}
+
+						instancesConfig.create.push(instances[instance].setup);
+					}
+				}
+
+				if(!(instancesConfig.create.length && instancesConfig.start.length)) {
+
+
+
+					for(let instance=0; instance < instances.length; instance++) {
+
+						let instanceFilters = {
+							Filters: instances[instance].config.filters
+						};
+
+						let instanceDetails = await ec2_service.describeInstances(instanceFilters).promise();
+
+						if(instanceDetails.Reservations.length) {
+							let instanceId = instanceDetails.Reservations[0].Instances[0].InstanceId;
+							let instanceCommands = instances[instance].commands;
+
+							for(let command in instanceCommands) {
+
+								commandsConfig[command] = {};
+								commandsConfig[command]['Parameters'] = {};
+								commandsConfig[command]['InstanceIds'] = [];
+								
+
+								if(instanceCommands[command]['inject'] === true) {
+
+									let injectParams = this.config.deploy.parameters;
+									
+									let paramResolvedCommand = instanceCommands[command]['commands'].map(function(command) {
+										let injectParamPattern = /(calc:{)(\w+)(})/;
+
+										if(injectParamPattern.test(command)) {
+											let injectParamName = command.match(injectParamPattern)[2];
+											let injectParamResolved = `"${JSON.stringify(injectParams[injectParamName]).replace(/"/g, '\\"')}"`;
+											command = command.replace(injectParamPattern, injectParamResolved);
+										}
+
+										return command;
+									});
+
+									commandsConfig[command]['Parameters']['commands'] = paramResolvedCommand;
+								}
+								else {
+									commandsConfig[command]['Parameters']['commands'] = instanceCommands[command]['commands'];
+								}
+
+								commandsConfig[command]['DocumentName'] = instanceCommands[command]['documentType'];
+								commandsConfig[command]['InstanceIds'].push(instanceId);
+							}
+						}
+					}
+
+				}
+
+			}
+
+			var asyncData = {
+				instances: Object.keys(instancesConfig).length ? instancesConfig : false,
+				commands: Object.keys(commandsConfig).length ? commandsConfig : false
+			};
+
+			return asyncData;
+		};	
 	}
 
 	SolutionConfig.prototype.getConfig = async function() {
-		
+
 		var asyncDataResolved = await this.getAsyncData();
 
+		if(this.config.deploy) {
+			this.config.deploy.instances = asyncDataResolved.instances;
+			this.config.deploy.commands = asyncDataResolved.commands;
+		}
+
 		return this.config;
-	}
+	};
 
 	var publicAPI = {
 		SolutionConfig

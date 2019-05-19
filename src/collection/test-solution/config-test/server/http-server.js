@@ -18,7 +18,7 @@
 
 		start(portNumber) {
 			const listen = util.promisify(this._httpServer.listen.bind(this._httpServer));
-			return listen(portNumber);
+			return listen(portNumber, '0.0.0.0');
 		}
 
 		stop() {
