@@ -13,7 +13,8 @@
 						protocol: 'mongodb://',
 						username: 'local',
 						password: 'pass',
-						port: 27017
+						port: 27017,
+						name: 'mongodb-cookbook-examples_01_inserting-records_users'
 					}
 				},
 				config: {
@@ -22,7 +23,7 @@
 			}
 		},
 		cloud: {
-			enabled: true,
+			enabled: false,
 			includeDependencies: false,
 			metadata: {
 				name: 'config-test'
@@ -36,7 +37,8 @@
 					protocol: 'mongodb://',
 					username: 'ssm:/DB/Mongo/Stage/Username',
 					password: 'ssm:/DB/Mongo/Stage/Password',
-					port: 'ssm:/DB/Mongo/Stage/Port'
+					port: 'ssm:/DB/Mongo/Stage/Port',
+					name: 'mongodb-cookbook-examples_01_inserting-records_users'
 				}
 			},
 			instances: [
@@ -51,8 +53,8 @@
 								IpPermissions:[
 									{
 										IpProtocol: 'tcp',
-										FromPort: 49152,
-										ToPort: 49152,
+										FromPort: 49156,
+										ToPort: 49156,
 										IpRanges: [
 											{
 												'CidrIp': '0.0.0.0/0'
@@ -97,25 +99,21 @@
 											}		
 										]
 									}
-								],
-								UserData: [
-									'#!/usr/bin/env bash',
-									'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash',
-									'export NVM_DIR="$HOME/.nvm"',
-									'[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"',
-									'nvm install 8.11.3',
-									'nvm use 8.11.3',
-									'cat <<EOF >> /home/ec2-user/.bashrc',
-									'export NVM_DIR="/.nvm"',
-									'[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"',
-									'EOF',
-									'yum install git -y',
-									'npm install pm2 -g'
 								]
 							}
 						}
 					},
 					commands: {
+						configureInstance: {
+							documentType: 'AWS-RunShellScript',
+							commands: [
+								'yum install -y gcc-c++ make',
+								'curl -sL https://rpm.nodesource.com/setup_8.x | bash -',
+								'yum install nodejs -y',
+								'yum install git -y',
+								'npm install pm2 -g'
+							]
+						},
 						pushToInstance: {
 							documentType: 'AWS-RunShellScript',
 							commands: [
@@ -144,6 +142,13 @@
 							commands: [
 								'cd /var/www/JS_app',
 								'npm start'
+							]
+						},
+						stopAppServer: {
+							documentType: 'AWS-RunShellScript',
+							commands: [
+								'cd /var/www/JS_app',
+								'npm stop'
 							]
 						}
 					},

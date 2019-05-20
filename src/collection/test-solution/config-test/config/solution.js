@@ -8,9 +8,6 @@
 			bundle: false,
 			server: {
 				render: false
-			},
-			db: {
-				name: 'mongodb-cookbook-examples_01_inserting-records_users'
 			}
 		},
 		browser: {

@@ -399,46 +399,6 @@
 		}
 	}
 
-	async function prepareInstancesConfig() {
-
-		var { instances } = config.deploy.preqs;
-
-		config.deploy.instances = {};
-		var instancesConfig = config.deploy.instances;
-
-		instancesConfig.start = [];
-		instancesConfig.create = [];
-
-		for(var instance=0; instance < instances.length; instance++) {
-
-			var instanceFilters = {
-				Filters: instances[instance].config.filters
-			};
-
-			var instanceDetails = await ec2_service.describeInstances(instanceFilters).promise();
-
-			if(instanceDetails.Reservations.length) {
-				var instanceId = instanceDetails.Reservations[0].Instances[0].InstanceId;
-
-				instancesConfig.start.push(instanceId);
-			}
-			else {
-
-				var instanceParams = instances[instance].setup.compute.parameters;
-
-				if(instanceParams.UserData) {
-					instanceParams.UserData = new Buffer(instanceParams.UserData.join('\n')).toString('base64');
-				}
-
-				instancesConfig.create.push(instances[instance].setup);
-			}
-
-		}
-
-		console.log(JSON.stringify(config, null, 4));
-		
-	}
-
 	async function startOrCreateCloudInstances(cb) {
 		
 		var { start } = config.deploy.instances;
@@ -510,8 +470,6 @@
 			return commandNames;
 		})(commands);
 
-		console.log(commandsList);
-
 		var interactions = [
 			{
 				type: 'list',
@@ -533,7 +491,7 @@
 		}
 		finally {
 			if(sendCommand_Response) {
-				console.log(`Command (ID : ${sendCommand_Response.Command.CommandId}) executed  successfully`);
+				console.log(`Command (ID : ${sendCommand_Response.Command.CommandId}) sent  successfully`);
 			}
 			else {
 				console.log('Command did not execute properly. Please check the parameters and try again');

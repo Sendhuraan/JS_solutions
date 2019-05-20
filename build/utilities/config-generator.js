@@ -22,19 +22,6 @@
 		apiVersion: '2014-11-06'
 	});
 
-	function replaceWithSSM(parameter, cache) {
-
-		var ssmTagPattern = /(ssm:)(\W\w+)/;
-
-		if(ssmTagPattern.test(parameter)) {
-			let ssmParameterName = parameter.replace(ssmTagPattern, '$2');
-			return cache[ssmParameterName];
-		}
-		else {
-			return parameter;
-		}
-	}
-
 	function SolutionConfig(DEFAULTS, solutionDir, commonConfigs, solutionConfigOptions) {
 
 		var {
@@ -68,7 +55,7 @@
 		var isBrowserBundle = solutionConfig.browser.bundle;
 
 		var isNodeServer = solutionConfig.node.server;
-		var isNodeDB = solutionConfig.node.db;
+		var isNodeDB = solutionEnvironments.workstation.instance.parameters.db;
 
 		if(solutionEnvironments) {
 			var isCloudDeploy = solutionEnvironments.cloud.enabled;
@@ -108,11 +95,11 @@
 		var DEPLOY_DIR__PARAM = solutionConfig.dirs.deployDir;
 
 		var OUTPUT_DIR = (function(outputDir, inputDir, devDir, deployDir, cloud) {
-			if(outputDir && devDir) {
-				return `${inputDir}/${outputDir}/${devDir}`;
-			}
-			else if(outputDir && deployDir && cloud) {
+			if(outputDir && deployDir && cloud) {
 				return `${inputDir}/${outputDir}/${deployDir}`;
+			}
+			else if(outputDir && devDir) {
+				return `${inputDir}/${outputDir}/${devDir}`;
 			}
 			else {
 				return `${inputDir}`;
@@ -128,13 +115,12 @@
 		if(isNodeDB) {
 
 			var NODE_DB_ENV_PARAMS = solutionEnvironments.workstation.instance.parameters.db;
-			var NODE_DB_SOLUTION_PARAMS = solutionConfig.node.db;
 
-			var NODE_DB_PARAMS = (function(envParams, solutionParams) {
+			var NODE_DB_PARAMS = (function(envParams) {
 				return {
-					connectionString: `${envParams.protocol}${envParams.username}:${envParams.password}@localhost:${envParams.port}/${solutionParams.name}`
+					connectionString: `${envParams.protocol}${envParams.username}:${envParams.password}@localhost:${envParams.port}/${envParams.name}`
 				};
-			})(NODE_DB_ENV_PARAMS, NODE_DB_SOLUTION_PARAMS);
+			})(NODE_DB_ENV_PARAMS);
 
 		}
 
@@ -342,58 +328,6 @@
 			var isCloudServer = solutionEnvironments.cloud.parameters.server;
 			var isCloudDB = solutionEnvironments.cloud.parameters.db;
 
-			var ssmParameterCache = (function(dir) {
-
-				var cacheFile = path.resolve(`${dir}/.tmp/aws.cache.json`);
-
-				if(fs.existsSync(cacheFile)) {
-					return require(cacheFile);
-				}
-				else {
-					return false;
-				}
-				
-			})(SOURCE_DIR);
-
-			if(isCloudServer) {
-
-				var NODE_CLOUD_SERVER_ENV_PARAMS = solutionEnvironments.cloud.parameters.server;
-				
-				NODE_CLOUD_SERVER_ENV_PARAMS.serveDir = BROWSER_BUNDLE_OUTPUT_DIR__PARAM;
-
-				var NODE_CLOUD_SERVER_PARAMS = (function(envParams) {
-					let ssmResolvedParams = {};
-					
-					for(let param in envParams) {
-						ssmResolvedParams[param] = replaceWithSSM(envParams[param], ssmParameterCache);
-					}
-
-					return {
-						port: ssmResolvedParams.port,
-						serveDir: ssmResolvedParams.serveDir
-					};
-				})(NODE_CLOUD_SERVER_ENV_PARAMS);
-			}
-
-			if(isCloudDB) {
-
-				var NODE_CLOUD_DB_ENV_PARAMS = solutionEnvironments.cloud.parameters.db;
-				var NODE_CLOUD_DB_SOLUTION_PARAMS = solutionConfig.node.db;
-
-				var NODE_CLOUD_DB_PARAMS = (function(envParams, solutionParams) {
-					let ssmResolvedParams = {};
-
-					for(let param in envParams) {
-						ssmResolvedParams[param] = replaceWithSSM(envParams[param], ssmParameterCache);
-					}
-
-					return {
-						connectionString: `${ssmResolvedParams.protocol}${ssmResolvedParams.username}:${ssmResolvedParams.password}@localhost:${ssmResolvedParams.port}/${solutionParams.name}`
-					};
-				})(NODE_CLOUD_DB_ENV_PARAMS, NODE_CLOUD_DB_SOLUTION_PARAMS);
-
-			}
-
 		}
 
 		this.config = {
@@ -453,28 +387,64 @@
 				dir: NODE_MAIN_FILE ? NODE_MAIN_FILE : OUTPUT_DIR
 			} : false,
 			deploy: isCloudDeploy ? {
-				preqs: {
-					instances: cloudInstancesDetails ? cloudInstancesDetails : false
-				},
 				prepare: {
 					includeDependencies: isDependencies ? isDependencies : false,
 					solutionPkgConfig: solutionPkgConfig ? solutionPkgConfig : false
-				},
-				parameters: {
-					env: {
-						server: NODE_CLOUD_SERVER_PARAMS ? NODE_CLOUD_SERVER_PARAMS : false,
-						db: NODE_CLOUD_DB_PARAMS ? NODE_CLOUD_DB_PARAMS : false	
-					}
 				}
 			} : false
 		};
 
+		this.replaceWithSSM = async function(parameter) {
 
+			var cacheFile = path.resolve(`${SOURCE_DIR}/.tmp/aws.cache.json`);
+
+			var ssmParameterCache = (function() {
+				if(fs.existsSync(cacheFile)) {
+					return require(cacheFile);
+				}
+				else {
+					fs.mkdirSync(`${SOURCE_DIR}/.tmp`);
+					return {};
+				}
+			})();
+
+			var ssmTagPattern = /(ssm:)(\W\w+)/;
+
+			if(ssmTagPattern.test(parameter)) {
+				let ssmParameterName = parameter.replace(ssmTagPattern, '$2');
+
+				if(ssmParameterCache[ssmParameterName]) {
+					return ssmParameterCache[ssmParameterName];
+				}
+				else {
+					
+					let ssmParamDetails = {
+						Name: `${ssmParameterName}`,
+						WithDecryption: true
+					};
+
+					let fetchedParamDetails = await ssm_service.getParameter(ssmParamDetails).promise();
+
+					let fetchedParamValue = fetchedParamDetails.Parameter.Value;
+
+					ssmParameterCache[ssmParameterName] = fetchedParamValue;
+
+					fs.writeFileSync(cacheFile, JSON.stringify(ssmParameterCache, null, 4));
+
+					return fetchedParamValue;
+				}
+				
+			}
+			else {
+				return parameter;
+			}
+		};
 
 		this.getAsyncData = async function() {
 
 			var instancesConfig = {};
 			var commandsConfig = {};
+			var cloudDBHostName = false;
 
 			if(isCloudDeploy) {
 
@@ -515,9 +485,26 @@
 					}
 				}
 
+				if(isCloudServer) {
+
+					var NODE_CLOUD_SERVER_ENV_PARAMS = solutionEnvironments.cloud.parameters.server;
+					let ssmResolvedParams = {};
+					
+					for(let param in NODE_CLOUD_SERVER_ENV_PARAMS) {
+						ssmResolvedParams[param] = await this.replaceWithSSM(NODE_CLOUD_SERVER_ENV_PARAMS[param]);
+					}
+
+					var NODE_CLOUD_SERVER_PARAMS = {
+						port: ssmResolvedParams.port,
+						serveDir: BROWSER_BUNDLE_OUTPUT_DIR__PARAM
+					};
+
+					this.config.deploy.parameters = {};
+					this.config.deploy.parameters.env = {};
+					this.config.deploy.parameters.env.server = NODE_CLOUD_SERVER_PARAMS;
+				}
+
 				if(!(instancesConfig.create.length && instancesConfig.start.length)) {
-
-
 
 					for(let instance=0; instance < instances.length; instance++) {
 
@@ -530,6 +517,33 @@
 						if(instanceDetails.Reservations.length) {
 							let instanceId = instanceDetails.Reservations[0].Instances[0].InstanceId;
 							let instanceCommands = instances[instance].commands;
+
+							if(isCloudDB) {
+								
+								if(instances[instance].config.type === 'db') {
+									cloudDBHostName = instanceDetails.Reservations[0].Instances[0].PublicDnsName;
+								}
+
+								var NODE_CLOUD_DB_ENV_PARAMS = solutionEnvironments.cloud.parameters.db;
+								var NODE_CLOUD_DB_HOSTNAME = cloudDBHostName;
+								let ssmResolvedParams = {};
+
+								for(let param in NODE_CLOUD_DB_ENV_PARAMS) {
+									ssmResolvedParams[param] = await this.replaceWithSSM(NODE_CLOUD_DB_ENV_PARAMS[param]);
+								}
+
+								if(NODE_CLOUD_DB_HOSTNAME) {
+									var NODE_CLOUD_DB_PARAMS = {
+										connectionString: `${ssmResolvedParams.protocol}${ssmResolvedParams.username}:${ssmResolvedParams.password}@${NODE_CLOUD_DB_HOSTNAME}:${ssmResolvedParams.port}/${ssmResolvedParams.name}`
+									};
+								}
+								else {
+									console.log('DB Instance not configured. No host found running');
+								}
+
+								this.config.deploy.parameters.env.db = NODE_CLOUD_DB_PARAMS;
+								
+							}
 
 							for(let command in instanceCommands) {
 
