@@ -122,7 +122,9 @@
 		var { test } = config.node;
 
 		if(!test) {
-			cb();
+			console.log('NODE TESTS NOT CONFIGURED');
+			cb(new Error('NODE TESTS NOT CONFIGURED'));
+			
 		}
 		else {
 			mochaRunner.runTests(globby.sync(test.pattern), test.options, cb);
@@ -133,7 +135,7 @@
 		var { test } = config.browser;
 
 		if(!test) {
-			cb();
+			cb(new Error('BROWSER TESTS NOT CONFIGURED'));
 		}
 		else {
 			var serverInstance = new KarmaServer(test.options, function(exitCode) {
@@ -157,6 +159,7 @@
 		var { test } = config.browser;
 
 		if(!test) {
+			console.log('BROWSER TESTS NOT CONFIGURED');
 			cb();
 		}
 		else {
@@ -329,7 +332,7 @@
 
 
 
-	function prepareDeployment(cb) {
+	function createDeployment(cb) {
 		var { solutionPkgConfig } = config.deploy.prepare;
 		var { includeDependencies } = config.deploy.prepare;
 		var { output } = config.build.dirs;
@@ -400,61 +403,70 @@
 	}
 
 	async function startOrCreateCloudInstances(cb) {
-		
-		var { start } = config.deploy.instances;
-		var { create } = config.deploy.instances;
+		var { deploy } = config;
 
-		if(start.length) {
-			var startInstanceDetails = {
-				InstanceIds: start
-			};
-
-			var startedInstanceDetails = await ec2_service.startInstances(startInstanceDetails).promise();
-
-			console.log(startedInstanceDetails);
+		if(!deploy) {
+			cb(new Error('DEPLOYMENT NOT CONFIGURED'));
 		}
+		else {
+			var { start } = config.deploy.instances;
+			var { create } = config.deploy.instances;
 
-		if(create.length) {
+			if(start.length) {
 
-			console.log('Instance not Found');
-			console.log('Creating new instance');
+				console.log('Instance Found');
+				console.log('Starting required instance(s)');
 
-			create.map(async function(instance) {
-
-				var describeVpcs_Response = await ec2_service.describeVpcs().promise();
-
-				console.log(`VPC ID : ${describeVpcs_Response.Vpcs[0].VpcId}`);
-
-				var paramsSecurityGroup = instance.securityGroup.metadata;
-				paramsSecurityGroup.VpcId = describeVpcs_Response.Vpcs[0].VpcId;
-
-				var createSecurityGroup_Response = await ec2_service.createSecurityGroup(paramsSecurityGroup).promise();
-
-				console.log(`Security Group (ID : ${createSecurityGroup_Response.GroupId}) Created!`);
-
-				var paramsIngress = {
-					GroupId: createSecurityGroup_Response.GroupId,
-					IpPermissions: instance.securityGroup.parameters.IpPermissions
+				var startInstanceDetails = {
+					InstanceIds: start
 				};
 
-				var securityGroup = await ec2_service.authorizeSecurityGroupIngress(paramsIngress).promise();
+				var startedInstanceDetails = await ec2_service.startInstances(startInstanceDetails).promise();
 
-				console.log('Rules Added to Security Group');
+				console.log(startedInstanceDetails);
+			}
 
-				var instanceParams = instance.compute.parameters;
+			if(create.length) {
 
-				instanceParams.SecurityGroupIds.push(createSecurityGroup_Response.GroupId);
+				console.log('Instance not Found');
+				console.log('Creating new instance');
 
-				var ec2_instances = await ec2_service.runInstances(instanceParams).promise();
+				create.map(async function(instance) {
 
-				ec2_instances.Instances.map(function(instance) {
-					console.log(`Instance (ID: ${instance.InstanceId}) Created`);
+					var describeVpcs_Response = await ec2_service.describeVpcs().promise();
+
+					console.log(`VPC ID : ${describeVpcs_Response.Vpcs[0].VpcId}`);
+
+					var paramsSecurityGroup = instance.securityGroup.metadata;
+					paramsSecurityGroup.VpcId = describeVpcs_Response.Vpcs[0].VpcId;
+
+					var createSecurityGroup_Response = await ec2_service.createSecurityGroup(paramsSecurityGroup).promise();
+
+					console.log(`Security Group (ID : ${createSecurityGroup_Response.GroupId}) Created!`);
+
+					var paramsIngress = {
+						GroupId: createSecurityGroup_Response.GroupId,
+						IpPermissions: instance.securityGroup.parameters.IpPermissions
+					};
+
+					var securityGroup = await ec2_service.authorizeSecurityGroupIngress(paramsIngress).promise();
+
+					console.log('Rules Added to Security Group');
+
+					var instanceParams = instance.compute.parameters;
+
+					instanceParams.SecurityGroupIds.push(createSecurityGroup_Response.GroupId);
+
+					var ec2_instances = await ec2_service.runInstances(instanceParams).promise();
+
+					ec2_instances.Instances.map(function(instance) {
+						console.log(`Instance (ID: ${instance.InstanceId}) Created`);
+					});
 				});
-			});
+			}
+
+			cb();
 		}
-
-		cb();
-
 	}
 
 	async function executeCommands() {
@@ -499,7 +511,7 @@
 		}
 	}
 
-	async function runCommands(cb) {
+	async function runCloudCommands(cb) {
 		await executeCommands();
 
 		var interactions = [
@@ -513,7 +525,7 @@
 		const userInput = await inquirer.prompt(interactions);
 
 		if(userInput.reinitiate === 'y') {
-			runCommands();
+			runCloudCommands();
 			return;
 		}
 		else if (userInput.reinitiate === 'n') {
@@ -538,30 +550,45 @@
 		.pipe(dest(`${dir}/output`));
 
 		cb();
-		
 	}
+
 
 	const lint = parallel(lintGlobalFiles, lintSourceFiles);
 	const bundle = series(bundleNode, bundleBrowser);
-	const prepareSolution = series(lint, runNodeTests, runBrowserTests, cleanOutputDir, bundle, build);
-	const deploy = series(getConfig, validateDeployment, prepareSolution, prepareDeployment, runCommands);
+	const generateSolution = series(lint, runNodeTests, runBrowserTests, cleanOutputDir, bundle, build);
+	const generateDeployment = series(validateDeployment, generateSolution, createDeployment);
+	const deploy = series(generateDeployment, runCloudCommands);
 
-	exports.lint = lint;
-	exports.runNodeTests = runNodeTests;
-	exports.startAndCaptureTestBrowsers = startAndCaptureTestBrowsers;
-	exports.runBrowserTests = runBrowserTests;
-	exports.bundle = bundle;
-	exports.build = build;
-	exports.copyServerFiles = copyServerFiles;
-	exports.runSolution = runSolution;
-	exports.deploy = deploy;
-	exports.transformFiles = transformFiles;
+	// Preqs Individual Tasks
+	exports.startAndCaptureTestBrowsers = series(getConfig, startAndCaptureTestBrowsers);
+	exports.startOrCreateCloudInstances = series(getConfig, startOrCreateCloudInstances);
 
-	exports.printConfig = series(getConfig, printConfig);
-	exports.runCommands = series(getConfig, runCommands);
-
+	// Preqs Group Tasks
 	exports.developmentPreqs = series(getConfig, startAndCaptureTestBrowsers);
 	exports.deploymentPreqs = series(getConfig, startOrCreateCloudInstances);
-	exports.default = series(getConfig, validateSolution, prepareSolution, runSolution);
+
+	// Individual Tasks
+	exports.lint = series(getConfig, lint);
+	exports.runNodeTests = series(getConfig, runNodeTests);
+	exports.runBrowserTests = series(getConfig, runBrowserTests);
+	exports.cleanOutputDir = series(getConfig, cleanOutputDir);
+	exports.bundle = series(getConfig, bundle);
+	exports.build = series(getConfig, build);
+	exports.runSolution = series(getConfig, runSolution);
+	exports.runCloudCommands = series(getConfig, runCloudCommands);
+
+	// Temp Tasks
+	exports.transformFiles = transformFiles;
+
+	// Group Tasks
+	exports.generateSolution = series(getConfig, generateSolution);
+	exports.generateDeployment = series(getConfig, generateDeployment);
+	exports.deploy = series(getConfig, deploy);
+
+	// Meta Tasks
+	exports.printConfig = series(getConfig, printConfig);
+
+	// Default Task
+	exports.default = series(getConfig, validateSolution, generateSolution, runSolution);
 	
 })();
