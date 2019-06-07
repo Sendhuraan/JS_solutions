@@ -4,7 +4,7 @@
 
 	var Mocha = require('mocha');
 
-	exports.runTests = function runTestFn(options, files) {
+	exports.runTests = function runTestFn(files, options, callback) {
 
 		var mocha = new Mocha(options);
 
@@ -13,7 +13,12 @@
 		});
 
 		mocha.run(function(failures){
-			process.exitCode = failures ? -1 : 0;
+			if(failures) {
+				return callback(new Error('Node Tests Failed'));
+			}
+			else {
+				return callback();
+			}
 		});
 
 	};
