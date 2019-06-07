@@ -4,8 +4,15 @@
 		node: {
 			// remove dir to set source dir.
 			dir: 'server',
-			test: false,
-			bundle: false,
+			test: {
+				pattern: ['**/*_test.js']
+			},
+			bundle: {
+				entry: 'index.js',
+				output: {
+					file: 'index.js'
+				}
+			},
 			server: {
 				render: false
 			}
@@ -13,7 +20,9 @@
 		browser: {
 			// remove dir to set source dir.
 			dir: 'client',
-			test: false,
+			test: {
+				pattern: ['**/*_test.jsx']
+			},
 			bundle: {
 				entry: 'index.jsx',
 				output: {

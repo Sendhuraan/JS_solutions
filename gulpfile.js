@@ -122,9 +122,7 @@
 		var { test } = config.node;
 
 		if(!test) {
-			console.log('NODE TESTS NOT CONFIGURED');
 			cb(new Error('NODE TESTS NOT CONFIGURED'));
-			
 		}
 		else {
 			mochaRunner.runTests(globby.sync(test.pattern), test.options, cb);
@@ -159,8 +157,7 @@
 		var { test } = config.browser;
 
 		if(!test) {
-			console.log('BROWSER TESTS NOT CONFIGURED');
-			cb();
+			cb(new Error('BROWSER TESTS NOT CONFIGURED'));
 		}
 		else {
 			KarmaRunner.run(test.options, function(exitCode) {
