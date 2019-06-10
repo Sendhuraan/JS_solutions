@@ -122,7 +122,7 @@
 		var { test } = config.node;
 
 		if(!test) {
-			cb(new Error('NODE TESTS NOT CONFIGURED'));
+			cb();
 		}
 		else {
 			mochaRunner.runTests(globby.sync(test.pattern), test.options, cb);
@@ -133,7 +133,7 @@
 		var { test } = config.browser;
 
 		if(!test) {
-			cb(new Error('BROWSER TESTS NOT CONFIGURED'));
+			cb();
 		}
 		else {
 			var serverInstance = new KarmaServer(test.options, function(exitCode) {
@@ -157,7 +157,7 @@
 		var { test } = config.browser;
 
 		if(!test) {
-			cb(new Error('BROWSER TESTS NOT CONFIGURED'));
+			cb();
 		}
 		else {
 			KarmaRunner.run(test.options, function(exitCode) {
@@ -318,6 +318,11 @@
 		else {
 			solutionProcess = child_process.fork(`${dir}`, [], {
 				execArgv: [`--inspect-brk=${DEBUG_PORT}`]
+				// TODO: Implement debug logging (See page:97 in node-cookbook)
+				// env: {
+				// 	DEBUG: '*',
+				// 	NODE_DEBUG: 'timer'
+				// }
 			});
 			console.log(`Open chrome://inspect. If no target was found, click configure and add localhost:${DEBUG_PORT}`);
 		}

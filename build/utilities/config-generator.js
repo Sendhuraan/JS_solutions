@@ -55,12 +55,12 @@
 		var isBrowserBundle = solutionConfig.browser.bundle;
 
 		var isNodeServer = solutionConfig.node.server;
-		var isNodeDB = solutionEnvironments.workstation.instance.parameters.db;
 
 		if(solutionEnvironments) {
 			var isCloudDeploy = solutionEnvironments.cloud.enabled;
 			var isDependencies = solutionEnvironments.cloud.includeDependencies;
 			var solutionMetadata = solutionEnvironments.cloud.metadata;
+			var isNodeDB = solutionEnvironments.workstation.instance.parameters.db;
 		}
 
 		var SOURCE_DIR = `${DEFAULT_FOLDER_STRING}/${solutionDir}`;

@@ -3,9 +3,8 @@
 	var solution = {
 		node: {
 			// remove dir to set source dir.
-			dir: 'server',
 			test: {
-				pattern: ['**/*_test.js']
+				pattern: ['**/*_test.js', 'server/**/*.js']
 			},
 			bundle: {
 				entry: 'index.js',

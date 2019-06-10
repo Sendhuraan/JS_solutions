@@ -47,6 +47,7 @@
 	},
 	"dependencies": {
 		"axios": "^0.18.0",
+		"base64-encode-stream": "^1.0.0",
 		"body-parser": "^1.18.3",
 		"bootstrap": "^4.3.1",
 		"classnames": "^2.2.6",
@@ -57,11 +58,15 @@
 		"mongoose": "^5.4.14",
 		"popper.js": "^1.14.7",
 		"prop-types": "^15.7.1",
+		"pump": "^3.0.0",
+		"pumpify": "^1.5.1",
 		"react": "^16.6.3",
 		"react-dom": "^16.6.3",
 		"react-redux": "^6.0.0",
 		"react-router-dom": "^4.3.1",
+		"readable-stream": "^3.4.0",
 		"redux": "^4.0.1",
-		"serve-static": "^1.13.2"
+		"serve-static": "^1.13.2",
+		"tableaux": "^1.0.1"
 	}
 }
