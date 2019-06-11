@@ -4,6 +4,7 @@
 
 	var webpack = require('webpack');
 	var HtmlWebpackPlugin = require('html-webpack-plugin');
+	var MiniCssExtractPlugin = require('mini-css-extract-plugin');
 	var nodeExternals = require('webpack-node-externals');
 
 	var transpileConfig = require('./babel.config.js');
@@ -60,8 +61,60 @@
 				{
 					test: /\.css$/,
 					use: [
-						'style-loader',
+						{
+							loader: MiniCssExtractPlugin.loader
+						},
 						'css-loader'
+					]
+				},
+				{
+					test: /\.scss$/,
+					use: [
+						{
+							loader: MiniCssExtractPlugin.loader
+						},
+						'css-loader',
+						'sass-loader'
+					]
+				},
+				{
+					test: /\.less$/,
+					use: [
+						{
+							loader: MiniCssExtractPlugin.loader
+						},
+						'css-loader',
+						'less-loader'
+					]
+				},
+				{
+					test: /\.pcss$/,
+					use: [
+						{
+							loader: MiniCssExtractPlugin.loader
+						},
+						'css-loader',
+						{
+							loader: 'postcss-loader',
+							options: {
+								ident: 'postcss',
+								plugins: (loader) => [
+									require('postcss-import')({ root: loader.resourcePath }),
+									require('postcss-css-variables')()
+								]
+							}
+						}
+					]
+				},
+				{
+					test: /\.(png|jpg|gif|svg)$/,
+					use: [
+						{
+							loader: 'file-loader',
+							options: {
+								name: 'images/[hash].[ext]'
+							}
+						}
 					]
 				},
 				{
@@ -80,11 +133,17 @@
 				}
 			]
 		},
-		plugins: [],
+		plugins: [
+			new MiniCssExtractPlugin({
+				filename: 'css/[name].css',
+				chunkFilename: '[id].css'
+			})
+		],
 		resolve: {
 			extensions: [
 				'.js',
-				'.jsx'
+				'.jsx',
+				'.scss'
 			]
 		}
 	};

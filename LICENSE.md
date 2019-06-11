@@ -26,4 +26,3 @@ in their redistributable form and any existing copyright and license notices
 remain intact. These files may be found in the following locations:
 
 * `node_modules`
-* various `vendor` directories

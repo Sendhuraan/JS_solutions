@@ -2,6 +2,8 @@
 
 (function() {
 
+	var npmDependencies = JSON.parse(require('./dependencies.json')).dependencies;
+
 	var config = {
 		node: {
 			// remove dir to set source dir.
@@ -19,48 +21,37 @@
 				render: false,
 				serveDir: 'client',
 				development: {
-					host: 'localhost',
 					port: 3000
 				},
 				stage: {
-					// set stage host
-					host: '',
-					// set stage port
-					port: 0
+					port: 8080
 				},
 				production: {
-					// set production host
-					host: '',
-					// set production host
-					port: 0
+					port: 80
 				}
 			},
 			db: {
 				protocol: 'mongodb://',
 				development: {
-					host: 'localhost',
+					username: '',
+					password: '',
 					port: 27017,
-					// set DB name
 					dbName: ''
 				},
 				stage: {
-					// set stage DB host
-					host: '',
-					// set stage DB port
+					username: '',
+					password: '',
 					port: 0,
-					// set stage DB name
 					dbName: ''
 				},
 				production: {
-					// set production DB host
-					host: '',
-					// set production DB port
+					username: '',
+					password: '',
 					port: 0,
-					// set production DB name
 					dbName: ''
 				}
 			},
-			deploy: 'deploy'
+			outputDir: 'deploy'
 		},
 		browser: {
 			// remove dir to set source dir.
@@ -84,11 +75,18 @@
 				}
 				
 			}
+		},
+		deploy: {
+			enabled: false,
+			cloudService: 'aws',
+			environment: 'stage',
+			includeDependencies: false
 		}
 	};
 
 	var publicAPI = {
-		config
+		config,
+		npmDependencies
 	};
 
 	module.exports = publicAPI;

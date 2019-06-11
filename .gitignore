@@ -3,3 +3,9 @@
 
 # Node Modules cache
 node_modules/.cache
+
+# Config Files
+env.json
+
+# Temp Cache Files
+*.cache.json

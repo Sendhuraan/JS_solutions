@@ -9,10 +9,24 @@
 	var HtmlWebpackPlugin = require('html-webpack-plugin');
 	var deepMerge = require('deepmerge');
 
-	function SolutionConfig(DEFAULTS, solutionDir, commonConfigs, solutionConfig, envType) {
+	const AWS = require('aws-sdk');
+	AWS.config.update({
+		region: 'ap-south-1'
+	});
+
+	var ec2_service = new AWS.EC2({
+		apiVersion: '2016-11-15'
+	});
+
+	var ssm_service = new AWS.SSM({
+		apiVersion: '2014-11-06'
+	});
+
+	function SolutionConfig(DEFAULTS, solutionDir, commonConfigs, solutionConfigOptions) {
 
 		var {
 			DEFAULT_FOLDER_STRING,
+			DEFAULT_DEV_MACHINE_NAME,
 			DEFAULT_LINT__GLOBAL
 
 		} = DEFAULTS;
@@ -26,6 +40,11 @@
 
 		} = commonConfigs;
 
+		var solutionConfig = solutionConfigOptions.solution;
+		var solutionDependencies = solutionConfigOptions.dependencies;
+		var solutionEnvironments = solutionConfigOptions.environments;
+		
+
 		var isNode = solutionConfig.node;
 		var isBrowser = solutionConfig.browser;
 
@@ -36,7 +55,13 @@
 		var isBrowserBundle = solutionConfig.browser.bundle;
 
 		var isNodeServer = solutionConfig.node.server;
-		var isNodeDB = solutionConfig.node.db;
+
+		if(solutionEnvironments) {
+			var isCloudDeploy = solutionEnvironments.cloud.enabled;
+			var isDependencies = solutionEnvironments.cloud.includeDependencies;
+			var solutionMetadata = solutionEnvironments.cloud.metadata;
+			var isNodeDB = solutionEnvironments.workstation.instance.parameters.db;
+		}
 
 		var SOURCE_DIR = `${DEFAULT_FOLDER_STRING}/${solutionDir}`;
 
@@ -61,41 +86,42 @@
 			}
 		})(BROWSER_DIR__PARAM, SOURCE_DIR);
 
-		switch(envType) {
-			case 'development':
-				var ENV_DEVELOPMENT = true;
-				break;
-			case 'stage':
-				var ENV_STAGE = true;
-				break;
-			case 'production':
-				var ENV_PRODUCTION = true;
-				break;
-			default:
-				ENV_DEVELOPMENT = true;
-		}
+		var OUTPUT_DIR__PARAM = solutionConfig.dirs.outputDir;
+		var OUTPUT_DIR__GROUP = (function(param, inputDir) {
+			return `${inputDir}/${param}`;
+		})(OUTPUT_DIR__PARAM, SOURCE_DIR);
 
-		var DEPLOY_DIR__PARAM = solutionConfig.node.deploy;
-		var DEPLOY_DIR = (function(param, inputDir) {
-			if(param) {
-				return `${inputDir}/${param}`;
+		var DEVELOPMENT_DIR__PARAM = solutionConfig.dirs.developmentDir;
+		var DEPLOY_DIR__PARAM = solutionConfig.dirs.deployDir;
+
+		var OUTPUT_DIR = (function(outputDir, inputDir, devDir, deployDir, cloud) {
+			if(outputDir && deployDir && cloud) {
+				return `${inputDir}/${outputDir}/${deployDir}`;
+			}
+			else if(outputDir && devDir) {
+				return `${inputDir}/${outputDir}/${devDir}`;
 			}
 			else {
 				return `${inputDir}`;
 			}
-		})(DEPLOY_DIR__PARAM, SOURCE_DIR);
+		})(OUTPUT_DIR__PARAM, SOURCE_DIR, DEVELOPMENT_DIR__PARAM, DEPLOY_DIR__PARAM, isCloudDeploy);
+
 		
 		if(isNodeServer) {
+			var NODE_SERVER_SOLUTION_PARAMS = solutionConfig.node.server;
+			var NODE_SERVER_RENDER = NODE_SERVER_SOLUTION_PARAMS.render;
+		}
 
-			var NODE_SERVER_DEVELOPMENT_PORT = solutionConfig.node.server.development.port;
-			var NODE_SERVER_STAGE_PORT = solutionConfig.node.server.stage.port;
-			var NODE_SERVER_PRODUCTION_PORT = solutionConfig.node.server.production.port;
+		if(isNodeDB) {
 
-			var NODE_SERVER_DEVELOPMENT_HOST = solutionConfig.node.server.development.host;
-			var NODE_SERVER_STAGE_HOST = solutionConfig.node.server.stage.host;
-			var NODE_SERVER_PRODUCTION_HOST = solutionConfig.node.server.production.host;
+			var NODE_DB_ENV_PARAMS = solutionEnvironments.workstation.instance.parameters.db;
 
-			var NODE_SERVER_RENDER = solutionConfig.node.server.render;
+			var NODE_DB_PARAMS = (function(envParams) {
+				return {
+					connectionString: `${envParams.protocol}${envParams.username}:${envParams.password}@localhost:${envParams.port}/${envParams.name}`
+				};
+			})(NODE_DB_ENV_PARAMS);
+
 		}
 
 		if(isNodeTest) {
@@ -150,11 +176,13 @@
 				return `${inputDir}/${param}`;
 			})(NODE_BUNDLE_ENTRY__PARAM, SOURCE_DIR);
 
-			var NODE_BUNDLE_OUTPUT_DIR = DEPLOY_DIR;
+			var NODE_BUNDLE_OUTPUT_DIR = OUTPUT_DIR;
 
-			var NODE_BUNDLE_OUTPUT_FILE = (function(param, inputDir) {
+			var NODE_BUNDLE_OUTPUT_FILE = NODE_BUNDLE_OUTPUT_FILE__PARAM;
+
+			var NODE_MAIN_FILE = (function(param, inputDir) {
 				return `${inputDir}/${param}`;
-			})(NODE_BUNDLE_OUTPUT_FILE__PARAM, SOURCE_DIR);
+			})(NODE_BUNDLE_OUTPUT_FILE, OUTPUT_DIR);
 
 
 			var nodeBundleConfig = (function(config, entry, outputDir, outputFile) {
@@ -165,8 +193,8 @@
 				newConfig.output.path = path.resolve(outputDir);
 				newConfig.output.filename = outputFile;
 
-				if(ENV_PRODUCTION) {
-					newConfig.mode = 'production';
+				if(isCloudDeploy) {
+					newConfig.mode = solutionEnvironments.cloud.mode;
 				}
 
 				return newConfig;
@@ -186,7 +214,7 @@
 
 			var BROWSER_BUNDLE_OUTPUT_DIR = (function(param, inputDir) {
 				return `${inputDir}/${param}`;
-			})(BROWSER_BUNDLE_OUTPUT_DIR__PARAM, DEPLOY_DIR);
+			})(BROWSER_BUNDLE_OUTPUT_DIR__PARAM, OUTPUT_DIR);
 
 			var BROWSER_BUNDLE_OUTPUT_FILE = BROWSER_BUNDLE_OUTPUT_FILE__PARAM;
 
@@ -243,8 +271,8 @@
 				newConfig.output.path = path.resolve(outputDir);
 				newConfig.output.filename = outputFile;
 
-				if(ENV_PRODUCTION) {
-					newConfig.mode = 'production';
+				if(isCloudDeploy) {
+					newConfig.mode = solutionEnvironments.cloud.mode;
 				}
 
 				if(!NODE_SERVER_RENDER) {
@@ -260,7 +288,46 @@
 		}
 
 		if(isNodeServer) {
-			var NODE_SERVER_SERVEDIR = BROWSER_BUNDLE_OUTPUT_DIR__PARAM;
+
+			var NODE_SERVER_ENV_PARAMS = solutionEnvironments.workstation.instance.parameters.server;
+			
+			
+			NODE_SERVER_ENV_PARAMS.serveDir = BROWSER_BUNDLE_OUTPUT_DIR__PARAM;
+
+			var NODE_SERVER_PARAMS = (function(envParams, solutionParams) {
+				return {
+					port: envParams.port,
+					serveDir: envParams.serveDir
+				};
+			})(NODE_SERVER_ENV_PARAMS, NODE_SERVER_SOLUTION_PARAMS);
+		}
+
+		if(isCloudDeploy) {
+
+			var solutionPackages = solutionDependencies;
+			var globalSolutionConfig = require('../../package.json');
+
+			var solutionPkgConfig = (function(config, metadata, listings) {
+
+				var dependenciesObj = {};
+
+				listings.map(function(listing) {
+					dependenciesObj[listing] = config['dependencies'][listing];
+				});
+
+				delete config.devDependencies;
+				config.dependencies = dependenciesObj;
+				config.name = metadata.name;
+				
+				return config;
+
+			})(globalSolutionConfig, solutionMetadata, solutionPackages);
+
+			var cloudInstancesDetails = solutionEnvironments.cloud.instances;
+
+			var isCloudServer = solutionEnvironments.cloud.parameters.server;
+			var isCloudDB = solutionEnvironments.cloud.parameters.db;
+
 		}
 
 		this.config = {
@@ -271,10 +338,16 @@
 					options: lintConfig.es5Options
 				},
 				source: {
-					pattern: [
+					pattern: OUTPUT_DIR__PARAM ?
+					[
 						`${SOURCE_DIR}/**/*.js`,
 						`${SOURCE_DIR}/**/*.jsx`,
-						`!${DEPLOY_DIR}/**/*.js`
+						`!${OUTPUT_DIR__GROUP}/**/*.js`
+					]
+					:
+					[
+						`${SOURCE_DIR}/**/*.js`,
+						`${SOURCE_DIR}/**/*.jsx`
 					],
 					options: lintConfig.es6Options
 				}
@@ -298,33 +371,239 @@
 					source: SOURCE_DIR ? SOURCE_DIR : false,
 					node: NODE_DIR ? NODE_DIR : false,
 					browser: BROWSER_DIR ? BROWSER_DIR : false,
-					deploy: NODE_BUNDLE_OUTPUT_DIR ? NODE_BUNDLE_OUTPUT_DIR : DEPLOY_DIR,
+					output: NODE_BUNDLE_OUTPUT_DIR ? NODE_BUNDLE_OUTPUT_DIR : OUTPUT_DIR,
 					serve: BROWSER_BUNDLE_OUTPUT_DIR ? BROWSER_BUNDLE_OUTPUT_DIR : false
 				},
-				envs: {
-					development: ENV_DEVELOPMENT ? {
-						host: NODE_SERVER_DEVELOPMENT_HOST ? NODE_SERVER_DEVELOPMENT_HOST : false,
-						port: NODE_SERVER_DEVELOPMENT_PORT ? NODE_SERVER_DEVELOPMENT_PORT : false,
-						serveDir: NODE_SERVER_SERVEDIR ? NODE_SERVER_SERVEDIR : false
-					} : false,
-					stage: ENV_STAGE ? {
-						host: NODE_SERVER_STAGE_HOST ? NODE_SERVER_STAGE_HOST : false,
-						port: NODE_SERVER_STAGE_PORT ? NODE_SERVER_STAGE_PORT : false,
-						serveDir: NODE_SERVER_SERVEDIR ? NODE_SERVER_SERVEDIR : false
-					} : false,
-					production: ENV_PRODUCTION ? {
-						host: NODE_SERVER_PRODUCTION_HOST ? NODE_SERVER_PRODUCTION_HOST : false,
-						port: NODE_SERVER_PRODUCTION_PORT ? NODE_SERVER_PRODUCTION_PORT : false,
-						serveDir: NODE_SERVER_SERVEDIR ? NODE_SERVER_SERVEDIR : false
+				env: {
+					workstation: !isCloudDeploy ? {
+						parameters: {
+							server: NODE_SERVER_PARAMS ? NODE_SERVER_PARAMS : false,
+							db: NODE_DB_PARAMS ? NODE_DB_PARAMS : false
+						}
 					} : false
 				}
 			} : false,
-			run: {
-				dir: DEPLOY_DIR
+			run: !isCloudDeploy ? {
+				dir: NODE_MAIN_FILE ? NODE_MAIN_FILE : OUTPUT_DIR
+			} : false,
+			deploy: isCloudDeploy ? {
+				prepare: {
+					includeDependencies: isDependencies ? isDependencies : false,
+					solutionPkgConfig: solutionPkgConfig ? solutionPkgConfig : false
+				}
+			} : false
+		};
+
+		this.replaceWithSSM = async function(parameter) {
+
+			var cacheFile = path.resolve(`${SOURCE_DIR}/.tmp/aws.cache.json`);
+
+			var ssmParameterCache = (function() {
+				if(fs.existsSync(cacheFile)) {
+					return require(cacheFile);
+				}
+				else {
+					fs.mkdirSync(`${SOURCE_DIR}/.tmp`);
+					return {};
+				}
+			})();
+
+			var ssmTagPattern = /(ssm:)(\W\w+)/;
+
+			if(ssmTagPattern.test(parameter)) {
+				let ssmParameterName = parameter.replace(ssmTagPattern, '$2');
+
+				if(ssmParameterCache[ssmParameterName]) {
+					return ssmParameterCache[ssmParameterName];
+				}
+				else {
+					
+					let ssmParamDetails = {
+						Name: `${ssmParameterName}`,
+						WithDecryption: true
+					};
+
+					let fetchedParamDetails = await ssm_service.getParameter(ssmParamDetails).promise();
+
+					let fetchedParamValue = fetchedParamDetails.Parameter.Value;
+
+					ssmParameterCache[ssmParameterName] = fetchedParamValue;
+
+					fs.writeFileSync(cacheFile, JSON.stringify(ssmParameterCache, null, 4));
+
+					return fetchedParamValue;
+				}
+				
+			}
+			else {
+				return parameter;
 			}
 		};
-		
+
+		this.getAsyncData = async function() {
+
+			var instancesConfig = {};
+			var commandsConfig = {};
+			var cloudDBHostName = false;
+
+			if(isCloudDeploy) {
+
+				var { instances } = solutionEnvironments.cloud;
+
+				instancesConfig.start = [];
+				instancesConfig.create = [];
+
+				for(let instance=0; instance < instances.length; instance++) {
+
+					let instanceFilters = {
+						Filters: instances[instance].config.filters
+					};
+
+					let instanceDetails = await ec2_service.describeInstances(instanceFilters).promise();
+
+					if(instanceDetails.Reservations.length) {
+						let instanceState = instanceDetails.Reservations[0].Instances[0].State.Name;
+						let instanceId = instanceDetails.Reservations[0].Instances[0].InstanceId;
+
+						if(instanceState === 'stopped') {
+							instancesConfig.start.push(instanceId);
+						}
+						else {
+							console.log(`${instanceId} cannot be started, as it is in ${instanceState} state`);
+						}
+						
+					}
+					else {
+
+						let instanceParams = instances[instance].setup.compute.parameters;
+
+						if(instanceParams.UserData) {
+							instanceParams.UserData = new Buffer(instanceParams.UserData.join('\n')).toString('base64');
+						}
+
+						instancesConfig.create.push(instances[instance].setup);
+					}
+				}
+
+				if(isCloudServer) {
+
+					var NODE_CLOUD_SERVER_ENV_PARAMS = solutionEnvironments.cloud.parameters.server;
+					let ssmResolvedParams = {};
+					
+					for(let param in NODE_CLOUD_SERVER_ENV_PARAMS) {
+						ssmResolvedParams[param] = await this.replaceWithSSM(NODE_CLOUD_SERVER_ENV_PARAMS[param]);
+					}
+
+					var NODE_CLOUD_SERVER_PARAMS = {
+						port: ssmResolvedParams.port,
+						serveDir: BROWSER_BUNDLE_OUTPUT_DIR__PARAM
+					};
+
+					this.config.deploy.parameters = {};
+					this.config.deploy.parameters.env = {};
+					this.config.deploy.parameters.env.server = NODE_CLOUD_SERVER_PARAMS;
+				}
+
+				if(!(instancesConfig.create.length && instancesConfig.start.length)) {
+
+					for(let instance=0; instance < instances.length; instance++) {
+
+						let instanceFilters = {
+							Filters: instances[instance].config.filters
+						};
+
+						let instanceDetails = await ec2_service.describeInstances(instanceFilters).promise();
+
+						if(instanceDetails.Reservations.length) {
+							let instanceId = instanceDetails.Reservations[0].Instances[0].InstanceId;
+							let instanceCommands = instances[instance].commands;
+
+							if(isCloudDB) {
+								
+								if(instances[instance].config.type === 'db') {
+									cloudDBHostName = instanceDetails.Reservations[0].Instances[0].PublicDnsName;
+								}
+
+								var NODE_CLOUD_DB_ENV_PARAMS = solutionEnvironments.cloud.parameters.db;
+								var NODE_CLOUD_DB_HOSTNAME = cloudDBHostName;
+								let ssmResolvedParams = {};
+
+								for(let param in NODE_CLOUD_DB_ENV_PARAMS) {
+									ssmResolvedParams[param] = await this.replaceWithSSM(NODE_CLOUD_DB_ENV_PARAMS[param]);
+								}
+
+								if(NODE_CLOUD_DB_HOSTNAME) {
+									var NODE_CLOUD_DB_PARAMS = {
+										connectionString: `${ssmResolvedParams.protocol}${ssmResolvedParams.username}:${ssmResolvedParams.password}@${NODE_CLOUD_DB_HOSTNAME}:${ssmResolvedParams.port}/${ssmResolvedParams.name}`
+									};
+								}
+								else {
+									console.log('DB Instance not configured. No host found running');
+								}
+
+								this.config.deploy.parameters.env.db = NODE_CLOUD_DB_PARAMS;
+								
+							}
+
+							for(let command in instanceCommands) {
+
+								commandsConfig[command] = {};
+								commandsConfig[command]['Parameters'] = {};
+								commandsConfig[command]['InstanceIds'] = [];
+								
+
+								if(instanceCommands[command]['inject'] === true) {
+
+									let injectParams = this.config.deploy.parameters;
+									
+									let paramResolvedCommand = instanceCommands[command]['commands'].map(function(command) {
+										let injectParamPattern = /(calc:{)(\w+)(})/;
+
+										if(injectParamPattern.test(command)) {
+											let injectParamName = command.match(injectParamPattern)[2];
+											let injectParamResolved = `"${JSON.stringify(injectParams[injectParamName]).replace(/"/g, '\\"')}"`;
+											command = command.replace(injectParamPattern, injectParamResolved);
+										}
+
+										return command;
+									});
+
+									commandsConfig[command]['Parameters']['commands'] = paramResolvedCommand;
+								}
+								else {
+									commandsConfig[command]['Parameters']['commands'] = instanceCommands[command]['commands'];
+								}
+
+								commandsConfig[command]['DocumentName'] = instanceCommands[command]['documentType'];
+								commandsConfig[command]['InstanceIds'].push(instanceId);
+							}
+						}
+					}
+
+				}
+
+			}
+
+			var asyncData = {
+				instances: Object.keys(instancesConfig).length ? instancesConfig : false,
+				commands: Object.keys(commandsConfig).length ? commandsConfig : false
+			};
+
+			return asyncData;
+		};	
 	}
+
+	SolutionConfig.prototype.getConfig = async function() {
+
+		var asyncDataResolved = await this.getAsyncData();
+
+		if(this.config.deploy) {
+			this.config.deploy.instances = asyncDataResolved.instances;
+			this.config.deploy.commands = asyncDataResolved.commands;
+		}
+
+		return this.config;
+	};
 
 	var publicAPI = {
 		SolutionConfig

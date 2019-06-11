@@ -1,2 +1,11 @@
-* Update README file to match the current process.
-* Refactor Jakefile.js to include multiple namespaces for multiple type of solutions.
+## Local development
+* Implement Debug logging in JS_solutions (See page: 97 in node-cookbook)
+* Implement documentation generator using mochawesome
+* Implement css linting
+
+## Examples
+* Integrate JS_basics & JS_utilities into JS_solutions
+* Create DS & Algorithms examples
+
+## Deploy
+* Fix deploy script, if there is no dependencies
