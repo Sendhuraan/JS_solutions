@@ -12,11 +12,20 @@
 	const inputFile = getFullPath('data/input/input.json');
 	const outputFile = getFullPath('data/output/output.json');
 
-	function addPoint() {
+	function average() {
 
 		return through.obj(function(chunk, encoding, callback) {
-			const pointObj = JSON.parse(chunk);
-			callback(null, { z: pointObj.x + pointObj.y });
+			const points = JSON.parse(chunk);
+
+			var pointsAvg = points.map(function(point) {
+				return {
+					x: point.x,
+					y: point.y,
+					average: (point.x + point.y) / 2
+				};
+			});
+
+			callback(null, pointsAvg);
 		});
 
 	}
@@ -31,7 +40,7 @@
 	}
 
 	fs.createReadStream(inputFile)
-	.pipe(addPoint())
+	.pipe(average())
 	.pipe(toJSONString())
 	.pipe(fs.createWriteStream(outputFile));
 		
