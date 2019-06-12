@@ -1,6 +1,6 @@
 (function() {
 
-	var main = require('../../main');
+	var main = require('../../main').solution;
 
 	var Parity = Object.create(main);
 

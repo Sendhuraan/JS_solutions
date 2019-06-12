@@ -18,16 +18,25 @@
 	console.log(`Input in binary : ${input.toString(2)}`);
 	console.log(`Number of setbits : ${BitUtils.countSetBits_shiftBits(input)}`);
 
-	var Solution_byPrototype = require('./solution').usingPrototype.Parity;
-	var parity_byPrototype = new Solution_byPrototype(input);
+	var parity = require('./solution').index.Parity;
+	parity.init(input);
 
-	console.log('Prototype');
+	console.log('Default (ObjLink)');
 	console.log('============');
-	console.log(parity_byPrototype.using_shiftBits());
-	console.log(parity_byPrototype.using_clearSetBits());
-	console.log(parity_byPrototype.using_lookupTable());
-	console.log(parity_byPrototype.using_xor());
-	console.log(parity_byPrototype.index());
+	console.log(`Default (xor) : ${parity.index()}`);
+
+	process.stdout.write('\n');
+
+	var Solution_byFunction = require('./solution').usingFunction.Parity;
+	var parity_byFunction = new Solution_byFunction(input);
+
+	console.log('Function');
+	console.log('============');
+	console.log(`Using shift bits : ${parity_byFunction.using_shiftBits()}`);
+	console.log(`Using clear set bits : ${parity_byFunction.using_clearSetBits()}`);
+	console.log(`Using lookup table : ${parity_byFunction.using_lookupTable()}`);
+	console.log(`Using xor : ${parity_byFunction.using_xor()}`);
+	console.log(`Default (xor) : ${parity_byFunction.index()}`);
 
 	process.stdout.write('\n');
 
@@ -36,11 +45,11 @@
 
 	console.log('ObjLink');
 	console.log('============');
-	console.log(parity_byObjLink.using_shiftBits());
-	console.log(parity_byObjLink.using_clearSetBits());
-	console.log(parity_byObjLink.using_lookupTable());
-	console.log(parity_byObjLink.using_xor());
-	console.log(parity_byObjLink.index());
+	console.log(`Using shift bits : ${parity_byObjLink.using_shiftBits()}`);
+	console.log(`Using clear set bits : ${parity_byObjLink.using_clearSetBits()}`);
+	console.log(`Using lookup table : ${parity_byObjLink.using_lookupTable()}`);
+	console.log(`Using xor : ${parity_byObjLink.using_xor()}`);
+	console.log(`Default (xor) : ${parity_byObjLink.index()}`);
 
 	process.stdout.write('\n');
 
@@ -49,11 +58,11 @@
 
 	console.log('Class');
 	console.log('============');
-	console.log(parity_byClass.using_shiftBits());
-	console.log(parity_byClass.using_clearSetBits());
-	console.log(parity_byClass.using_lookupTable());
-	console.log(parity_byClass.using_xor());
-	console.log(parity_byClass.index());
+	console.log(`Using shift bits : ${parity_byClass.using_shiftBits()}`);
+	console.log(`Using clear set bits : ${parity_byClass.using_clearSetBits()}`);
+	console.log(`Using lookup table : ${parity_byClass.using_lookupTable()}`);
+	console.log(`Using xor : ${parity_byClass.using_xor()}`);
+	console.log(`Default (xor) : ${parity_byClass.index()}`);
 	
 })();
 

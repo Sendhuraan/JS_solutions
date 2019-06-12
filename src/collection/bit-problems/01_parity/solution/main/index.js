@@ -4,15 +4,7 @@
 
 	var BitUtils = require('@sendhuraan/js-utilities').BitUtils;
 
-	function buildTable() {
-		var table = [];
-
-		for(var i = 0; i < 2**16 ; i++) {
-			table[i] = this.using_xor(i);
-		}
-
-		return table;
-	}
+	var Utils = require('./utilities');
 
 	function using_shiftBits(x = this.input) {
 		var result = 0;
@@ -62,13 +54,16 @@
 
 	const index = using_xor;
 
+	var solution = Object.create(Utils);
+
+	solution.using_shiftBits = using_shiftBits;
+	solution.using_clearSetBits = using_clearSetBits;
+	solution.using_lookupTable = using_lookupTable;
+	solution.using_xor = using_xor;
+	solution.index = index;
+
 	var publicAPI = {
-		buildTable,
-		using_shiftBits,
-		using_clearSetBits,
-		using_lookupTable,
-		using_xor,
-		index
+		solution
 	};
 
 	module.exports = publicAPI;

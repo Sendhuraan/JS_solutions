@@ -1,8 +1,6 @@
 (function() {
 
-	var BitUtils = require('@sendhuraan/js-utilities').BitUtils;
-
-	var main = require('../../main');
+	var main = require('../../main').solution;
 
 	class Parity {
 		constructor(input) {
