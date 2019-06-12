@@ -1,16 +1,10 @@
-## Consider an array of sheep where some sheep may be missing from their place. We need a function that counts the number of sheep present in the array (true means present).
+## Compute the parity of 64-bit number.
 
 For example,
 
-[
-true, true, true, false,
-true, true, true, true ,
-true, false, true, false,
-true, false, false, true,
-true, true, true, true,
-false, false, true, true
-]
+parity(6) => 0
+parity(7) => 1
 
-The correct answer would be 17.
-
-Hint: Don't forget to check for bad values like null/undefined
+### Explanation
+If number of 1(s) in a given number is odd, then parity is 1.
+If number of 1(s) in a given number is even, then parity is 0.

@@ -1,5 +1,3 @@
-/* eslint-disable no-bitwise */
-
 (function() {
 
 	var BitUtils = require('@sendhuraan/js-utilities').BitUtils;

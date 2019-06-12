@@ -18,7 +18,7 @@
 	console.log(`Input in binary : ${input.toString(2)}`);
 	console.log(`Number of setbits : ${BitUtils.countSetBits_shiftBits(input)}`);
 
-	var Solution_byPrototype = require('./solutions').usingPrototype.Parity;
+	var Solution_byPrototype = require('./solution').usingPrototype.Parity;
 	var parity_byPrototype = new Solution_byPrototype(input);
 
 	console.log('Prototype');
@@ -31,7 +31,7 @@
 
 	process.stdout.write('\n');
 
-	var parity_byObjLink = require('./solutions').usingObjLink.Parity;
+	var parity_byObjLink = require('./solution').usingObjLink.Parity;
 	parity_byObjLink.init(input);
 
 	console.log('ObjLink');
@@ -44,7 +44,7 @@
 
 	process.stdout.write('\n');
 
-	var Solution_byClass = require('./solutions').usingClass.Parity;
+	var Solution_byClass = require('./solution').usingClass.Parity;
 	var parity_byClass = new Solution_byClass(input);
 
 	console.log('Class');
