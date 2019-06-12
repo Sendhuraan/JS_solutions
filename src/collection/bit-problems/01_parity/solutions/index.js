@@ -1,9 +1,13 @@
 (function() {
 
-	var usingPrototype = require('./prototype');
+	var usingPrototype = require('./type/prototype');
+	var usingObjLink = require('./type/obj-link');
+	var usingClass = require('./type/class');
 
 	var publicAPI = {
-		usingPrototype
+		usingPrototype,
+		usingObjLink,
+		usingClass
 	};
 
 	module.exports = publicAPI;

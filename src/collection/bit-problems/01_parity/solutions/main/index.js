@@ -4,43 +4,39 @@
 
 	var BitUtils = require('@sendhuraan/js-utilities').BitUtils;
 
-	function Parity() {
+	function buildTable() {
+		var table = [];
 
-		this.buildTable = function() {
-			var table = [];
+		for(var i = 0; i < 2**16 ; i++) {
+			table[i] = this.using_xor(i);
+		}
 
-			for(var i=0; i < 2**16 ; i++) {
-				table[i] = this.using_clearSetBits(i);
-			}
-
-			return table;
-		};
-
+		return table;
 	}
 
-	Parity.prototype.using_shiftBits = function(x) {
+	function using_shiftBits(x = this.input) {
 		var result = 0;
-
+		
 		while(x) {
 			result = result ^ BitUtils.getLSB(x);
 			x = BitUtils.shiftBitRight(x, 1);
 		}
 
 		return result;
-	};
+	}
 
-	Parity.prototype.using_clearSetBits = function(x) {
+	function using_clearSetBits(x = this.input) {
 		var result = 0;
-
+		
 		while(x) {
 			result = result ^ 1;
 			x = BitUtils.clearLowestSetBit(x);
 		}
 
 		return result;
-	};
+	}
 
-	Parity.prototype.using_lookupTable = function(x) {
+	function using_lookupTable(x = this.input) {
 		var precomputedParity = this.buildTable();
 
 		var WORD_SIZE = 8;
@@ -52,10 +48,9 @@
 			precomputedParity[(x >>> WORD_SIZE) & BITMASK] ^
 			precomputedParity[x & BITMASK]
 		);
+	}
 
-	};
-
-	Parity.prototype.using_xor = function(x) {
+	function using_xor(x = this.input) {
 		x = x ^ (x >>> 16);
 		x = x ^ (x >>> 8);
 		x = x ^ (x >>> 4);
@@ -63,12 +58,17 @@
 		x = x ^ (x >>> 1);
 
 		return x & 1;
-	};
+	}
 
-	Parity.prototype.index = Parity.prototype.using_xor;
+	const index = using_xor;
 
 	var publicAPI = {
-		Parity
+		buildTable,
+		using_shiftBits,
+		using_clearSetBits,
+		using_lookupTable,
+		using_xor,
+		index
 	};
 
 	module.exports = publicAPI;
