@@ -61,18 +61,20 @@
 				{
 					test: /\.css$/,
 					use: [
-						{
-							loader: MiniCssExtractPlugin.loader
-						},
+						// {
+						// 	loader: MiniCssExtractPlugin.loader
+						// },
+						'style-loader',
 						'css-loader'
 					]
 				},
 				{
 					test: /\.scss$/,
 					use: [
-						{
-							loader: MiniCssExtractPlugin.loader
-						},
+						// {
+						// 	loader: MiniCssExtractPlugin.loader
+						// },
+						'style-loader',
 						'css-loader',
 						'sass-loader'
 					]
@@ -80,9 +82,10 @@
 				{
 					test: /\.less$/,
 					use: [
-						{
-							loader: MiniCssExtractPlugin.loader
-						},
+						// {
+						// 	loader: MiniCssExtractPlugin.loader
+						// },
+						'style-loader',
 						'css-loader',
 						'less-loader'
 					]
@@ -90,9 +93,10 @@
 				{
 					test: /\.pcss$/,
 					use: [
-						{
-							loader: MiniCssExtractPlugin.loader
-						},
+						// {
+						// 	loader: MiniCssExtractPlugin.loader
+						// },
+						'style-loader',
 						'css-loader',
 						{
 							loader: 'postcss-loader',
