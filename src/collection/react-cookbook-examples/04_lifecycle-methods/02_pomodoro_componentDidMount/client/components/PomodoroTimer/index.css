@@ -17,15 +17,15 @@
 	background: #5da423;
 }
 
-.Pomodoro .alert.shortBreak {
+.Pomodoro .alert.short-break {
 	background: #f4ad42;
 }
 
-.Pomodoro .alert.longBreak {
+.Pomodoro .alert.long-break {
 	background: #2ba6cb;
 }
 
-.Pomodoro .alert.buz {
+.Pomodoro .alert.buzz {
 	background: #c60f13;
 }
 
