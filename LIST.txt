@@ -1,0 +1,88 @@
+HTML
+------
+Elements & Attributes
+
+CSS
+------
+	CSS Properties
+	----------------
+	Selectors
+	Combinators
+	Pseudo classes
+	Pseudo elements
+
+New CSS features (flex and grid)
+DOM CSS / CSSOM
+Bootstrap 4
+Processors - LESS, SASS, PostCSS
+
+Javascript
+------------
+Types & Coercion
+Scope & Closure
+Object & Prototypes
+Async
+ES6
+
+	Server Side Technologies
+	--------------------------
+	Node JS
+	---------
+	I/O
+	Streams
+
+		Web Protocols
+		---------------
+		HTTP
+		HTTPS
+		Express
+		REST API
+		Real time
+
+	Security
+	Performance
+	Microservices
+
+	Client Side Technologies
+	--------------------------
+		Libraries
+		-----------
+		React
+		Vue
+
+		State Management
+		-------------------
+		Redux
+
+Web APIs
+----------
+Canvas
+DOM
+DOM Events
+Drag and Drop
+Fetch
+Geolocation
+IndexedDB
+SVG
+Server Sent Events (SSE)
+Service Worker
+Touch Events
+Webstorage
+	Localstorage
+	Sessionstorage
+Web Worker
+WebRTC
+WebSockets
+XMLHttpRequest (Ajax)
+
+Data Persistence
+-------------------
+MongoDB
+MySQL
+
+Deploy
+---------
+AWS
+
+Data Structures & Algorithms
+------------------------------
