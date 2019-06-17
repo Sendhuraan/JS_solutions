@@ -1,5 +1,3 @@
-/* eslint-disable no-useless-escape */
-
 (function() {
 
 	var environments = {
@@ -27,13 +25,7 @@
 				server: {
 					port: 'ssm:/Server/Stage/Port'
 				},
-				db: {
-					protocol: 'mongodb://',
-					username: 'ssm:/DB/Mongo/Stage/Username',
-					password: 'ssm:/DB/Mongo/Stage/Password',
-					port: 'ssm:/DB/Mongo/Stage/Port',
-					name: 'mongodb-cookbook-examples_01_inserting-records_users'
-				}
+				db: false
 			},
 			instances: [
 				{
