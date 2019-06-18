@@ -35,6 +35,7 @@
 			lintConfig,
 			nodeTestConfig,
 			browserTestConfig,
+			jestTestConfig,
 			transpileConfig,
 			bundleConfig
 
@@ -125,14 +126,32 @@
 		}
 
 		if(isNodeTest) {
-			var NODE_TEST_PATTERN__PARAM = solutionConfig.node.test.pattern;
+			var NODE_TEST_RUNNER__PARAM = solutionConfig.node.test.runner;
+			var NODE_TEST_OPTIONS;
 
-			var NODE_TEST_PATTERN = (function(param, inputDir) {
-				return param.map(function(item) {
-					return `${inputDir}/${item}`;
-				});
-			})(NODE_TEST_PATTERN__PARAM, NODE_DIR);
+			if(NODE_TEST_RUNNER__PARAM === 'jest') {
+				var { jestConfig } = jestTestConfig;
 
+				NODE_TEST_OPTIONS = {
+					runner: NODE_TEST_RUNNER__PARAM,
+					options: jestConfig
+				};
+			}
+			else {
+				var NODE_TEST_PATTERN__PARAM = solutionConfig.node.test.pattern;
+
+				var NODE_TEST_PATTERN = (function(param, inputDir) {
+					return param.map(function(item) {
+						return `${inputDir}/${item}`;
+					});
+				})(NODE_TEST_PATTERN__PARAM, NODE_DIR);
+
+				NODE_TEST_OPTIONS = {
+					runner: NODE_TEST_RUNNER__PARAM,
+					pattern: NODE_TEST_PATTERN,
+					options: nodeTestConfig
+				}
+			}
 		}
 
 		if(isBrowserTest) {
@@ -353,10 +372,7 @@
 				}
 			},
 			node: isNode ? {
-				test: isNodeTest ? {
-					pattern: NODE_TEST_PATTERN ? NODE_TEST_PATTERN : false,
-					options: NODE_TEST_PATTERN ? nodeTestConfig : false
-				} : false,
+				test: isNodeTest ? NODE_TEST_OPTIONS : false,
 				bundle: nodeBundleConfig ? nodeBundleConfig : false
 			} : false,
 			browser: isBrowser ? {

@@ -4,7 +4,10 @@
 		node: {
 			// remove dir to set source dir.
 			dir: 'server',
-			test: false,
+			test: {
+				runner: 'jest',
+				pattern: ['**/*.test.js']
+			},
 			bundle: false,
 			server: {
 				render: false

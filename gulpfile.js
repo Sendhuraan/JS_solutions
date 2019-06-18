@@ -41,6 +41,7 @@
 		lintConfig: require('./build/config/eslint.config.js'),
 		nodeTestConfig: require('./build/config/mocha.config.js'),
 		browserTestConfig: { path: './build/config/karma.config.js' },
+		jestTestConfig: require('./build/config/jest.config.js'),
 		transpileConfig: require('./build/config/babel.config.js'),
 		bundleConfig: require('./build/config/webpack.config.js')
 	};
@@ -118,22 +119,19 @@
 	}
 
 	function runNodeTests(cb){
-		var mochaRunner = require('./build/utilities/mocha-runner.js');
 		var { test } = config.node;
 
 		if(!test) {
 			cb();
 		}
+		else if(test.runner === 'jest') {
+			var jestRunner = require('./build/utilities/jest-runner.js');
+			jestRunner.runTests(test.options, cb);
+		}
 		else {
+			var mochaRunner = require('./build/utilities/mocha-runner.js');
 			mochaRunner.runTests(globby.sync(test.pattern), test.options, cb);
 		}
-	}
-
-	function runJestTests(cb) {
-		var { jestConfig } = require('./build/config/jest.config.js');
-		var jestRunner = require('./build/utilities/jest-runner.js');
-
-		jestRunner.runTests(jestConfig, cb);
 	}
 
 	function startAndCaptureTestBrowsers(cb) {
@@ -579,7 +577,6 @@
 	// Individual Tasks
 	exports.lint = series(getConfig, lint);
 	exports.runNodeTests = series(getConfig, runNodeTests);
-	exports.runJestTests = series(getConfig, runJestTests);
 	exports.runBrowserTests = series(getConfig, runBrowserTests);
 	exports.cleanOutputDir = series(getConfig, cleanOutputDir);
 	exports.bundle = series(getConfig, bundle);
