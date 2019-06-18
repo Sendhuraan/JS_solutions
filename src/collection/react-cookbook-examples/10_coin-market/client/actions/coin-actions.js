@@ -22,7 +22,7 @@ export const fetchCoins = function() {
 
 		const axiosData = {
 			method: 'GET',
-			url: 'http://dummy.restapiexample.com/api/v1/employees',
+			url: 'https://jsonplaceholder.typicode.com/users',
 			header: {
 				Accept: 'application/json',
 				'Content-Type': 'application/json',
