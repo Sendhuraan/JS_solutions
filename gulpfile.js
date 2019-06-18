@@ -129,6 +129,13 @@
 		}
 	}
 
+	function runJestTests(cb) {
+		var { jestConfig } = require('./build/config/jest.config.js');
+		var jestRunner = require('./build/utilities/jest-runner.js');
+
+		jestRunner.runTests(jestConfig, cb);
+	}
+
 	function startAndCaptureTestBrowsers(cb) {
 		var { test } = config.browser;
 
@@ -572,6 +579,7 @@
 	// Individual Tasks
 	exports.lint = series(getConfig, lint);
 	exports.runNodeTests = series(getConfig, runNodeTests);
+	exports.runJestTests = series(getConfig, runJestTests);
 	exports.runBrowserTests = series(getConfig, runBrowserTests);
 	exports.cleanOutputDir = series(getConfig, cleanOutputDir);
 	exports.bundle = series(getConfig, bundle);
