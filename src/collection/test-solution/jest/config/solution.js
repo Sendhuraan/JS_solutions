@@ -6,7 +6,7 @@
 			dir: 'server',
 			test: {
 				runner: 'jest',
-				pattern: ['**/*.test.js']
+				pattern: ['**/*_test.js']
 			},
 			bundle: false,
 			server: {
@@ -16,7 +16,10 @@
 		browser: {
 			// remove dir to set source dir.
 			dir: 'client',
-			test: false,
+			test: {
+				runner: 'jest',
+				pattern: ['**/*_test.js']
+			},
 			bundle: {
 				entry: 'index.jsx',
 				output: {

@@ -127,20 +127,32 @@
 
 		if(isNodeTest) {
 			var NODE_TEST_RUNNER__PARAM = solutionConfig.node.test.runner;
+			var NODE_TEST_PATTERN__PARAM = solutionConfig.node.test.pattern;
 			var NODE_TEST_OPTIONS;
+			var NODE_TEST_PATTERN;
 
 			if(NODE_TEST_RUNNER__PARAM === 'jest') {
-				var { jestConfig } = jestTestConfig;
+				let { jestConfig } = jestTestConfig;
+				var jestNodeTestConfig = Object.assign({}, jestConfig);
+
+				NODE_TEST_PATTERN = (function(param, inputDir) {
+					return param.map(function(item) {
+						return `${inputDir}/${item}`;
+					});
+				})(NODE_TEST_PATTERN__PARAM, '<rootDir>');
+
+				jestNodeTestConfig.rootDir = NODE_DIR;
+				jestNodeTestConfig.testEnvironment = 'node';
+				jestNodeTestConfig.testMatch = NODE_TEST_PATTERN;
 
 				NODE_TEST_OPTIONS = {
 					runner: NODE_TEST_RUNNER__PARAM,
-					options: jestConfig
+					config: jestNodeTestConfig
 				};
 			}
-			else {
-				var NODE_TEST_PATTERN__PARAM = solutionConfig.node.test.pattern;
+			else if(NODE_TEST_RUNNER__PARAM === 'mocha') {
 
-				var NODE_TEST_PATTERN = (function(param, inputDir) {
+				NODE_TEST_PATTERN = (function(param, inputDir) {
 					return param.map(function(item) {
 						return `${inputDir}/${item}`;
 					});
@@ -149,41 +161,78 @@
 				NODE_TEST_OPTIONS = {
 					runner: NODE_TEST_RUNNER__PARAM,
 					pattern: NODE_TEST_PATTERN,
-					options: nodeTestConfig
-				}
+					config: nodeTestConfig
+				};
+			}
+			else {
+				throw new Error('Node test runner not configured');
 			}
 		}
 
 		if(isBrowserTest) {
+
+			var BROWSER_TEST_RUNNER__PARAM = solutionConfig.browser.test.runner;
 			var BROWSER_TEST_PATTERN__PARAM = solutionConfig.browser.test.pattern;
+			var BROWSER_TEST_OPTIONS;
+			var BROWSER_TEST_PATTERN;
 
-			var BROWSER_TEST_PATTERN = (function(param, inputDir) {
-				return param.map(function(item) {
-					return `${inputDir}/${item}`;
-				});
-			})(BROWSER_TEST_PATTERN__PARAM, BROWSER_DIR);
+			if(BROWSER_TEST_RUNNER__PARAM === 'jest') {
+				let { jestConfig } = jestTestConfig;
+				var jestBrowserTestConfig = Object.assign({}, jestConfig);
 
-			var preprocessConfig = bundleConfig.browser.module;
+				BROWSER_TEST_PATTERN = (function(param, inputDir) {
+					return param.map(function(item) {
+						return `${inputDir}/${item}`;
+					});
+				})(BROWSER_TEST_PATTERN__PARAM, '<rootDir>');
 
-			var BROWSER_TEST_OPTIONS = (function(pattern, config, preprocessor) {
+				jestBrowserTestConfig.rootDir = BROWSER_DIR;
+				jestBrowserTestConfig.testEnvironment = 'jsdom';
+				jestBrowserTestConfig.testMatch = BROWSER_TEST_PATTERN;
 
-				var override = {
-					files: pattern,
-					preprocessors: {},
-					webpack: {
-						module: preprocessor
-					}
+				BROWSER_TEST_OPTIONS = {
+					runner: BROWSER_TEST_RUNNER__PARAM,
+					config: jestBrowserTestConfig
 				};
+			}
+			else if(BROWSER_TEST_RUNNER__PARAM === 'karma') {
 
-				pattern.map(function(item) {
-					override.preprocessors[item] = ['webpack'];
-				});
+				BROWSER_TEST_PATTERN = (function(param, inputDir) {
+					return param.map(function(item) {
+						return `${inputDir}/${item}`;
+					});
+				})(BROWSER_TEST_PATTERN__PARAM, BROWSER_DIR);
 
-				var browserTestOptions = karmaConfigParser.parseConfig(path.resolve(config.path), override);
+				var preprocessConfig = bundleConfig.browser.module;
 
-				return browserTestOptions;
+				var BROWSER_TEST_CONFIG = (function(pattern, config, preprocessor) {
 
-			})(BROWSER_TEST_PATTERN, browserTestConfig, preprocessConfig);
+					var override = {
+						files: pattern,
+						preprocessors: {},
+						webpack: {
+							module: preprocessor
+						}
+					};
+
+					pattern.map(function(item) {
+						override.preprocessors[item] = ['webpack'];
+					});
+
+					var browserTestConfig = karmaConfigParser.parseConfig(path.resolve(config.path), override);
+
+					return browserTestConfig;
+
+				})(BROWSER_TEST_PATTERN, browserTestConfig, preprocessConfig);
+
+				BROWSER_TEST_OPTIONS = {
+					runner: BROWSER_TEST_RUNNER__PARAM,
+					config: BROWSER_TEST_CONFIG
+				};
+			}
+			else {
+				throw new Error('Browser test runner not configured');
+			}
 		}
 
 		if(isNodeBundle) {
@@ -376,10 +425,7 @@
 				bundle: nodeBundleConfig ? nodeBundleConfig : false
 			} : false,
 			browser: isBrowser ? {
-				test: isBrowserTest ? {
-					pattern: BROWSER_TEST_PATTERN ? BROWSER_TEST_PATTERN : false,
-					options: BROWSER_TEST_OPTIONS ? BROWSER_TEST_OPTIONS : false
-				} : false,
+				test: isBrowserTest ? BROWSER_TEST_OPTIONS : false,
 				bundle: browserBundleConfig ? browserBundleConfig : false
 			} : false,
 			build: isNodeServer ? {

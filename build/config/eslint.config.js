@@ -94,7 +94,8 @@
 		'browser',
 		'node',
 		'commonjs',
-		'mocha'
+		'mocha',
+		'jest'
 	];
 	
 	// TODO Optimize duplicate options.

@@ -124,13 +124,22 @@
 		if(!test) {
 			cb();
 		}
-		else if(test.runner === 'jest') {
-			var jestRunner = require('./build/utilities/jest-runner.js');
-			jestRunner.runTests(test.options, cb);
-		}
 		else {
-			var mochaRunner = require('./build/utilities/mocha-runner.js');
-			mochaRunner.runTests(globby.sync(test.pattern), test.options, cb);
+			switch(test.runner) {
+				case 'jest':
+					var jestRunner = require('./build/utilities/jest-runner.js');
+					jestRunner.runTests(test.config, cb);
+					break;
+
+				case 'mocha':
+					var mochaRunner = require('./build/utilities/mocha-runner.js');
+					mochaRunner.runTests(globby.sync(test.pattern), test.config, cb);
+					break;
+
+				default:
+					mochaRunner.runTests(globby.sync(test.pattern), test.config, cb);
+					break;
+			}
 		}
 	}
 
@@ -165,15 +174,36 @@
 			cb();
 		}
 		else {
-			KarmaRunner.run(test.options, function(exitCode) {
-				if(exitCode) {
-					cb(new Error('Browser Tests Failed'));
-				}
-				else {
-					cb();
-				}
-				
-			});
+			switch(test.runner) {
+				case 'jest':
+					var jestRunner = require('./build/utilities/jest-runner.js');
+					jestRunner.runTests(test.config, cb);
+					break;
+
+				case 'karma':
+					KarmaRunner.run(test.config, function(exitCode) {
+						if(exitCode) {
+							cb(new Error('Browser Tests Failed'));
+						}
+						else {
+							cb();
+						}
+						
+					});
+					break;
+
+				default:
+					KarmaRunner.run(test.config, function(exitCode) {
+						if(exitCode) {
+							cb(new Error('Browser Tests Failed'));
+						}
+						else {
+							cb();
+						}
+						
+					});
+					break;
+			}
 		}
 	}
 

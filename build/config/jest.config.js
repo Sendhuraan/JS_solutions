@@ -3,7 +3,6 @@
 (function() {
 
 	const jestConfig = {
-		rootDir: 'src/collection/test-solution/jest'
 	};
 
 	const publicAPI = {
