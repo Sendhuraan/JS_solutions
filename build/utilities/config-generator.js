@@ -55,12 +55,11 @@
 		var isNodeBundle = solutionConfig.node.bundle;
 		var isBrowserBundle = solutionConfig.browser.bundle;
 
-		var isNodeServer = solutionConfig.node.server;
-
 		if(solutionEnvironments) {
 			var isCloudDeploy = solutionEnvironments.cloud.enabled;
 			var isDependencies = solutionEnvironments.cloud.includeDependencies;
 			var solutionMetadata = solutionEnvironments.cloud.metadata;
+			var isNodeServer = solutionEnvironments.workstation.instance.parameters.server;
 			var isNodeDB = solutionEnvironments.workstation.instance.parameters.db;
 		}
 
@@ -69,10 +68,15 @@
 		var NODE_DIR__PARAM = solutionConfig.node.dir;
 		var NODE_DIR = (function(param, inputDir) {
 			if(param) {
-				return `${inputDir}/${param}`;
+				if(param === '<sourceDir>') {
+					return `${inputDir}`;
+				}
+				else {
+					return `${inputDir}/${param}`;
+				}
 			}
 			else {
-				return `${inputDir}`;
+				return false;
 			}
 		})(NODE_DIR__PARAM, SOURCE_DIR);
 
@@ -80,10 +84,15 @@
 		var BROWSER_DIR__PARAM = solutionConfig.browser.dir;
 		var BROWSER_DIR = (function(param, inputDir) {
 			if(param) {
-				return `${inputDir}/${param}`;
+				if(param === '<sourceDir>') {
+					return `${inputDir}`;
+				}
+				else {
+					return `${inputDir}/${param}`;
+				}
 			}
 			else {
-				return `${inputDir}`;
+				return false;
 			}
 		})(BROWSER_DIR__PARAM, SOURCE_DIR);
 
@@ -109,8 +118,7 @@
 
 		
 		if(isNodeServer) {
-			var NODE_SERVER_SOLUTION_PARAMS = solutionConfig.node.server;
-			var NODE_SERVER_RENDER = NODE_SERVER_SOLUTION_PARAMS.render;
+			var NODE_SERVER_RENDER = solutionEnvironments.workstation.instance.parameters.server.render;
 		}
 
 		if(isNodeDB) {
@@ -119,7 +127,8 @@
 
 			var NODE_DB_PARAMS = (function(envParams) {
 				return {
-					connectionString: `${envParams.protocol}${envParams.username}:${envParams.password}@localhost:${envParams.port}/${envParams.name}`
+					connectionURL: `${envParams.protocol}${envParams.username ? `${envParams.username}:` : ''}${envParams.password ? `${envParams.password}@` : ''}localhost:${envParams.port}`,
+					name: `${envParams.name}`
 				};
 			})(NODE_DB_ENV_PARAMS);
 
@@ -362,12 +371,12 @@
 			
 			NODE_SERVER_ENV_PARAMS.serveDir = BROWSER_BUNDLE_OUTPUT_DIR__PARAM;
 
-			var NODE_SERVER_PARAMS = (function(envParams, solutionParams) {
+			var NODE_SERVER_PARAMS = (function(envParams) {
 				return {
 					port: envParams.port,
 					serveDir: envParams.serveDir
 				};
-			})(NODE_SERVER_ENV_PARAMS, NODE_SERVER_SOLUTION_PARAMS);
+			})(NODE_SERVER_ENV_PARAMS);
 		}
 
 		if(isCloudDeploy) {
@@ -428,7 +437,7 @@
 				test: isBrowserTest ? BROWSER_TEST_OPTIONS : false,
 				bundle: browserBundleConfig ? browserBundleConfig : false
 			} : false,
-			build: isNodeServer ? {
+			build: !isCloudDeploy && (isNodeServer || isNodeDB) ? {
 				dirs: {
 					source: SOURCE_DIR ? SOURCE_DIR : false,
 					node: NODE_DIR ? NODE_DIR : false,
@@ -437,12 +446,12 @@
 					serve: BROWSER_BUNDLE_OUTPUT_DIR ? BROWSER_BUNDLE_OUTPUT_DIR : false
 				},
 				env: {
-					workstation: !isCloudDeploy ? {
+					workstation: {
 						parameters: {
 							server: NODE_SERVER_PARAMS ? NODE_SERVER_PARAMS : false,
 							db: NODE_DB_PARAMS ? NODE_DB_PARAMS : false
 						}
-					} : false
+					}
 				}
 			} : false,
 			run: !isCloudDeploy ? {
@@ -596,7 +605,8 @@
 
 								if(NODE_CLOUD_DB_HOSTNAME) {
 									var NODE_CLOUD_DB_PARAMS = {
-										connectionString: `${ssmResolvedParams.protocol}${ssmResolvedParams.username}:${ssmResolvedParams.password}@${NODE_CLOUD_DB_HOSTNAME}:${ssmResolvedParams.port}/${ssmResolvedParams.name}`
+										connectionURL: `${ssmResolvedParams.protocol}${ssmResolvedParams.username ? ssmResolvedParams.username : ':'}${ssmResolvedParams.password ? ssmResolvedParams.password : '@'}${NODE_CLOUD_DB_HOSTNAME}:${ssmResolvedParams.port}`,
+										name: `${ssmResolvedParams.name}`
 									};
 								}
 								else {

@@ -11,8 +11,6 @@
 					},
 					db: {
 						protocol: 'mongodb://',
-						username: 'local',
-						password: 'pass',
 						port: 27017,
 						name: 'mongodb-cookbook-examples_01_inserting-records_users'
 					}

@@ -2,9 +2,10 @@
 
 	var solution = {
 		node: {
-			// remove dir to set source dir.
+			dir: '<sourceDir>',
 			test: {
-				pattern: ['**/*_test.js', 'server/**/*.js']
+				runner: 'mocha',
+				pattern: ['**/*_test.js']
 			},
 			bundle: {
 				entry: 'index.js',
@@ -17,9 +18,9 @@
 			}
 		},
 		browser: {
-			// remove dir to set source dir.
 			dir: 'client',
 			test: {
+				runner: 'karma',
 				pattern: ['**/*_test.jsx']
 			},
 			bundle: {

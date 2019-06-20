@@ -301,11 +301,19 @@
 		shell.mkdir('-p', output);
 		shell.mkdir('-p', serve);
 
-		shell.cp('-R',
+		if(source === node) {
+			shell.cp('-R',
+				`${source}/*.js`,
+				`${output}`
+			);
+		}
+		else {
+			shell.cp('-R',
 				`${node}`,
 				`${source}/*.js`,
-			`${output}`
-		);
+				`${output}`
+			);
+		}
 	}
 
 	function build(cb) {
