@@ -8,14 +8,14 @@
 
 	const readFile = util.promisify(fs.readFile);
 
+	const configEnv = './env.json';
+	const configPath = path.join(__dirname, configEnv);
+	const appConfig = JSON.parse(await readFile(configPath));
+
+	const { connectionURL } = appConfig.db;
+	const DB_NAME = appConfig.db.name;
+
 	try {
-		const configEnv = './env.json';
-		const configPath = path.join(__dirname, configEnv);
-		const appConfig = JSON.parse(await readFile(configPath));
-
-		const { connectionURL } = appConfig.db;
-		const DB_NAME = appConfig.db.name;
-
 		var client = await MongoClient.connect(connectionURL, { useNewUrlParser: true });
 
 		console.log('Connected to DB successfully');
@@ -39,9 +39,8 @@
 		console.error(err);
 	}
 	finally {
-		client.close(function() {
-			console.log('Connection to DB closed');
-		});
+		await client.close();
+		console.log('Connection to DB closed');
 	}
 
 }());
