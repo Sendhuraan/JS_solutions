@@ -5,6 +5,7 @@
 * Implement publishing to npm repo
 * Implement miniCssExtract plugin with karma browser test. Determine if mode is production, then use extract plugin or else use style loader.
 * Implement Jest test runner in JS_solutions
+* Implement different eslint setup for server and client files.
 
 ## Examples
 * Integrate JS_basics into JS_solutions
