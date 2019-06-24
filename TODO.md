@@ -6,6 +6,7 @@
 * Implement miniCssExtract plugin with karma browser test. Determine if mode is production, then use extract plugin or else use style loader.
 * Implement Jest test runner in JS_solutions
 * Implement different eslint setup for server and client files.
+* Implement multiple folders for node and browser runtimes.
 
 ## Examples
 * Integrate JS_basics into JS_solutions
