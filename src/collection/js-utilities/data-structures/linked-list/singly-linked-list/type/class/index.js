@@ -10,13 +10,7 @@
 		}
 	}
 
-	Singly.prototype.push = main.push;
-	Singly.prototype.pop = main.pop;
-	Singly.prototype.shift = main.shift;
-	Singly.prototype.unshift = main.unshift;
-	Singly.prototype.get = main.get;
-	Singly.prototype.set = main.set;
-	Singly.prototype.insert = main.insert;
+	Object.setPrototypeOf(Singly.prototype, main);
 
 	var publicAPI = {
 		Singly

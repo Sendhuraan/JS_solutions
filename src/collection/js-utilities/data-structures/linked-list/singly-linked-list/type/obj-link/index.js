@@ -4,7 +4,7 @@
 
 	var Singly = Object.create(main);
 
-	Singly.init = function(input) {
+	Singly.init = function() {
 		this.head = null;
 		this.tail = null;
 		this.length = 0;
