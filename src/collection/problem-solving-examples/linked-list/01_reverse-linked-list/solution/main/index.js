@@ -3,7 +3,7 @@
 	var Utils = require('./utilities');
 	var SinglyLinkedList = require('@sendhuraan/js-utilities').DataStructures.LinkedList.Singly.usingFunction.Singly;
 
-	function using_loop(inputList = this.input) {
+	function using_popPush(inputList = this.input) {
 		let localList = new SinglyLinkedList();
 		let currentNode = inputList.head;
 
@@ -33,8 +33,6 @@
 		while(currentNode_input !== null) {
 			outputList.push(currentNode_input.data);
 			currentNode_input = currentNode_input.next;
-
-			console.log(JSON.stringify(outputList, null, 4));
 		}
 
 		let previousNode = null;
@@ -58,11 +56,11 @@
 		// TODO
 	}
 
-	const index = using_loop;
+	const index = using_reverseLinks;
 
 	var solution = Object.create(Utils);
 
-	solution.using_loop = using_loop;
+	solution.using_popPush = using_popPush;
 	solution.using_reverseLinks = using_reverseLinks;
 	solution.using_recursion = using_recursion;
 	solution.index = index;
