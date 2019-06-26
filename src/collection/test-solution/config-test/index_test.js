@@ -6,8 +6,12 @@
 
 	describe('Simple Test Suite', function() {
 
-		it('test for equality', function() {
+		test('test for equality', function() {
 			assert.equal(4,4);
+		});
+
+		test('test for equality', function() {
+			expect(4).toBe(4);
 		});
 		
 	});

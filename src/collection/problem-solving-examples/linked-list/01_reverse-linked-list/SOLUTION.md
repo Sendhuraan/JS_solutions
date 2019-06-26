@@ -43,3 +43,12 @@
 * Improve performance
 * Other ways to refactor
 * Other people solutions
+
+## Can any of the below patterns be used for solving
+* Frequency counter
+* Multiple pointers
+* Sliding window
+* Divide and Conquer
+* Recursion
+* Dynamic programming
+* Greedy

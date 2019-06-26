@@ -1,14 +1,15 @@
-'use strict';
-
 (function() {
 
+	// All paths start from source dir for better configuration
 	var solution = {
 		node: {
-			// dir: '<sourceDir>' to set source dir.
-			dir: 'server',
+			lint: {
+				pattern: ['*.js', 'server/**/*.js', 'data/**/*.js'],
+				options: 'defaultLintOptions'
+			},
 			test: {
-				runner: 'mocha',
-				pattern: ['**/*_test.js', 'server/**/*.js']
+				runner: 'jest',
+				pattern: ['*_test.js', 'server/**/*_test.js']
 			},
 			bundle: {
 				entry: 'index.js',
@@ -18,21 +19,23 @@
 			}
 		},
 		browser: {
-			// dir: '<sourceDir>' to set source dir.
-			dir: 'client',
+			lint: {
+				pattern: ['client/**/*.js', 'client/**/*.jsx'],
+				options: 'transpileLintOptions'
+			},
 			test: {
 				runner: 'karma',
-				pattern: ['**/*_test.jsx']
+				pattern: ['client/**/*_test.jsx']
 			},
 			bundle: {
-				entry: 'index.jsx',
+				entry: 'client/index.jsx',
 				output: {
 					dir: 'dist',
 					file: 'bundle.js'
 				}
 			},
 			template: {
-				dir: 'templates',
+				dir: 'client/templates',
 				page: {
 					dir: 'pages',
 					file: 'index.js',
@@ -41,9 +44,11 @@
 			}
 		},
 		dirs: {
-			outputDir: 'output',
-			developmentDir: 'workstation',
-			deployDir: 'deploy'
+			node: ['server'],
+			browser: ['client'],
+			output: 'output',
+			development: 'workstation',
+			deploy: 'deploy'
 		}
 	};
 

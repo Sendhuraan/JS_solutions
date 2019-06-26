@@ -102,15 +102,31 @@
 		}
 	}
 
-	function lintSourceFiles(cb) {
-		var { lint } = config;
+	function lintNodeFiles(cb) {
+		var { lint } = config.node;
 
-		if(!lint.global.pattern) {
-			cb(new Error('SOURCE LINT NOT CONFIGURED'));
+		if(!lint) {
+			cb(new Error('NODE LINT NOT CONFIGURED'));
 		}
 		else {
-			return src(lint.source.pattern)
-			.pipe(eslint(lint.source.options))
+			return src(lint.pattern)
+			.pipe(eslint(lint.options))
+			.pipe(eslint.format())
+			.pipe(eslint.failAfterError());
+
+			cb();
+		}
+	}
+
+	function lintBrowserFiles(cb) {
+		var { lint } = config.browser;
+
+		if(!lint) {
+			cb(new Error('BROWSER LINT NOT CONFIGURED'));
+		}
+		else {
+			return src(lint.pattern)
+			.pipe(eslint(lint.options))
 			.pipe(eslint.format())
 			.pipe(eslint.failAfterError());
 
@@ -150,7 +166,7 @@
 			cb();
 		}
 		else {
-			var serverInstance = new KarmaServer(test.options, function(exitCode) {
+			var serverInstance = new KarmaServer(test.config, function(exitCode) {
 				console.log('Karma has exited with ' + exitCode);
 			});
 
@@ -598,7 +614,7 @@
 	}
 
 
-	const lint = parallel(lintGlobalFiles, lintSourceFiles);
+	const lint = parallel(lintGlobalFiles, lintNodeFiles, lintBrowserFiles);
 	const bundle = series(bundleNode, bundleBrowser);
 	const generateSolution = series(lint, runNodeTests, runBrowserTests, cleanOutputDir, bundle, build);
 	const generateDeployment = series(validateDeployment, generateSolution, createDeployment);

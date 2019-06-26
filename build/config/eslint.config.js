@@ -98,8 +98,7 @@
 		'jest'
 	];
 	
-	// TODO Optimize duplicate options.
-	var es5Options = {
+	var defaultLintOptions = {
 		'parserOptions': {
 			'ecmaVersion': 2017
 		},
@@ -111,7 +110,7 @@
 	};
 
 
-	var es6Options = {
+	var transpileLintOptions = {
 		'parser': 'babel-eslint',
 		'envs': envs,
 		'globals': [
@@ -121,8 +120,8 @@
 	};
 
 	module.exports = {
-		es5Options: es5Options,
-		es6Options: es6Options
+		defaultLintOptions,
+		transpileLintOptions
 	};
 	
 })();

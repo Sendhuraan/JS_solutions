@@ -93,7 +93,8 @@
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-eval("(async function () {\n  var fs = __webpack_require__(/*! fs */ \"fs\");\n\n  var path = __webpack_require__(/*! path */ \"path\");\n\n  var util = __webpack_require__(/*! util */ \"util\");\n\n  const readFile = util.promisify(fs.readFile);\n\n  const Server = __webpack_require__(/*! ./server/server.js */ \"./src/collection/test-solution/config-test/server/server.js\");\n\n  try {\n    const configEnv = '/env.json';\n    const configPath = path.join(__dirname, configEnv);\n    const appConfig = JSON.parse((await readFile(configPath)));\n    const PORT = appConfig.server.port;\n    const SERVE_DIR = appConfig.server.serveDir;\n    const CONTENT_DIR = path.join(__dirname, SERVE_DIR);\n    const server = new Server();\n    await server.start(CONTENT_DIR, PORT);\n    console.log(`Server at localhost:${PORT}`);\n  } catch (err) {\n    if (err) {\n      console.log(err);\n    }\n  }\n})();\n\n//# sourceURL=webpack:///./src/collection/test-solution/config-test/index.js?");
+"use strict";
+eval("\n\n(async function () {\n  var fs = __webpack_require__(/*! fs */ \"fs\");\n\n  var path = __webpack_require__(/*! path */ \"path\");\n\n  var util = __webpack_require__(/*! util */ \"util\");\n\n  const readFile = util.promisify(fs.readFile);\n\n  const Server = __webpack_require__(/*! ./server/server.js */ \"./src/collection/test-solution/config-test/server/server.js\");\n\n  try {\n    const configEnv = './env.json';\n    const configPath = path.join(__dirname, configEnv);\n    const appConfig = JSON.parse((await readFile(configPath)));\n    const PORT = appConfig.server.port;\n    const SERVE_DIR = appConfig.server.serveDir;\n    const CONTENT_DIR = path.join(__dirname, SERVE_DIR);\n    const server = new Server();\n    await server.start(CONTENT_DIR, PORT);\n    console.log(`Server at localhost:${PORT}`);\n  } catch (err) {\n    if (err) {\n      console.log(err);\n    }\n  }\n})();\n\n//# sourceURL=webpack:///./src/collection/test-solution/config-test/index.js?");
 
 /***/ }),
 
@@ -104,7 +105,8 @@ eval("(async function () {\n  var fs = __webpack_require__(/*! fs */ \"fs\");\n\
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-eval("(function () {\n  var finalhandler = __webpack_require__(/*! finalhandler */ \"finalhandler\");\n\n  var http = __webpack_require__(/*! http */ \"http\");\n\n  var serveStatic = __webpack_require__(/*! serve-static */ \"serve-static\");\n\n  var util = __webpack_require__(/*! util */ \"util\");\n\n  module.exports = class HttpServer {\n    constructor(contentDir) {\n      var serve = serveStatic(contentDir, {\n        'index': ['index.html', 'index.htm']\n      });\n      this._httpServer = http.createServer(function onRequest(req, res) {\n        serve(req, res, finalhandler(req, res));\n      });\n    }\n\n    start(portNumber) {\n      const listen = util.promisify(this._httpServer.listen.bind(this._httpServer));\n      return listen(portNumber, '0.0.0.0');\n    }\n\n    stop() {\n      const close = util.promisify(this._httpServer.close.bind(this._httpServer));\n      return close();\n    }\n\n    getNodeServer() {\n      return this._httpServer;\n    }\n\n  };\n})();\n\n//# sourceURL=webpack:///./src/collection/test-solution/config-test/server/http-server.js?");
+"use strict";
+eval("\n\n(function () {\n  var finalhandler = __webpack_require__(/*! finalhandler */ \"finalhandler\");\n\n  var http = __webpack_require__(/*! http */ \"http\");\n\n  var serveStatic = __webpack_require__(/*! serve-static */ \"serve-static\");\n\n  var util = __webpack_require__(/*! util */ \"util\");\n\n  module.exports = class HttpServer {\n    constructor(contentDir) {\n      var serve = serveStatic(contentDir, {\n        'index': ['index.html', 'index.htm']\n      });\n      this._httpServer = http.createServer(function onRequest(req, res) {\n        serve(req, res, finalhandler(req, res));\n      });\n    }\n\n    start(portNumber) {\n      const listen = util.promisify(this._httpServer.listen.bind(this._httpServer));\n      return listen(portNumber, '0.0.0.0');\n    }\n\n    stop() {\n      const close = util.promisify(this._httpServer.close.bind(this._httpServer));\n      return close();\n    }\n\n    getNodeServer() {\n      return this._httpServer;\n    }\n\n  };\n})();\n\n//# sourceURL=webpack:///./src/collection/test-solution/config-test/server/http-server.js?");
 
 /***/ }),
 
@@ -115,7 +117,8 @@ eval("(function () {\n  var finalhandler = __webpack_require__(/*! finalhandler 
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-eval("(function () {\n  const HttpServer = __webpack_require__(/*! ./http-server.js */ \"./src/collection/test-solution/config-test/server/http-server.js\");\n\n  module.exports = class Server {\n    async start(contentDir, portNumber) {\n      if (!portNumber) throw new Error('port number is required');\n      this._httpServer = new HttpServer(contentDir);\n      await this._httpServer.start(portNumber);\n    }\n\n  };\n})();\n\n//# sourceURL=webpack:///./src/collection/test-solution/config-test/server/server.js?");
+"use strict";
+eval("\n\n(function () {\n  const HttpServer = __webpack_require__(/*! ./http-server.js */ \"./src/collection/test-solution/config-test/server/http-server.js\");\n\n  module.exports = class Server {\n    async start(contentDir, portNumber) {\n      if (!portNumber) throw new Error('port number is required');\n      this._httpServer = new HttpServer(contentDir);\n      await this._httpServer.start(portNumber);\n    }\n\n  };\n})();\n\n//# sourceURL=webpack:///./src/collection/test-solution/config-test/server/server.js?");
 
 /***/ }),
 

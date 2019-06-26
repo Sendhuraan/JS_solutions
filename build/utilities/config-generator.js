@@ -65,44 +65,46 @@
 
 		var SOURCE_DIR = `${DEFAULT_FOLDER_STRING}/${solutionDir}`;
 
-		var NODE_DIR__PARAM = solutionConfig.node.dir;
+		var NODE_LINT_PATTERN__PARAM = solutionConfig.node.lint.pattern;
+		var NODE_LINT_OPTIONS__PARAM = solutionConfig.node.lint.options;
+
+		var NODE_LINT_PATTERN = (function(param, inputDir) {
+			return param.map(function(pattern) {
+				return `${inputDir}/${pattern}`;
+			});
+		})(NODE_LINT_PATTERN__PARAM, SOURCE_DIR);
+
+		var BROWSER_LINT_PATTERN__PARAM = solutionConfig.browser.lint.pattern;
+		var BROWSER_LINT_OPTIONS__PARAM = solutionConfig.browser.lint.options;
+
+		var BROWSER_LINT_PATTERN = (function(param, inputDir) {
+			return param.map(function(pattern) {
+				return `${inputDir}/${pattern}`;
+			});
+		})(BROWSER_LINT_PATTERN__PARAM, SOURCE_DIR);
+
+		var NODE_DIR__PARAM = solutionConfig.dirs.node;
 		var NODE_DIR = (function(param, inputDir) {
-			if(param) {
-				if(param === '<sourceDir>') {
-					return `${inputDir}`;
-				}
-				else {
-					return `${inputDir}/${param}`;
-				}
-			}
-			else {
-				return false;
-			}
+			return param.map(function(folder) {
+				return `${inputDir}/${folder}`;
+			});
 		})(NODE_DIR__PARAM, SOURCE_DIR);
 
 
-		var BROWSER_DIR__PARAM = solutionConfig.browser.dir;
+		var BROWSER_DIR__PARAM = solutionConfig.dirs.browser;
 		var BROWSER_DIR = (function(param, inputDir) {
-			if(param) {
-				if(param === '<sourceDir>') {
-					return `${inputDir}`;
-				}
-				else {
-					return `${inputDir}/${param}`;
-				}
-			}
-			else {
-				return false;
-			}
+			return param.map(function(folder) {
+				return `${inputDir}/${folder}`;
+			});
 		})(BROWSER_DIR__PARAM, SOURCE_DIR);
 
-		var OUTPUT_DIR__PARAM = solutionConfig.dirs.outputDir;
+		var OUTPUT_DIR__PARAM = solutionConfig.dirs.output;
 		var OUTPUT_DIR__GROUP = (function(param, inputDir) {
 			return `${inputDir}/${param}`;
 		})(OUTPUT_DIR__PARAM, SOURCE_DIR);
 
-		var DEVELOPMENT_DIR__PARAM = solutionConfig.dirs.developmentDir;
-		var DEPLOY_DIR__PARAM = solutionConfig.dirs.deployDir;
+		var DEVELOPMENT_DIR__PARAM = solutionConfig.dirs.development;
+		var DEPLOY_DIR__PARAM = solutionConfig.dirs.deploy;
 
 		var OUTPUT_DIR = (function(outputDir, inputDir, devDir, deployDir, cloud) {
 			if(outputDir && deployDir && cloud) {
@@ -150,9 +152,10 @@
 					});
 				})(NODE_TEST_PATTERN__PARAM, '<rootDir>');
 
-				jestNodeTestConfig.rootDir = NODE_DIR;
+				jestNodeTestConfig.rootDir = SOURCE_DIR;
 				jestNodeTestConfig.testEnvironment = 'node';
 				jestNodeTestConfig.testMatch = NODE_TEST_PATTERN;
+				jestNodeTestConfig.verbose = true;
 
 				NODE_TEST_OPTIONS = {
 					runner: NODE_TEST_RUNNER__PARAM,
@@ -165,7 +168,7 @@
 					return param.map(function(item) {
 						return `${inputDir}/${item}`;
 					});
-				})(NODE_TEST_PATTERN__PARAM, NODE_DIR);
+				})(NODE_TEST_PATTERN__PARAM, SOURCE_DIR);
 
 				NODE_TEST_OPTIONS = {
 					runner: NODE_TEST_RUNNER__PARAM,
@@ -195,9 +198,10 @@
 					});
 				})(BROWSER_TEST_PATTERN__PARAM, '<rootDir>');
 
-				jestBrowserTestConfig.rootDir = BROWSER_DIR;
+				jestBrowserTestConfig.rootDir = SOURCE_DIR;
 				jestBrowserTestConfig.testEnvironment = 'jsdom';
 				jestBrowserTestConfig.testMatch = BROWSER_TEST_PATTERN;
+				jestNodeTestConfig.verbose = true;
 
 				BROWSER_TEST_OPTIONS = {
 					runner: BROWSER_TEST_RUNNER__PARAM,
@@ -210,7 +214,7 @@
 					return param.map(function(item) {
 						return `${inputDir}/${item}`;
 					});
-				})(BROWSER_TEST_PATTERN__PARAM, BROWSER_DIR);
+				})(BROWSER_TEST_PATTERN__PARAM, SOURCE_DIR);
 
 				var preprocessConfig = bundleConfig.browser.module;
 
@@ -287,7 +291,7 @@
 
 			var BROWSER_BUNDLE_ENTRY = (function(param, inputDir) {
 				return `${inputDir}/${param}`;
-			})(BROWSER_BUNDLE_ENTRY__PARAM, BROWSER_DIR);
+			})(BROWSER_BUNDLE_ENTRY__PARAM, SOURCE_DIR);
 
 			var BROWSER_BUNDLE_OUTPUT_DIR = (function(param, inputDir) {
 				return `${inputDir}/${param}`;
@@ -305,7 +309,7 @@
 
 				var BROWSER_TEMPLATE_DIR = (function(param, inputDir) {
 					return `${inputDir}/${param}`;
-				})(BROWSER_TEMPLATE_DIR__PARAM, BROWSER_DIR);
+				})(BROWSER_TEMPLATE_DIR__PARAM, SOURCE_DIR);
 
 				var BROWSER_TEMPLATE_PAGE_DIR = (function(param, inputDir) {
 					return `${inputDir}/${param}`;
@@ -412,28 +416,38 @@
 			lint: {
 				global: {
 					pattern: DEFAULT_LINT__GLOBAL,
-					options: lintConfig.es5Options
-				},
-				source: {
+					options: lintConfig.defaultLintOptions
+				}
+			},
+			node: isNode ? {
+				lint: {
 					pattern: OUTPUT_DIR__PARAM ?
 					[
-						`${SOURCE_DIR}/**/*.js`,
-						`${SOURCE_DIR}/**/*.jsx`,
+						...NODE_LINT_PATTERN,
 						`!${OUTPUT_DIR__GROUP}/**/*.js`
 					]
 					:
 					[
-						`${SOURCE_DIR}/**/*.js`,
-						`${SOURCE_DIR}/**/*.jsx`
+						...NODE_LINT_PATTERN
 					],
-					options: lintConfig.es6Options
-				}
-			},
-			node: isNode ? {
+					options: lintConfig[NODE_LINT_OPTIONS__PARAM]
+				},
 				test: isNodeTest ? NODE_TEST_OPTIONS : false,
 				bundle: nodeBundleConfig ? nodeBundleConfig : false
 			} : false,
 			browser: isBrowser ? {
+				lint: {
+					pattern: OUTPUT_DIR__PARAM ?
+					[
+						...BROWSER_LINT_PATTERN,
+						`!${OUTPUT_DIR__GROUP}/**/*.js`
+					]
+					:
+					[
+						...BROWSER_LINT_PATTERN
+					],
+					options: lintConfig[BROWSER_LINT_OPTIONS__PARAM]
+				},
 				test: isBrowserTest ? BROWSER_TEST_OPTIONS : false,
 				bundle: browserBundleConfig ? browserBundleConfig : false
 			} : false,
