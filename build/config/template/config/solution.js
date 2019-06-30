@@ -1,10 +1,12 @@
+'use strict';
+
 (function() {
 
 	// All paths start from source dir for better configuration
 	var solution = {
 		node: {
 			lint: {
-				pattern: ['*.js', 'server/**/*.js', 'data/**/*.js'],
+				pattern: ['config/**/*.js', '*.js', 'server/**/*.js', 'data/**/*.js'],
 				options: 'defaultLintOptions'
 			},
 			test: {
@@ -44,8 +46,8 @@
 			}
 		},
 		dirs: {
-			node: ['server'],
-			browser: ['client'],
+			node: ['server', 'data'],
+			browser: ['client', 'shared'],
 			output: 'output',
 			development: 'workstation',
 			deploy: 'deploy'

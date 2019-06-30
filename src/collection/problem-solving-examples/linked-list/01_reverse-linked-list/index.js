@@ -1,3 +1,5 @@
+'use strict';
+
 (function() {
 
 	const { performance } = require('perf_hooks');
@@ -41,7 +43,7 @@
 	console.log(`Using pop push : ${JSON.stringify(reverseList_byObjLink.using_popPush(), null, 4)}`);
 
 	process.stdout.write('\n');
-	
+
 
 	var Solution_byClass = require('./solution').usingClass.ReverseLinkedList;
 	var reverseList_byClass = new Solution_byClass(inputList);

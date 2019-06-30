@@ -45,6 +45,8 @@
 		var solutionDependencies = solutionConfigOptions.dependencies;
 		var solutionEnvironments = solutionConfigOptions.environments;
 		
+		var isNodeLint = solutionConfig.node.lint;
+		var isBrowserLint = solutionConfig.browser.lint;
 
 		var isNode = solutionConfig.node;
 		var isBrowser = solutionConfig.browser;
@@ -54,6 +56,8 @@
 
 		var isNodeBundle = solutionConfig.node.bundle;
 		var isBrowserBundle = solutionConfig.browser.bundle;
+
+		var isOutputDir = solutionConfig.dirs.output;
 
 		if(solutionEnvironments) {
 			var isCloudDeploy = solutionEnvironments.cloud.enabled;
@@ -65,39 +69,48 @@
 
 		var SOURCE_DIR = `${DEFAULT_FOLDER_STRING}/${solutionDir}`;
 
-		var NODE_LINT_PATTERN__PARAM = solutionConfig.node.lint.pattern;
-		var NODE_LINT_OPTIONS__PARAM = solutionConfig.node.lint.options;
+		if(isNode) {
 
-		var NODE_LINT_PATTERN = (function(param, inputDir) {
-			return param.map(function(pattern) {
-				return `${inputDir}/${pattern}`;
-			});
-		})(NODE_LINT_PATTERN__PARAM, SOURCE_DIR);
+			if(isNodeLint) {
+				var NODE_LINT_PATTERN__PARAM = solutionConfig.node.lint.pattern;
+				var NODE_LINT_OPTIONS__PARAM = solutionConfig.node.lint.options;
 
-		var BROWSER_LINT_PATTERN__PARAM = solutionConfig.browser.lint.pattern;
-		var BROWSER_LINT_OPTIONS__PARAM = solutionConfig.browser.lint.options;
+				var NODE_LINT_PATTERN = (function(param, inputDir) {
+					return param.map(function(pattern) {
+						return `${inputDir}/${pattern}`;
+					});
+				})(NODE_LINT_PATTERN__PARAM, SOURCE_DIR);	
+			}
 
-		var BROWSER_LINT_PATTERN = (function(param, inputDir) {
-			return param.map(function(pattern) {
-				return `${inputDir}/${pattern}`;
-			});
-		})(BROWSER_LINT_PATTERN__PARAM, SOURCE_DIR);
+			var NODE_DIR__PARAM = solutionConfig.dirs.node;
+			var NODE_DIR = (function(param, inputDir) {
+				return param.map(function(folder) {
+					return `${inputDir}/${folder}`;
+				});
+			})(NODE_DIR__PARAM, SOURCE_DIR);
+		}
+		
+		if(isBrowser) {
 
-		var NODE_DIR__PARAM = solutionConfig.dirs.node;
-		var NODE_DIR = (function(param, inputDir) {
-			return param.map(function(folder) {
-				return `${inputDir}/${folder}`;
-			});
-		})(NODE_DIR__PARAM, SOURCE_DIR);
+			if(isBrowserLint) {
+				var BROWSER_LINT_PATTERN__PARAM = solutionConfig.browser.lint.pattern;
+				var BROWSER_LINT_OPTIONS__PARAM = solutionConfig.browser.lint.options;
 
+				var BROWSER_LINT_PATTERN = (function(param, inputDir) {
+					return param.map(function(pattern) {
+						return `${inputDir}/${pattern}`;
+					});
+				})(BROWSER_LINT_PATTERN__PARAM, SOURCE_DIR);
+			}
 
-		var BROWSER_DIR__PARAM = solutionConfig.dirs.browser;
-		var BROWSER_DIR = (function(param, inputDir) {
-			return param.map(function(folder) {
-				return `${inputDir}/${folder}`;
-			});
-		})(BROWSER_DIR__PARAM, SOURCE_DIR);
-
+			var BROWSER_DIR__PARAM = solutionConfig.dirs.browser;
+			var BROWSER_DIR = (function(param, inputDir) {
+				return param.map(function(folder) {
+					return `${inputDir}/${folder}`;
+				});
+			})(BROWSER_DIR__PARAM, SOURCE_DIR);
+		}
+		
 		var OUTPUT_DIR__PARAM = solutionConfig.dirs.output;
 		var OUTPUT_DIR__GROUP = (function(param, inputDir) {
 			return `${inputDir}/${param}`;
@@ -117,8 +130,8 @@
 				return `${inputDir}`;
 			}
 		})(OUTPUT_DIR__PARAM, SOURCE_DIR, DEVELOPMENT_DIR__PARAM, DEPLOY_DIR__PARAM, isCloudDeploy);
-
 		
+
 		if(isNodeServer) {
 			var NODE_SERVER_RENDER = solutionEnvironments.workstation.instance.parameters.server.render;
 		}

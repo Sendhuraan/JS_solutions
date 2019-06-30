@@ -106,7 +106,7 @@
 		var { lint } = config.node;
 
 		if(!lint) {
-			cb(new Error('NODE LINT NOT CONFIGURED'));
+			cb();
 		}
 		else {
 			return src(lint.pattern)
@@ -122,7 +122,7 @@
 		var { lint } = config.browser;
 
 		if(!lint) {
-			cb(new Error('BROWSER LINT NOT CONFIGURED'));
+			cb();
 		}
 		else {
 			return src(lint.pattern)
