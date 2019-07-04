@@ -1,3 +1,5 @@
+'use strict';
+
 (function() {
 
 	const fs = require('fs');
@@ -21,7 +23,7 @@
 
 		const key = new Buffer('SendhuraanPasskeSendhuraanPasske');
 		const iv = new Buffer(randomBytes(16)).toString('hex').slice(0, 16);
-		const encrypt = createCipheriv('aes-256-cbc',key , iv);
+		const encrypt = createCipheriv('aes-256-cbc', key, iv);
 
 		const encode = base64_encode();
 		const writeStream = fs.createWriteStream(outputFile);

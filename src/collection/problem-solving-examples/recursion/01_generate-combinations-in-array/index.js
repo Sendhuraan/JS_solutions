@@ -2,7 +2,7 @@
 
 (function() {
 
-	var inputArray = [1, 2, 3, 4, 5, 6];
+	var inputArray = [2,2,3,4];
 	var combinationOf = 3;
 
 	var Solution_byFunction = require('./solution').usingFunction.Combination;

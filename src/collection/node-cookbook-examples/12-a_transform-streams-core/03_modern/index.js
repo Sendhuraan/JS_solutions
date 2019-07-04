@@ -1,5 +1,7 @@
 /* eslint-disable new-cap */
 
+'use strict';
+
 (function() {
 
 	const fs = require('fs');

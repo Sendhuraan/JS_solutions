@@ -1,3 +1,5 @@
+'use strict';
+
 (function() {
 
 	const fs = require('fs');

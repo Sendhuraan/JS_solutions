@@ -1,3 +1,5 @@
+'use strict';
+
 (function() {
 
 	var readStream = require('readable-stream');

@@ -1,3 +1,5 @@
+'use strict';
+
 (function() {
 
 	if(process.stdin.isTTY) {

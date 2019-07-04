@@ -1,20 +1,23 @@
+'use strict';
+
 (function() {
 
 	var solution = {
 		node: {
-			// remove dir to set source dir.
-			dir: 'server',
+			lint: {
+				pattern: ['**/*.js'],
+				options: 'defaultLintOptions'
+			},
 			test: false,
-			bundle: false,
-			server: {
-				render: false
-			}
+			bundle: false
 		},
 		browser: false,
 		dirs: {
-			outputDir: 'output',
-			developmentDir: 'workstation',
-			deployDir: 'deploy'
+			node: ['server'],
+			browser: false,
+			output: false,
+			development: false,
+			deploy: false
 		}
 	};
 

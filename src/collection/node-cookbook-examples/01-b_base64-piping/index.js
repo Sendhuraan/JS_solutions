@@ -1,3 +1,5 @@
+'use strict';
+
 (function() {
 
 	var base64_encode = require('base64-encode-stream');

@@ -1,3 +1,5 @@
+'use strict';
+
 (function() {
 
 	console.log('Type Input: ');

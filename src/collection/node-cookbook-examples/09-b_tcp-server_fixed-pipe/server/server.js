@@ -1,3 +1,5 @@
+'use strict';
+
 (function() {
 
 	const TcpServer = require('./tcp-server.js');
