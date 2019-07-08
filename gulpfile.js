@@ -4,7 +4,7 @@
 	var fs = require('fs');
 	var path = require('path');
 
-	const { src, series, parallel, watch, dest } = require('gulp');
+	const { src, series, parallel, dest } = require('gulp');
 	var program = require('commander');
 	const eslint = require('gulp-eslint');
 	var webpack = require('webpack');
@@ -29,12 +29,10 @@
 
 	program
 		.option('-d --dir <value>', 'Input folder name')
-		.option('-env --environment <value>', 'Build environment')
 		.option('--debug <value>', 'Build environment')
 		.parse(process.argv);
 
 	var DIRNAME = program.dir;
-	var ENV_TYPE = program.environment;
 	var DEBUG_PORT = Number(program.debug);
 
 	var commonConfigs = {
@@ -42,7 +40,6 @@
 		nodeTestConfig: require('./build/config/mocha.config.js'),
 		browserTestConfig: { path: './build/config/karma.config.js' },
 		jestTestConfig: require('./build/config/jest.config.js'),
-		transpileConfig: require('./build/config/babel.config.js'),
 		bundleConfig: require('./build/config/webpack.config.js')
 	};
 
@@ -77,7 +74,7 @@
 	var solutionConfig = new SolutionConfig(DEFAULTS, sourceDir, commonConfigs, pageConfigOptions);
 	var config;
 
-	async function getConfig(cb) {
+	async function getConfig() {
 		config = await solutionConfig.getConfig();
 	}
 
@@ -172,7 +169,7 @@
 
 			serverInstance.start();
 
-			serverInstance.on('listening', function (browser) {
+			serverInstance.on('listening', function () {
 				console.log('CAPTURE THE REQUIRED BROWSERS...');
 			});
 
@@ -510,7 +507,7 @@
 						IpPermissions: instance.securityGroup.parameters.IpPermissions
 					};
 
-					var securityGroup = await ec2_service.authorizeSecurityGroupIngress(paramsIngress).promise();
+					await ec2_service.authorizeSecurityGroupIngress(paramsIngress).promise();
 
 					console.log('Rules Added to Security Group');
 
@@ -572,7 +569,7 @@
 		}
 	}
 
-	async function runCloudCommands(cb) {
+	async function runCloudCommands() {
 		await executeCommands();
 
 		var interactions = [

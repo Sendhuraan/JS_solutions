@@ -7,7 +7,6 @@
 	var karmaConfigParser = require('karma').config;
 	var glob = require('glob');
 	var HtmlWebpackPlugin = require('html-webpack-plugin');
-	var deepMerge = require('deepmerge');
 
 	const AWS = require('aws-sdk');
 	AWS.config.update({
@@ -26,7 +25,6 @@
 
 		var {
 			DEFAULT_FOLDER_STRING,
-			DEFAULT_DEV_MACHINE_NAME,
 			DEFAULT_LINT__GLOBAL
 
 		} = DEFAULTS;
@@ -36,7 +34,6 @@
 			nodeTestConfig,
 			browserTestConfig,
 			jestTestConfig,
-			transpileConfig,
 			bundleConfig
 
 		} = commonConfigs;
@@ -56,8 +53,6 @@
 
 		var isNodeBundle = solutionConfig.node.bundle;
 		var isBrowserBundle = solutionConfig.browser.bundle;
-
-		var isOutputDir = solutionConfig.dirs.output;
 
 		if(solutionEnvironments) {
 			var isCloudDeploy = solutionEnvironments.cloud.enabled;
@@ -79,7 +74,7 @@
 					return param.map(function(pattern) {
 						return `${inputDir}/${pattern}`;
 					});
-				})(NODE_LINT_PATTERN__PARAM, SOURCE_DIR);	
+				})(NODE_LINT_PATTERN__PARAM, SOURCE_DIR);
 			}
 
 			if(!isCloudDeploy && (isNodeServer || isNodeDB)) {
@@ -265,7 +260,6 @@
 
 		if(isNodeBundle) {
 			var NODE_BUNDLE_ENTRY__PARAM 		= solutionConfig.node.bundle.entry;
-			var NODE_BUNDLE_OUTPUT_DIR__PARAM 	= solutionConfig.node.bundle.output.dir;
 			var NODE_BUNDLE_OUTPUT_FILE__PARAM 	= solutionConfig.node.bundle.output.file;
 
 			var NODE_BUNDLE_ENTRY = (function(param, inputDir) {
@@ -418,8 +412,6 @@
 				return config;
 
 			})(globalSolutionConfig, solutionMetadata, solutionPackages);
-
-			var cloudInstancesDetails = solutionEnvironments.cloud.instances;
 
 			var isCloudServer = solutionEnvironments.cloud.parameters.server;
 			var isCloudDB = solutionEnvironments.cloud.parameters.db;

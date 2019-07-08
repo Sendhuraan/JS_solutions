@@ -19,7 +19,6 @@
 			var isBuffer = false;
 			var inputString = null;
 			var result = null;
-			var outBuffer = null;
 
 			console.log(file.isStream());
 

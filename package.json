@@ -72,6 +72,7 @@
 		"lessc": "^1.0.2",
 		"mongodb": "^3.2.7",
 		"mongoose": "^5.4.14",
+		"multipart-read-stream": "^3.0.1",
 		"popper.js": "^1.14.7",
 		"prop-types": "^15.7.1",
 		"pump": "^3.0.0",

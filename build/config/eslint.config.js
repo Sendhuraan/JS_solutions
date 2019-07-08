@@ -56,6 +56,7 @@
 		'no-self-compare': ERROR,
 		'no-throw-literal': ERROR,
 		'no-useless-escape': ERROR,
+		'no-unused-vars': ERROR,
 		'no-with': ERROR,
 		'prefer-promise-reject-errors': ERROR,
 		'radix': ERROR,

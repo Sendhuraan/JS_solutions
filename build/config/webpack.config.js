@@ -2,8 +2,6 @@
 
 (function() {
 
-	var webpack = require('webpack');
-	var HtmlWebpackPlugin = require('html-webpack-plugin');
 	var MiniCssExtractPlugin = require('mini-css-extract-plugin');
 	var nodeExternals = require('webpack-node-externals');
 
