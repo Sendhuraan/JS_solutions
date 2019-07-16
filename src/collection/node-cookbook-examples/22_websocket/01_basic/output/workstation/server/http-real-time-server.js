@@ -2,9 +2,19 @@
 
 (function() {
 
-	const ws = require('ws');
+	var http = require('http');
+	var util = require('util');
 
-	class RealTimeServer {
+	var ws = require('ws');
+	var serveStatic = require('serve-static');
+	var finalhandler = require('finalhandler');
+
+	function reject(code, response) {
+		response.statusCode = code;
+		response.end(`ERROR ${http.STATUS_CODES[code]}`);
+	}
+
+	class HttpServer {
 
 		constructor(contentDir) {
 
@@ -19,6 +29,20 @@
 					reject(405, response);
 				}
 				
+			});
+
+			const wss = new ws.Server({
+				server: this._httpServer
+			});
+
+			wss.on('connection', function(socket) {
+				socket.on('message', function(msg) {
+					console.log(`Received: ${msg}`);
+
+					if(msg === 'Hello') {
+						socket.send('Websockets!');
+					}
+				});
 			});
 		}
 
@@ -39,7 +63,7 @@
 	}
 
 	var publicAPI = {
-		RealTimeServer
+		HttpServer
 	};
 
 	module.exports = publicAPI;

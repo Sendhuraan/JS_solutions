@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./src/collection/node-cookbook-examples/19_receive-post-input/01_basic/client/index.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./src/collection/node-cookbook-examples/22_websocket/01_basic/client/index.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -142,15 +142,15 @@ eval("\n/**\n * When source maps are enabled, `style-loader` uses a link element
 
 /***/ }),
 
-/***/ "./src/collection/node-cookbook-examples/19_receive-post-input/01_basic/client/index.js":
-/*!**********************************************************************************************!*\
-  !*** ./src/collection/node-cookbook-examples/19_receive-post-input/01_basic/client/index.js ***!
-  \**********************************************************************************************/
+/***/ "./src/collection/node-cookbook-examples/22_websocket/01_basic/client/index.js":
+/*!*************************************************************************************!*\
+  !*** ./src/collection/node-cookbook-examples/22_websocket/01_basic/client/index.js ***!
+  \*************************************************************************************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var bootstrap_dist_css_bootstrap_min_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! bootstrap/dist/css/bootstrap.min.css */ \"./node_modules/bootstrap/dist/css/bootstrap.min.css\");\n/* harmony import */ var bootstrap_dist_css_bootstrap_min_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(bootstrap_dist_css_bootstrap_min_css__WEBPACK_IMPORTED_MODULE_0__);\n\n\n//# sourceURL=webpack:///./src/collection/node-cookbook-examples/19_receive-post-input/01_basic/client/index.js?");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var bootstrap_dist_css_bootstrap_min_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! bootstrap/dist/css/bootstrap.min.css */ \"./node_modules/bootstrap/dist/css/bootstrap.min.css\");\n/* harmony import */ var bootstrap_dist_css_bootstrap_min_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(bootstrap_dist_css_bootstrap_min_css__WEBPACK_IMPORTED_MODULE_0__);\n\n\n(function () {\n  var ws = new WebSocket('ws://localhost:3000');\n  var output = document.getElementById('output');\n  var send = document.getElementById('send');\n\n  function log(event, msg) {\n    return '<div>' + event + ': ' + msg + '</div>';\n  }\n\n  send.addEventListener('click', function () {\n    var msg = document.getElementById('msg').value;\n    ws.send(msg);\n    output.innerHTML += log('Sent', msg);\n  });\n\n  ws.onmessage = function (e) {\n    output.innerHTML += log('Received', e.data);\n  };\n\n  ws.onclose = function (e) {\n    output.innerHTML += log('Disconnected', e.code + '-' + e.type);\n  };\n\n  ws.onerror = function (e) {\n    output.innerHTML += log('Error', e.data);\n  };\n})();\n\n//# sourceURL=webpack:///./src/collection/node-cookbook-examples/22_websocket/01_basic/client/index.js?");
 
 /***/ })
 

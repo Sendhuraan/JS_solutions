@@ -31,12 +31,13 @@
 				
 			});
 
-			const wss = new ws.Server({this._httpServer});
+			const wss = new ws.Server({
+				server: this._httpServer
+			});
 
 			wss.on('connection', function(socket) {
 				socket.on('message', function(msg) {
 					console.log(`Received: ${msg}`);
-					console.log(`From IP: ${socket.upgradeReq.connection.remoteAddress}`);
 
 					if(msg === 'Hello') {
 						socket.send('Websockets!');

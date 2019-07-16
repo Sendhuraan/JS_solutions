@@ -2,7 +2,7 @@
 
 (function() {
 
-	const { HttpServer } = require('./http-server.js');
+	const { HttpServer } = require('./http-real-time-server.js');
 
 	class Server {
 		async start(portNumber, contentDir) {
