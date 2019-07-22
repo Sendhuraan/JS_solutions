@@ -96,7 +96,8 @@
 		'node',
 		'commonjs',
 		'mocha',
-		'jest'
+		'jest',
+		'es6'
 	];
 	
 	var defaultLintOptions = {

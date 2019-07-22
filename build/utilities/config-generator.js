@@ -139,7 +139,7 @@
 
 			var NODE_DB_PARAMS = (function(envParams) {
 				return {
-					connectionURL: `${envParams.protocol}${envParams.username ? `${envParams.username}:` : ''}${envParams.password ? `${envParams.password}@` : ''}localhost:${envParams.port}`,
+					connectionURL: `${envParams.protocol}${envParams.username ? `${envParams.username}:` : ''}${envParams.password ? `${envParams.password}` : ''}@localhost:${envParams.port}`,
 					name: `${envParams.name}`
 				};
 			})(NODE_DB_ENV_PARAMS);
