@@ -88,7 +88,11 @@
 		'no-duplicate-imports': ERROR,
 		'no-new-symbol': ERROR,
 		'no-this-before-super': ERROR,
-		'require-yield': ERROR
+		'require-yield': ERROR,
+
+		// React
+		'react/jsx-uses-react': true,
+		'react/jsx-uses-vars': true
 	};
 
 	var envs = [
@@ -114,6 +118,15 @@
 
 	var transpileLintOptions = {
 		'parser': 'babel-eslint',
+		'ecmaFeatures': {
+			'jsx': true
+		},
+		'plugins': [
+			'react'
+		],
+		'ecmaFeatures': {
+			'jsx': true
+		},
 		'envs': envs,
 		'globals': [
 			'Promise'
