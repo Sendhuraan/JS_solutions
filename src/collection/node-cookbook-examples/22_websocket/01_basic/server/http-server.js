@@ -5,7 +5,6 @@
 	var http = require('http');
 	var util = require('util');
 
-	var ws = require('ws');
 	var serveStatic = require('serve-static');
 	var finalhandler = require('finalhandler');
 
@@ -31,19 +30,6 @@
 				
 			});
 
-			const wss = new ws.Server({
-				server: this._httpServer
-			});
-
-			wss.on('connection', function(socket) {
-				socket.on('message', function(msg) {
-					console.log(`Received: ${msg}`);
-
-					if(msg === 'Hello') {
-						socket.send('Websockets!');
-					}
-				});
-			});
 		}
 
 		start(portNumber) {
