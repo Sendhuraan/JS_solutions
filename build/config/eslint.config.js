@@ -3,7 +3,16 @@
 (function() {
 	
 	var ERROR = 'error';
-	var rules = {
+	var envs = [
+		'browser',
+		'node',
+		'commonjs',
+		'mocha',
+		'jest',
+		'es6'
+	];
+
+	var defaultLintRules = {
 		// 'Possible Errors' (according to ESLint docs)
 		'no-compare-neg-zero': ERROR,
 		'no-cond-assign': ERROR,
@@ -88,50 +97,50 @@
 		'no-duplicate-imports': ERROR,
 		'no-new-symbol': ERROR,
 		'no-this-before-super': ERROR,
-		'require-yield': ERROR,
-
-		// React
-		'react/jsx-uses-react': true,
-		'react/jsx-uses-vars': true
+		'require-yield': ERROR
 	};
-
-	var envs = [
-		'browser',
-		'node',
-		'commonjs',
-		'mocha',
-		'jest',
-		'es6'
-	];
 	
 	var defaultLintOptions = {
 		'parserOptions': {
-			'ecmaVersion': 2017
+			'ecmaVersion': 2017,
+			'ecmaFeatures': {
+				'experimentalObjectRestSpread': true
+			}
 		},
 		'envs': envs,
 		'globals': [
 			'Promise'
 		],
-		'rules': rules
+		'rules': defaultLintRules
 	};
 
 
+	var transpileLintRules = {
+		...defaultLintRules,
+
+		// React
+		'react/jsx-uses-react': 'error',
+		'react/jsx-uses-vars': 'error'
+	};
+
 	var transpileLintOptions = {
 		'parser': 'babel-eslint',
-		'ecmaFeatures': {
-			'jsx': true
+		'parserOptions': {
+			'ecmaVersion': 2017,
+			'ecmaFeatures': {
+				'experimentalObjectRestSpread': true,
+				'jsx': true
+			},
+			'sourceType': 'module'
 		},
 		'plugins': [
 			'react'
 		],
-		'ecmaFeatures': {
-			'jsx': true
-		},
 		'envs': envs,
 		'globals': [
 			'Promise'
 		],
-		'rules': rules
+		'rules': transpileLintRules
 	};
 
 	module.exports = {

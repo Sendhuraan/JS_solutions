@@ -2,27 +2,28 @@
 
 	var solution = {
 		node: {
-			// remove dir to set source dir.
-			dir: 'server',
+			lint: {
+				pattern: ['*.js', 'server/**/*.js'],
+				options: 'defaultLintOptions'
+			},
 			test: false,
-			bundle: false,
-			server: {
-				render: false
-			}
+			bundle: false
 		},
 		browser: {
-			// remove dir to set source dir.
-			dir: 'client',
+			lint: {
+				pattern: ['client/**/*.js', 'client/**/*.jsx'],
+				options: 'transpileLintOptions'
+			},
 			test: false,
 			bundle: {
-				entry: 'index.jsx',
+				entry: 'client/index.jsx',
 				output: {
 					dir: 'dist',
 					file: 'bundle.js'
 				}
 			},
 			template: {
-				dir: 'templates',
+				dir: 'client/templates',
 				page: {
 					dir: 'pages',
 					file: 'index.js',
@@ -31,9 +32,11 @@
 			}
 		},
 		dirs: {
-			outputDir: 'output',
-			developmentDir: 'workstation',
-			deployDir: 'deploy'
+			node: ['server'],
+			browser: ['client'],
+			output: 'output',
+			development: 'workstation',
+			deploy: 'deploy'
 		}
 	};
 

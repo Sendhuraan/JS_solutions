@@ -42,7 +42,7 @@ class GetPersonInfo extends Component {
 	handleOnSubmit(e) {
 		e.preventDefault();
 
-		const { firstname, lastname, email, phone } = this.state;
+		const { firstname, lastname, email } = this.state;
 
 		this.setState({
 			errors: {
