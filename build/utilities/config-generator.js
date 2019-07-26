@@ -80,9 +80,14 @@
 			if(!isCloudDeploy && (isNodeServer || isNodeDB)) {
 				var NODE_DIR__PARAM = solutionConfig.dirs.node;
 				var NODE_DIR = (function(param, inputDir) {
-					return param.map(function(folder) {
-						return `${inputDir}/${folder}`;
-					});
+					if(param) {
+						return param.map(function(folder) {
+							return `${inputDir}/${folder}`;
+						});
+					}
+					else {
+						return inputDir;
+					}
 				})(NODE_DIR__PARAM, SOURCE_DIR);
 			}
 		}
@@ -102,9 +107,14 @@
 
 			var BROWSER_DIR__PARAM = solutionConfig.dirs.browser;
 			var BROWSER_DIR = (function(param, inputDir) {
-				return param.map(function(folder) {
-					return `${inputDir}/${folder}`;
-				});
+				if(param) {
+					return param.map(function(folder) {
+						return `${inputDir}/${folder}`;
+					});	
+				}
+				else {
+					return false;
+				}
 			})(BROWSER_DIR__PARAM, SOURCE_DIR);
 		}
 		
