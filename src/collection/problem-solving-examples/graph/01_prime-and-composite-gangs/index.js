@@ -1,64 +1,138 @@
 'use strict';
 
-/*(function() {
-
-	const readline = require('readline');
-
-	var { getSolution } = require('./utilities');
-
-	const rl = readline.createInterface({
-		input: process.stdin,
-		output: process.stdout
-	});
-
-	let numberOfTestCases;
-	// let numberOfRows;
-	// let numberOfColumns;
-	// let inputData;
-
-	function getNumberOfTestCases() {
-		return new Promise(function(resolve, reject) {
-			rl.question('', function(numberOfTestCases) {
-				resolve(numberOfTestCases);
-			});
-		});
-	}
-
-	getNumberOfTestCases
-	.then(function(result) {
-		console.log(result);
-	});
-
-	// for(let testCases = 0; testCases < Number(numberOfTestCases); testCases++ ) {
-	// 	process.stdin.on('data', function() {
-			
-	// 	})
-	// }
-
-	var input = [1,2,3];
-
-	var primeAndCompositeGangs_default = getSolution('index', input);
-	console.log(primeAndCompositeGangs_default.index());
-	
-})();*/
-
 (function() {
 
 	var fs = require('fs');
 	var path = require('path');
 
-	function add(a, b) {
-		return a + b;
+	const numbers = {
+		type: {
+			prime: 'PRIME',
+			composite: 'COMPOSITE'
+		}
+	};
+
+	function buildPrimeAndCompositeTable(maxNumber) {
+		maxNumber = maxNumber + 1;
+		const table = new Array(maxNumber).fill(numbers.type.prime);
+		table[0] = NaN;
+		table[1] = NaN;
+
+		for (let i = 2; i < Math.sqrt(maxNumber); i++) {
+			if (table[i] === numbers.type.prime) {
+				for (let j = Math.pow(i, 2); j < maxNumber; j += i) {
+					table[j] = numbers.type.composite;
+				}
+			}
+		}
+
+		return table;
+	}
+
+	const primeCompositeTable = buildPrimeAndCompositeTable(10000);
+
+	function prime(value) {
+		if(primeCompositeTable[Number(value)] === numbers.type.prime) {
+			return 1;
+		}
+		else {
+			return 0;
+		}
+	}
+
+	function composite(value) {
+		if(primeCompositeTable[Number(value)] === numbers.type.composite) {
+			return 1;
+		}
+		else {
+			return 0;
+		}
+	}
+
+	function getPatternCount(grid) {
+		if (!grid || grid.length === 0) {
+			return 0;
+		}
+
+		const m = grid.length;
+		const n = grid[0].length;
+
+		let count = 0;
+
+		for (let i = 0; i < m; i++) {
+			for (let j = 0; j < n; j++) {
+				if (grid[i][j] === 1) {
+					dfs(grid, m, n, i, j);
+					count++;
+				}
+			}
+		}
+
+		return count;
+	}
+
+	function dfs(grid, m, n, i, j) {
+		if (i < 0 || i >= m || j < 0 || j >= n || grid[i][j] === 0) {
+			return;
+		}
+
+		grid[i][j] = 0;
+
+		const dx = [0, 0, -1, 1];
+		const dy = [-1, 1, 0, 0];
+
+		for (let k = 0; k < 4; k++) {
+			dfs(grid, m, n, i + dx[k], j + dy[k]);
+		}
 	}
 
 	function main(input) {
 		var lines = input.split('\n');
-		var t = Number(lines[0]);
-		for (var x = 1; x <= t; x++) {
-			var sum = lines[x].split(' ').map(Number).reduce(add);
-			process.stdout.write(sum.toString());
-			process.stdout.write('\n');
+		var totalTestCases = Number(lines[0]);
+		var inputMatrices = [];
+
+		var currentTestCase = 1;
+		var lineNumber = 1;
+		while (currentTestCase <= totalTestCases) {
+
+			var currentMatrixDimensions = lines[lineNumber].split(' ');
+
+			var currentMatrixRows = Number(currentMatrixDimensions[0]);
+
+			var inputMatrix_prime = [];
+			var inputMatrix_composite = [];
+			for(let matrixRow=1; matrixRow <= currentMatrixRows; matrixRow++) {
+				let inputRow = lines[lineNumber + matrixRow].split(' ');
+
+				inputMatrix_prime.push(inputRow.map(prime));
+				inputMatrix_composite.push(inputRow.map(composite));
+			}
+
+			var inputPrimeCompositeObj = {
+				'prime': inputMatrix_prime,
+				'composite': inputMatrix_composite
+			};
+
+			inputMatrices.push(inputPrimeCompositeObj);
+
+			lineNumber = lineNumber + currentMatrixRows + 1;
+			currentTestCase++;
+
 		}
+
+		var resultsArray = inputMatrices.map(function(testCase) {
+			let resultArray = [];
+			for(let matrixType in testCase) {
+				resultArray.push(getPatternCount(testCase[matrixType]));
+			}
+
+			return resultArray;
+		});
+
+		resultsArray.map(function(result) {
+			console.log(`${result[0]} ${result[1]}`);
+		});
+		
 	}
 
 	process.stdin.resume();
@@ -74,6 +148,7 @@
 
 	readFile.on('end', function() {
 		main(stdin_input);
+		process.exit(1);
 	});
 	
 })();
