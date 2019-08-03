@@ -13,7 +13,7 @@
 		},
 		browser: false,
 		dirs: {
-			node: ['solution'],
+			node: ['solution', 'utilities'],
 			browser: false,
 			output: false,
 			development: false,
