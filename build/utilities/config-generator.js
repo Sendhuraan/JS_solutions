@@ -353,7 +353,9 @@
 						return new HtmlWebpackPlugin({
 							template: pageTemplate,
 							templateParameters: parsedData.templateParams,
-							filename: parsedData.metadata.outputFileName
+							filename: parsedData.metadata.outputFileName,
+							cache: false,
+							chunksSortMode: 'none'
 						});
 					});
 

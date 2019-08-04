@@ -6,26 +6,15 @@
 				pattern: ['*.js', 'server/**/*.js', 'data/**/*.js'],
 				options: 'defaultLintOptions'
 			},
-			test: {
-				runner: 'jest',
-				pattern: ['*_test.js', 'server/**/*_test.js']
-			},
-			bundle: {
-				entry: 'index.js',
-				output: {
-					file: 'index.js'
-				}
-			}
+			test: false,
+			bundle: false
 		},
 		browser: {
 			lint: {
 				pattern: ['client/**/*.js', 'client/**/*.jsx'],
 				options: 'transpileLintOptions'
 			},
-			test: {
-				runner: 'karma',
-				pattern: ['client/**/*_test.jsx']
-			},
+			test: false,
 			bundle: {
 				entry: 'client/index.jsx',
 				output: {

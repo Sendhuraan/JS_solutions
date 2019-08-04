@@ -4,7 +4,7 @@
 	var fs = require('fs');
 	var path = require('path');
 
-	const { src, series, parallel, dest } = require('gulp');
+	const { src, series, parallel, dest, watch } = require('gulp');
 	var program = require('commander');
 	const eslint = require('gulp-eslint');
 	var webpack = require('webpack');
@@ -224,14 +224,18 @@
 		var isBundle_node = config.node.bundle;
 		var isBundle_browser = config.browser.bundle;
 
-		if(isBundle_node || isBundle_browser) {
-			var { output } = config.build.dirs;
-			shell.rm('-rf', `${output}/*`);
-			cb();
+		if(isBundle_node) {
+			let { output } = config.build.dirs;
+			let { filename } = config.node.bundle.output;
+			shell.rm('-rf', `${output}/${filename}`);
 		}
-		else {
-			cb();
+		else if(isBundle_browser) {
+			let { serve } = config.build.dirs;
+			let { filename } = config.browser.bundle.output;
+			shell.rm('-rf', `${serve}/${filename}`);
 		}
+
+		cb();
 	}
 
 	function bundleNode(cb) {
@@ -366,7 +370,9 @@
 
 	function runSolution(cb) {
 		var { dir } = config.run;
+		var { source, output } = config.build.dirs;
 		var solutionProcess;
+		// var watchProcess;
 
 		if(!DEBUG_PORT) {
 			solutionProcess = child_process.fork(`${dir}`);
@@ -383,8 +389,20 @@
 			console.log(`Open chrome://inspect. If no target was found, click configure and add localhost:${DEBUG_PORT}`);
 		}
 
-		solutionProcess.on('exit', function() {
+		const watcher = watch([`${source}/**/*.jsx`, `!${output}/*`]);
+
+		watcher.on('change', function(filepath) {
+			console.log(`File ${filepath} was changed`);
+			solutionProcess.kill('SIGINT');
+			watcher.close();
+
+			console.log('Regenerating solution...');
+			series(generateSolution, runSolution)();
 			cb();
+		});
+
+		solutionProcess.on('close', function() {
+			console.log('Solution Process killed');
 		});
 	}
 
@@ -405,6 +423,7 @@
 			});
 		}
 
+		// TODO Remove sync operations and and await by using promise based exec.
 		child_process.execSync('rm -rf *', {
 			cwd: path.resolve('../JS_deploy')
 		});
@@ -616,6 +635,7 @@
 	const generateSolution = series(lint, runNodeTests, runBrowserTests, cleanOutputDir, bundle, build);
 	const generateDeployment = series(validateDeployment, generateSolution, createDeployment);
 	const deploy = series(generateDeployment, runCloudCommands);
+	// const defaultTasks = series(generateSolution, runSolution);
 
 	// Preqs Individual Tasks
 	exports.startAndCaptureTestBrowsers = series(getConfig, startAndCaptureTestBrowsers);

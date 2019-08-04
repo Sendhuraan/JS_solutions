@@ -8,6 +8,6 @@ import App from './components/App/index.jsx';
 import './index.css';
 
 ReactDOM.render(
-	<App name='App' />,
+	<App name='Sendhuraan2' />,
 	document.getElementById('root')
 );
