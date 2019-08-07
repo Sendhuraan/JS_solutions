@@ -8,10 +8,14 @@
 		'!node_modules/**',
 		'!src/collection/**'
 	];
+	const DEFAULT_CONFIG_DIR = 'build/config';
+	const DEFAULT_UTILS_DIR = 'build/utilities';
 
 	var defaults = {
 		DEFAULT_FOLDER_STRING,
-		DEFAULT_LINT__GLOBAL
+		DEFAULT_LINT__GLOBAL,
+		DEFAULT_CONFIG_DIR,
+		DEFAULT_UTILS_DIR
 	};
 
 	var publicAPI = {

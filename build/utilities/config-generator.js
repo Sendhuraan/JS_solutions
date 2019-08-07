@@ -25,7 +25,8 @@
 
 		var {
 			DEFAULT_FOLDER_STRING,
-			DEFAULT_LINT__GLOBAL
+			DEFAULT_LINT__GLOBAL,
+			DEFAULT_UTILS_DIR
 
 		} = DEFAULTS;
 
@@ -175,7 +176,7 @@
 				jestNodeTestConfig.rootDir = SOURCE_DIR;
 				jestNodeTestConfig.testEnvironment = 'node';
 				jestNodeTestConfig.testMatch = NODE_TEST_PATTERN;
-				jestNodeTestConfig.verbose = true;
+				jestNodeTestConfig.verbose = false;
 
 				NODE_TEST_OPTIONS = {
 					runner: NODE_TEST_RUNNER__PARAM,
@@ -218,10 +219,16 @@
 					});
 				})(BROWSER_TEST_PATTERN__PARAM, '<rootDir>');
 
+				let jestTransformerPath = path.resolve(DEFAULT_UTILS_DIR, 'jest-transformer');
+
 				jestBrowserTestConfig.rootDir = SOURCE_DIR;
 				jestBrowserTestConfig.testEnvironment = 'jsdom';
 				jestBrowserTestConfig.testMatch = BROWSER_TEST_PATTERN;
-				jestNodeTestConfig.verbose = true;
+				jestBrowserTestConfig.transform = JSON.stringify({
+					'^.+\\.(js|jsx)?$': jestTransformerPath
+				});
+				jestBrowserTestConfig.verbose = false;
+				jestBrowserTestConfig.watchPlugins = ['jest-watch-master'];
 
 				BROWSER_TEST_OPTIONS = {
 					runner: BROWSER_TEST_RUNNER__PARAM,

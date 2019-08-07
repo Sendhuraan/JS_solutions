@@ -4,7 +4,7 @@
 	var fs = require('fs');
 	var path = require('path');
 
-	const { src, series, parallel, dest, watch } = require('gulp');
+	const { src, series, parallel, dest } = require('gulp');
 	var program = require('commander');
 	const eslint = require('gulp-eslint');
 	var webpack = require('webpack');
@@ -370,15 +370,13 @@
 
 	function runSolution(cb) {
 		var { dir } = config.run;
-		var { source, output } = config.build.dirs;
-		var solutionProcess;
-		// var watchProcess;
+		//var solutionProcess;
 
 		if(!DEBUG_PORT) {
-			solutionProcess = child_process.fork(`${dir}`);
+			child_process.fork(`${dir}`);
 		}
 		else {
-			solutionProcess = child_process.fork(`${dir}`, [], {
+			child_process.fork(`${dir}`, [], {
 				execArgv: [`--inspect-brk=${DEBUG_PORT}`]
 				// TODO: Implement debug logging (See page:97 in node-cookbook)
 				// env: {
@@ -389,21 +387,29 @@
 			console.log(`Open chrome://inspect. If no target was found, click configure and add localhost:${DEBUG_PORT}`);
 		}
 
-		const watcher = watch([`${source}/**/*.jsx`, `!${output}/*`]);
+		// TODO Implement watch in JS_solutions.
 
-		watcher.on('change', function(filepath) {
-			console.log(`File ${filepath} was changed`);
-			solutionProcess.kill('SIGINT');
-			watcher.close();
+		// if(config.build.dirs) {
+		// 	var { source, output } = config.build.dirs;
+		// }
+		
+		// const watcher = watch([`${source}/**/*.jsx`, `!${output}/*`]);
 
-			console.log('Regenerating solution...');
-			series(generateSolution, runSolution)();
-			cb();
-		});
+		// watcher.on('change', function(filepath) {
+		// 	console.log(`File ${filepath} was changed`);
+		// 	solutionProcess.kill('SIGINT');
+		// 	watcher.close();
 
-		solutionProcess.on('close', function() {
-			console.log('Solution Process killed');
-		});
+		// 	console.log('Regenerating solution...');
+		// 	series(generateSolution, runSolution)();
+		// 	cb();
+		// });
+
+		// solutionProcess.on('close', function() {
+		// 	console.log('Solution Process killed');
+		// });
+
+		cb();
 	}
 
 
@@ -647,8 +653,8 @@
 
 	// Individual Tasks
 	exports.lint = series(getConfig, lint);
-	exports.runNodeTests = series(getConfig, runNodeTests);
-	exports.runBrowserTests = series(getConfig, runBrowserTests);
+	exports.runNodeTests = series(getConfig, lintNodeFiles, runNodeTests);
+	exports.runBrowserTests = series(getConfig, lintBrowserFiles, runBrowserTests);
 	exports.cleanOutputDir = series(getConfig, cleanOutputDir);
 	exports.bundle = series(getConfig, bundle);
 	exports.build = series(getConfig, build);
