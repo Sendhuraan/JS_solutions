@@ -228,7 +228,6 @@
 					'^.+\\.(js|jsx)?$': jestTransformerPath
 				});
 				jestBrowserTestConfig.verbose = false;
-				jestBrowserTestConfig.watchPlugins = ['jest-watch-master'];
 
 				BROWSER_TEST_OPTIONS = {
 					runner: BROWSER_TEST_RUNNER__PARAM,
