@@ -476,7 +476,7 @@
 				test: isBrowserTest ? BROWSER_TEST_OPTIONS : false,
 				bundle: browserBundleConfig ? browserBundleConfig : false
 			} : false,
-			build: !isCloudDeploy && (isNodeServer || isNodeDB) ? {
+			build: !isCloudDeploy && (isNodeServer || isNodeDB || isNodeBundle) ? {
 				dirs: {
 					source: SOURCE_DIR ? SOURCE_DIR : false,
 					node: NODE_DIR ? NODE_DIR : false,
