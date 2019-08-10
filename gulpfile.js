@@ -326,7 +326,7 @@
 		}
 		else {
 			shell.cp('-R',
-				`${node}`,
+				...node,
 				`${source}/*.js`,
 				`${output}`
 			);

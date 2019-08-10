@@ -401,7 +401,6 @@
 
 			var NODE_SERVER_ENV_PARAMS = solutionEnvironments.workstation.instance.parameters.server;
 			
-			
 			NODE_SERVER_ENV_PARAMS.serveDir = BROWSER_BUNDLE_OUTPUT_DIR__PARAM;
 
 			var NODE_SERVER_PARAMS = (function(envParams) {
