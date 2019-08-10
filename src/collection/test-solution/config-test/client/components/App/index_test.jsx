@@ -19,4 +19,10 @@ describe('component', function() {
 		assert.equal(ReactTestUtils.isCompositeComponent(comp), true);
 	});
 
+	it('is a Composite Component', function() {
+		var comp = ReactTestUtils.renderIntoDocument(<App/>);
+
+		assert.equal(ReactTestUtils.isCompositeComponent(comp), true);
+	});
+
 });

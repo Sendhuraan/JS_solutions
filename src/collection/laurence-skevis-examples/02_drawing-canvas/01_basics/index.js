@@ -7,7 +7,7 @@
 	var util = require('util');
 
 	const readFile = util.promisify(fs.readFile);
-	const Server = require('./server/server.js');
+	const { Server } = require('./server/server.js');
 
 	try {
 		const configEnv = '/env.json';
@@ -21,14 +21,10 @@
 
 		const server = new Server();
 
-		await server.start(CONTENT_DIR, PORT);
-		console.log(`Server at localhost:${PORT}`);
-
+		await server.start(PORT, CONTENT_DIR);
 	}
 	catch(err) {
-		if(err) {
-			console.log(err);
-		}
+		console.error(err);
 	}	
 
 }());

@@ -4,7 +4,7 @@
 	var fs = require('fs');
 	var path = require('path');
 
-	const { src, series, parallel, dest } = require('gulp');
+	const { src, series, parallel, dest, watch } = require('gulp');
 	var program = require('commander');
 	const eslint = require('gulp-eslint');
 	var webpack = require('webpack');
@@ -370,13 +370,13 @@
 
 	function runSolution(cb) {
 		var { dir } = config.run;
-		//var solutionProcess;
+		var solutionProcess;
 
 		if(!DEBUG_PORT) {
-			child_process.fork(`${dir}`);
+			solutionProcess = child_process.fork(`${dir}`);
 		}
 		else {
-			child_process.fork(`${dir}`, [], {
+			solutionProcess = child_process.fork(`${dir}`, [], {
 				execArgv: [`--inspect-brk=${DEBUG_PORT}`]
 				// TODO: Implement debug logging (See page:97 in node-cookbook)
 				// env: {
@@ -388,26 +388,57 @@
 		}
 
 		// TODO Implement watch in JS_solutions.
-
-		// if(config.build.dirs) {
-		// 	var { source, output } = config.build.dirs;
-		// }
 		
-		// const watcher = watch([`${source}/**/*.jsx`, `!${output}/*`]);
+		if(config.build) {
+			const { source, node, browser, output } = config.build.dirs;
 
-		// watcher.on('change', function(filepath) {
-		// 	console.log(`File ${filepath} was changed`);
-		// 	solutionProcess.kill('SIGINT');
-		// 	watcher.close();
+			const nodeWatcher = watch([`${source}/*.js`, `${node}/**/*`, `!${output}/*`]);
+			const BrowserWatcher = watch([`${browser}/**/*`, `!${output}/*`]);
 
-		// 	console.log('Regenerating solution...');
-		// 	series(generateSolution, runSolution)();
-		// 	cb();
-		// });
+			console.log('Watching changes for following ' + '\n' +
+				`${source}/*.js` + '\n' +
+				`${node ? `${node}/**/.js` : ''}` + '\n' +
+				`${browser ? `${browser}/**/.js` : ''}`
+			);
 
-		// solutionProcess.on('close', function() {
-		// 	console.log('Solution Process killed');
-		// });
+			nodeWatcher.on('change', function(filepath) {
+				console.log(`File ${filepath} was changed`);
+				solutionProcess.kill('SIGINT');
+				nodeWatcher.close();
+
+				console.log('Regenerating solution...');
+				series(runNodeTests, bundleNode, build, runSolution)();
+				cb();
+			});
+
+			BrowserWatcher.on('change', function(filepath) {
+				console.log(`File ${filepath} was changed`);
+				solutionProcess.kill('SIGINT');
+				BrowserWatcher.close();
+
+				console.log('Regenerating solution...');
+				series(runBrowserTests, bundleBrowser, runSolution)();
+				cb();
+			});
+		}
+		else {
+			const { dir } = config.run;
+			const solutionWatcher = watch([`${dir}/*.js`]);
+
+			console.log('Watching changes for following ' + '\n' +
+				`${dir}/*.js`
+			);
+
+			solutionWatcher.on('change', function(filepath) {
+				console.log(`File ${filepath} was changed`);
+				solutionProcess.kill('SIGINT');
+				solutionWatcher.close();
+
+				console.log('Regenerating solution...');
+				series(runSolution)();
+				cb();
+			});
+		}
 
 		cb();
 	}

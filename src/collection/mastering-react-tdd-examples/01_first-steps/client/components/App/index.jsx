@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import Home from '../Home';
 
 import './index.css';
 
@@ -13,7 +12,6 @@ class App extends Component {
 					<img className='App-logo' src={logo} alt='logo' />
 					<h1 className='App-title'>First Component</h1>
 				</header>
-				<Home />
 			</div>
 		);
 	}

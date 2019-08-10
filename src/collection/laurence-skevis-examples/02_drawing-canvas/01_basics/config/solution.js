@@ -3,26 +3,20 @@
 	var solution = {
 		node: {
 			lint: {
-				pattern: ['*.js', 'server/**/*.js', 'data/**/*.js'],
+				pattern: ['*.js', 'server/**/*.js'],
 				options: 'defaultLintOptions'
 			},
-			test: {
-				runner: 'jest',
-				pattern: ['*_test.js', 'server/**/*_test.js']
-			},
+			test: false,
 			bundle: false
 		},
 		browser: {
 			lint: {
-				pattern: ['client/**/*.js', 'client/**/*.jsx'],
+				pattern: ['client/**/*.js'],
 				options: 'transpileLintOptions'
 			},
-			test: {
-				runner: 'jest',
-				pattern: ['client/**/*_test.jsx']
-			},
+			test: false,
 			bundle: {
-				entry: 'client/index.jsx',
+				entry: 'client/index.js',
 				output: {
 					dir: 'dist',
 					file: 'bundle.js'

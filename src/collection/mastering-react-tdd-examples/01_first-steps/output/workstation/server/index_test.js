@@ -1,10 +1,10 @@
-(function() {
+'use strict';
 
-	var assert = require('chai').assert;
+(function() {
 
 	describe('initial test', function() {
 		it('should pass', function() {
-			assert.equal(2,2);
+			expect(2).toEqual(2);
 		});
 	});
 	

@@ -2,20 +2,20 @@
 
 (function() {
 
-	var finalhandler = require('finalhandler');
 	var http = require('http');
-	var serveStatic = require('serve-static');
 	var util = require('util');
+	var serveStatic = require('serve-static');
+	var finalhandler = require('finalhandler');
 
-	module.exports = class HttpServer {
+	class HttpServer {
 
 		constructor(contentDir) {
+
 			var serve = serveStatic(contentDir, {'index': ['index.html', 'index.htm']});
 
 			this._httpServer = http.createServer(function onRequest(req, res) {
 				serve(req, res, finalhandler(req, res));
 			});
-
 		}
 
 		start(portNumber) {
@@ -32,6 +32,12 @@
 			return this._httpServer;
 		}
 
+	}
+
+	var publicAPI = {
+		HttpServer
 	};
+
+	module.exports = publicAPI;
 
 })();

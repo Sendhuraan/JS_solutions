@@ -163,11 +163,17 @@
 			var NODE_TEST_OPTIONS;
 			var NODE_TEST_PATTERN;
 
+			NODE_TEST_PATTERN = (function(param, inputDir) {
+				return param.map(function(item) {
+					return `${inputDir}/${item}`;
+				});
+			})(NODE_TEST_PATTERN__PARAM, SOURCE_DIR);
+
 			if(NODE_TEST_RUNNER__PARAM === 'jest') {
 				let { jestConfig } = jestTestConfig;
 				var jestNodeTestConfig = Object.assign({}, jestConfig);
 
-				NODE_TEST_PATTERN = (function(param, inputDir) {
+				let NODE_JEST_TEST_PATTERN = (function(param, inputDir) {
 					return param.map(function(item) {
 						return `${inputDir}/${item}`;
 					});
@@ -175,22 +181,16 @@
 
 				jestNodeTestConfig.rootDir = SOURCE_DIR;
 				jestNodeTestConfig.testEnvironment = 'node';
-				jestNodeTestConfig.testMatch = NODE_TEST_PATTERN;
+				jestNodeTestConfig.testMatch = NODE_JEST_TEST_PATTERN;
 				jestNodeTestConfig.verbose = false;
 
 				NODE_TEST_OPTIONS = {
 					runner: NODE_TEST_RUNNER__PARAM,
+					pattern: NODE_TEST_PATTERN,
 					config: jestNodeTestConfig
 				};
 			}
 			else if(NODE_TEST_RUNNER__PARAM === 'mocha') {
-
-				NODE_TEST_PATTERN = (function(param, inputDir) {
-					return param.map(function(item) {
-						return `${inputDir}/${item}`;
-					});
-				})(NODE_TEST_PATTERN__PARAM, SOURCE_DIR);
-
 				NODE_TEST_OPTIONS = {
 					runner: NODE_TEST_RUNNER__PARAM,
 					pattern: NODE_TEST_PATTERN,
@@ -209,11 +209,17 @@
 			var BROWSER_TEST_OPTIONS;
 			var BROWSER_TEST_PATTERN;
 
+			BROWSER_TEST_PATTERN = (function(param, inputDir) {
+				return param.map(function(item) {
+					return `${inputDir}/${item}`;
+				});
+			})(BROWSER_TEST_PATTERN__PARAM, SOURCE_DIR);
+
 			if(BROWSER_TEST_RUNNER__PARAM === 'jest') {
 				let { jestConfig } = jestTestConfig;
 				var jestBrowserTestConfig = Object.assign({}, jestConfig);
 
-				BROWSER_TEST_PATTERN = (function(param, inputDir) {
+				let BROWSER_JEST_TEST_PATTERN = (function(param, inputDir) {
 					return param.map(function(item) {
 						return `${inputDir}/${item}`;
 					});
@@ -223,7 +229,7 @@
 
 				jestBrowserTestConfig.rootDir = SOURCE_DIR;
 				jestBrowserTestConfig.testEnvironment = 'jsdom';
-				jestBrowserTestConfig.testMatch = BROWSER_TEST_PATTERN;
+				jestBrowserTestConfig.testMatch = BROWSER_JEST_TEST_PATTERN;
 				jestBrowserTestConfig.transform = JSON.stringify({
 					'^.+\\.(js|jsx)?$': jestTransformerPath
 				});
@@ -231,16 +237,11 @@
 
 				BROWSER_TEST_OPTIONS = {
 					runner: BROWSER_TEST_RUNNER__PARAM,
+					pattern: BROWSER_TEST_PATTERN,
 					config: jestBrowserTestConfig
 				};
 			}
 			else if(BROWSER_TEST_RUNNER__PARAM === 'karma') {
-
-				BROWSER_TEST_PATTERN = (function(param, inputDir) {
-					return param.map(function(item) {
-						return `${inputDir}/${item}`;
-					});
-				})(BROWSER_TEST_PATTERN__PARAM, SOURCE_DIR);
 
 				var preprocessConfig = bundleConfig.browser.module;
 
@@ -266,6 +267,7 @@
 
 				BROWSER_TEST_OPTIONS = {
 					runner: BROWSER_TEST_RUNNER__PARAM,
+					pattern: BROWSER_TEST_PATTERN,
 					config: BROWSER_TEST_CONFIG
 				};
 			}
