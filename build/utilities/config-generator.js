@@ -361,9 +361,7 @@
 						return new HtmlWebpackPlugin({
 							template: pageTemplate,
 							templateParameters: parsedData.templateParams,
-							filename: parsedData.metadata.outputFileName,
-							cache: false,
-							chunksSortMode: 'none'
+							filename: parsedData.metadata.outputFileName
 						});
 					});
 
@@ -379,6 +377,7 @@
 
 				newConfig.entry = path.resolve(entry);
 				newConfig.output.path = path.resolve(outputDir);
+				newConfig.output.publicPath = '/';
 				newConfig.output.filename = outputFile;
 
 				if(isCloudDeploy) {
