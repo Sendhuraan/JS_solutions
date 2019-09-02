@@ -1,3 +1,5 @@
+'use strict';
+
 (function() {
 
 	var SinglyLinkedList = require('@sendhuraan/js-utilities').DataStructures.LinkedList.Singly.usingFunction.Singly;
