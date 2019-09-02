@@ -684,6 +684,9 @@
 
 	// Individual Tasks
 	exports.lint = series(getConfig, lint);
+	exports.lintGlobalFiles = series(getConfig, lintGlobalFiles);
+	exports.lintNodeFiles = series(getConfig, lintNodeFiles);
+	exports.lintBrowserFiles = series(getConfig, lintBrowserFiles);
 	exports.runNodeTests = series(getConfig, lintNodeFiles, runNodeTests);
 	exports.runBrowserTests = series(getConfig, lintBrowserFiles, runBrowserTests);
 	exports.cleanOutputDir = series(getConfig, cleanOutputDir);
