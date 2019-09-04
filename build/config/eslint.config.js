@@ -102,10 +102,7 @@
 	
 	var defaultLintOptions = {
 		'parserOptions': {
-			'ecmaVersion': 2017,
-			'ecmaFeatures': {
-				'experimentalObjectRestSpread': true
-			}
+			'ecmaVersion': 2018
 		},
 		'envs': envs,
 		'globals': [

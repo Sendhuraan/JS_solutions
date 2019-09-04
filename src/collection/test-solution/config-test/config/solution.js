@@ -18,7 +18,7 @@
 				options: 'transpileLintOptions'
 			},
 			test: {
-				runner: 'karma',
+				runner: 'jest',
 				pattern: ['client/**/*_test.jsx']
 			},
 			bundle: {
