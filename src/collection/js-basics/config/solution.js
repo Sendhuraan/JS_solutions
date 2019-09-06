@@ -18,8 +18,8 @@
 				options: 'transpileLintOptions'
 			},
 			test: {
-				runner: 'karma',
-				pattern: ['**/*_docs.js']
+				runner: 'jest',
+				pattern: ['**/*_test.js']
 			},
 			bundle: false,
 			template: false

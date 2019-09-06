@@ -182,7 +182,7 @@
 				jestNodeTestConfig.rootDir = SOURCE_DIR;
 				jestNodeTestConfig.testEnvironment = 'node';
 				jestNodeTestConfig.testMatch = NODE_JEST_TEST_PATTERN;
-				jestNodeTestConfig.verbose = false;
+				jestNodeTestConfig.verbose = true;
 
 				NODE_TEST_OPTIONS = {
 					runner: NODE_TEST_RUNNER__PARAM,
@@ -230,10 +230,13 @@
 				jestBrowserTestConfig.rootDir = SOURCE_DIR;
 				jestBrowserTestConfig.testEnvironment = 'jsdom';
 				jestBrowserTestConfig.testMatch = BROWSER_JEST_TEST_PATTERN;
+				jestBrowserTestConfig.reporters = [
+					'default'
+				];
 				jestBrowserTestConfig.transform = JSON.stringify({
 					'^.+\\.(js|jsx)?$': jestTransformerPath
 				});
-				jestBrowserTestConfig.verbose = false;
+				jestBrowserTestConfig.verbose = true;
 
 				BROWSER_TEST_OPTIONS = {
 					runner: BROWSER_TEST_RUNNER__PARAM,

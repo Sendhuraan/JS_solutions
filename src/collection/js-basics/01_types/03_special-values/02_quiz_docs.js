@@ -5,9 +5,9 @@
 
 	describe('Special Values Quiz', function() {
 
-		it('In Javascript, there are two phases - compile & execution phase. During the compile phase, the declaration on LHS of = are compiled and references of all the variables are created in respective scopes. And then, In execution phase, RHS of = are executed and values are assigned to the variables in that scope.');
+		xit('In Javascript, there are two phases - compile & execution phase. During the compile phase, the declaration on LHS of = are compiled and references of all the variables are created in respective scopes. And then, In execution phase, RHS of = are executed and values are assigned to the variables in that scope.');
 
-		it('In compile phase, all the variables to LHS of = will be compiled. when baz is again declared, it would have already created reference for baz, hence it will be ignored.');
+		xit('In compile phase, all the variables to LHS of = will be compiled. when baz is again declared, it would have already created reference for baz, hence it will be ignored.');
 		
 		it('In execution phase, output1 is assigned typeof number, output1 should be \'number\', as typeof number returns \'number\'', function() {
 			assert.equal(quiz.output1, 'number');
