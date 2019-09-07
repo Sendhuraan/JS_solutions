@@ -5,18 +5,19 @@
 	var solution = {
 		node: {
 			lint: {
-				pattern: ['**/*.js'],
+				pattern: ['**/*.js', '!documentation'],
 				options: 'defaultLintOptions'
 			},
 			test: {
 				runner: 'mocha',
+				reporter: 'mochawesome',
 				pattern: ['**/*_docs.js']
 			},
 			bundle: false
 		},
 		browser: {
 			lint: {
-				pattern: ['**/*.js'],
+				pattern: ['**/*.js', '!documentation'],
 				options: 'defaultLintOptions'
 			},
 			test: {

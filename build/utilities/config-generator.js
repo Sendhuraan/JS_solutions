@@ -73,7 +73,13 @@
 
 				var NODE_LINT_PATTERN = (function(param, inputDir) {
 					return param.map(function(pattern) {
-						return `${inputDir}/${pattern}`;
+						if(pattern.includes('!')) {
+							return `!${inputDir}/${pattern.split('!')[1]}`;
+						}
+						else {
+							return `${inputDir}/${pattern}`;
+						}
+						
 					});
 				})(NODE_LINT_PATTERN__PARAM, SOURCE_DIR);
 			}
@@ -101,7 +107,12 @@
 
 				var BROWSER_LINT_PATTERN = (function(param, inputDir) {
 					return param.map(function(pattern) {
-						return `${inputDir}/${pattern}`;
+						if(pattern.includes('!')) {
+							return `!${inputDir}/${pattern.split('!')[1]}`;
+						}
+						else {
+							return `${inputDir}/${pattern}`;
+						}
 					});
 				})(BROWSER_LINT_PATTERN__PARAM, SOURCE_DIR);
 			}
@@ -160,6 +171,7 @@
 		if(isNodeTest) {
 			var NODE_TEST_RUNNER__PARAM = solutionConfig.node.test.runner;
 			var NODE_TEST_PATTERN__PARAM = solutionConfig.node.test.pattern;
+			var NODE_TEST_REPORTER__PARAM = solutionConfig.node.test.reporter;
 			var NODE_TEST_OPTIONS;
 			var NODE_TEST_PATTERN;
 
@@ -191,6 +203,14 @@
 				};
 			}
 			else if(NODE_TEST_RUNNER__PARAM === 'mocha') {
+
+				if(NODE_TEST_REPORTER__PARAM === 'mochawesome') {
+					nodeTestConfig.reporter = NODE_TEST_REPORTER__PARAM;
+					nodeTestConfig.reporterOptions = {
+						reportDir: `${SOURCE_DIR}/documentation`
+					}
+				}
+
 				NODE_TEST_OPTIONS = {
 					runner: NODE_TEST_RUNNER__PARAM,
 					pattern: NODE_TEST_PATTERN,

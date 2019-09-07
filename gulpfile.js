@@ -106,7 +106,7 @@
 			cb();
 		}
 		else {
-			return src(lint.pattern)
+			return src(globby.sync(lint.pattern))
 			.pipe(eslint(lint.options))
 			.pipe(eslint.format())
 			.pipe(eslint.failAfterError());
@@ -122,7 +122,7 @@
 			cb();
 		}
 		else {
-			return src(lint.pattern)
+			return src(globby.sync(lint.pattern))
 			.pipe(eslint(lint.options))
 			.pipe(eslint.format())
 			.pipe(eslint.failAfterError());
