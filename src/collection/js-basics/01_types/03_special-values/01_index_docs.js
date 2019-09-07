@@ -1,12 +1,16 @@
 /* eslint eqeqeq: 'off', no-self-compare: 'off', no-compare-neg-zero: 'off' */
 
+'use strict';
+
 (function() {
 
 	var assert = require('chai').assert;
 
+	var nullFunction = function(){};
+
 	describe('Special Values', function() {
 		
-		xit(`Classified into
+		it(`Classified into
 			NaN (Not a Number)
 			+0
 			-0
@@ -14,7 +18,7 @@
 			-Infinity
 			null
 			undefined (void)
-			`);
+			`, nullFunction);
 		
 	});
 
@@ -50,9 +54,9 @@
 
 			describe('Global isNaN Utility', function() {
 
-				xit('We need to have a way to check for NaN. It is by using global isNaN utility. But there is fatal flaw in this utility. isNaN before checking the value, it tries to converts the given value to a number and then checks to see if it resulted in NaN');
+				it('We need to have a way to check for NaN. It is by using global isNaN utility. But there is fatal flaw in this utility. isNaN before checking the value, it tries to converts the given value to a number and then checks to see if it resulted in NaN', nullFunction);
 
-				xit('returns true when used isNaN on a string. While we may expect it to give false, as given a string, we expect that isNaN(\'<String Value>\') to be false. But it first tries to convert the string into number, and it results in NaN, so it returns true', function() {
+				it('returns true when used isNaN on a string. While we may expect it to give false, as given a string, we expect that isNaN(\'<String Value>\') to be false. But it first tries to convert the string into number, and it results in NaN, so it returns true', function() {
 					assert.equal(isNaN('a'), true);
 				});
 
@@ -79,7 +83,7 @@
 
 			describe('Number.isNaN Utility', function() {
 
-				xit('Fortunately, we have Number.isNaN() utility (added in ES6 as polyfill), which checks for NaN without converting it to a number');
+				it('Fortunately, we have Number.isNaN() utility (added in ES6 as polyfill), which checks for NaN without converting it to a number', nullFunction);
 
 				it('returns false when used Number.isNaN on a string', function() {
 					assert.equal(Number.isNaN('a'), false);
@@ -89,7 +93,7 @@
 
 			describe('Object.is Utility', function() {
 
-				xit('Another way to check for NaN is to check with Object.is Utility');
+				it('Another way to check for NaN is to check with Object.is Utility', nullFunction);
 
 				it('returns true when checked with NaN', function() {
 					var output = 'a' / 2;
@@ -109,11 +113,11 @@
 
 	describe('-0 (Negative Zero)', function() {
 
-		xit('The only way to get a negative zero (-0) would be to multiply or divide (0) by unary negate (-) operator. But we could not check for (-0) using the === operator, as we would see in the following examples');
+		it('The only way to get a negative zero (-0) would be to multiply or divide (0) by unary negate (-) operator. But we could not check for (-0) using the === operator, as we would see in the following examples', nullFunction);
 
-		xit('We could check by doing (1 / (-0)) which should result in -Infinity');
+		it('We could check by doing (1 / (-0)) which should result in -Infinity', nullFunction);
 
-		xit('We could check by using Object.is utility');
+		it('We could check by using Object.is utility', nullFunction);
 
 		describe('Check for (-0)', function() {
 
@@ -165,7 +169,7 @@
 
 			describe('Object.is Utility', function() {
 
-				xit('Object.is Utility is like quadruple equals. It can be used to check -0 & NaN');
+				it('Object.is Utility is like quadruple equals. It can be used to check -0 & NaN', nullFunction);
 
 				it('returns true if we check with -0', function() {
 					var output = 0 / -3;

@@ -1,6 +1,8 @@
 /* eslint no-redeclare: 'off' */
 
-exports.quiz = (function() {
+'use strict';
+
+(function() {
 
 	var baz = 2;
 	var output1 = typeof baz;
@@ -19,15 +21,19 @@ exports.quiz = (function() {
 	var output6 = baz;
 	var output7 = typeof baz;
 
-	return {
-		output1: output1,
-		output2: output2,
-		output3: output3,
-		output4: output4,
-		output5: output5,
-		output6: output6,
-		output7: output7
+	var publicAPI = {
+		quiz: {
+			output1,
+			output2,
+			output3,
+			output4,
+			output5,
+			output6,
+			output7
+		}
 	};
+
+	module.exports = publicAPI;
 	
 })();
 

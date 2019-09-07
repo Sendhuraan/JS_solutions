@@ -1,16 +1,20 @@
 /* eslint-disable eqeqeq */
 
+'use strict';
+
 (function() {
 
 	var assert = require('chai').assert;
 
+	var nullFunction = function(){};
+
 	describe('Implicit Coercion', function() {
 
-		it('Implicit Coercion implies that result happens as a side effect of other operation. It is as if we say we want the end result to happen. But don\'t care how it happens. Let the computer decide how it should be performed. That doesn\'t mean that it is all bad. We should make an informed decision about how clearly we are communicating our intent.');
+		it('Implicit Coercion implies that result happens as a side effect of other operation. It is as if we say we want the end result to happen. But don\'t care how it happens. Let the computer decide how it should be performed. That doesn\'t mean that it is all bad. We should make an informed decision about how clearly we are communicating our intent.', nullFunction);
 
 		describe('string -> number', function() {
 
-			it('We want to convert a string to a number primitive in an implicit way. Like doing a mathematical operation which doesn\'t have any effect on the original value. The following are some examples');
+			it('We want to convert a string to a number primitive in an implicit way. Like doing a mathematical operation which doesn\'t have any effect on the original value. The following are some examples', nullFunction);
 
 			it('Subtracting with (0). The minus operator (-) is designed specifically to deal with numbers. When operated on values other than numbers, it tries to coerce the value to a number and then subtracts zero (like a no-operation) from it', function() {
 				var a = '123';
@@ -40,13 +44,13 @@
 				assert.equal(output, 123);
 			});
 
-			it('We should never do the coercion this way, as it doesn\'t convey our intentions correctly. But we should be aware of this.');
+			it('We should never do the coercion this way, as it doesn\'t convey our intentions correctly. But we should be aware of this.', nullFunction);
 
 		});
 
 		describe('number -> string', function() {
 
-			it('Following are some of the ways, in which we convert number to string in an implicit way');
+			it('Following are some of the ways, in which we convert number to string in an implicit way', nullFunction);
 
 			it('Adding number with string. The (+) operator is designed to do mathematical addition. But if one of the operands is a string, then it prefers string concatenation. So it tries to convert the other operand into a string and adds the empty string (like no-operation) to it.', function() {
 				var a = 123;
@@ -69,7 +73,7 @@
 
 		describe('* -> boolean', function() {
 
-			it('Whenever we write an if statement, the value is implicitly coerced to a boolean value. The following are some examples');
+			it('Whenever we write an if statement, the value is implicitly coerced to a boolean value. The following are some examples', nullFunction);
 
 			it('Implicit coercion happens in an if statement. If any value that is not on the falsy list is passed to if statement, it passes', function() {
 				var a = '123';
@@ -191,7 +195,7 @@
 			it(`Since (==) operator prefers to do number comparison and not boolean coercion as we would expect, we usually get strange results. Hence it is better to avoid (==) in the following cases
 				* boolean comparisons (== true or == false)
 				* comparisons to either [], '' or 0
-			`);
+			`, nullFunction);
 			
 		});
 

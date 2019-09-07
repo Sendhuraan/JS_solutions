@@ -1,3 +1,5 @@
+'use strict';
+
 (function() {
 
 	var solution = {
@@ -15,11 +17,11 @@
 		browser: {
 			lint: {
 				pattern: ['**/*.js'],
-				options: 'transpileLintOptions'
+				options: 'defaultLintOptions'
 			},
 			test: {
 				runner: 'jest',
-				pattern: ['**/*_test.js']
+				pattern: ['**/*_docs.js']
 			},
 			bundle: false,
 			template: false

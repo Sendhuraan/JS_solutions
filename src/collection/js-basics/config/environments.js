@@ -1,5 +1,7 @@
 /* eslint-disable no-useless-escape */
 
+'use strict';
+
 (function() {
 
 	var environments = {

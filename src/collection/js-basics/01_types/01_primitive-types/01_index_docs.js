@@ -1,3 +1,5 @@
+'use strict';
+
 (function() {
 
 	var assert = require('chai').assert;

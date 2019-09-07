@@ -1,12 +1,16 @@
+'use strict';
+
 (function() {
 
 	var assert = require('chai').assert;
 
+	var nullFunction = function(){};
+
 	describe('Native Functions', function() {
 
-		xit('Native funtions can be called with new operator in front of it or can be called as regular functions.');
+		it('Native funtions can be called with new operator in front of it or can be called as regular functions.', nullFunction);
 
-		xit(`Classified into
+		it(`Classified into
 			String
 			Number
 			Boolean
@@ -16,7 +20,7 @@
 			Date
 			Function
 			Error
-		`);
+		`, nullFunction);
 
 		describe('Call Natives as Constructors', function() {
 
@@ -26,7 +30,7 @@
 				assert.equal(typeof output, 'object');
 			});
 
-			xit('There are some caveats in calling as constructors, as it constructs object around primitives.');
+			it('There are some caveats in calling as constructors, as it constructs object around primitives.', nullFunction);
 
 			it('Example, false as (boolean primitive) is falsy, but false as (Boolean Object) is truthy. Calling new Boolean(false) will return empty object, which is truthy (weird!)', function() {
 				var a = false;
@@ -52,7 +56,7 @@
 				assert.equal(Boolean(b), true);
 			});
 
-			it('Hence, it is better to avoid building primitives using constructors.');
+			it('Hence, it is better to avoid building primitives using constructors.', nullFunction);
 			
 		});
 
@@ -76,7 +80,7 @@
 
 	describe('Array', function() {
 		
-		xit('Array can be created by constructor form or literal syntax.');
+		it('Array can be created by constructor form or literal syntax.', nullFunction);
 
 		describe('Constructor Syntax', function() {
 			
@@ -95,7 +99,7 @@
 				assert.equal(arr.length, 5);
 			});
 
-			xit('Hence, it is better to avoid constructor syntax due to these caveats.');
+			it('Hence, it is better to avoid constructor syntax due to these caveats.', nullFunction);
 
 		});
 
@@ -109,7 +113,7 @@
 				assert.equal(arr[0], 1);
 			});
 
-			xit('It is always preferable to use the literal syntax. It reads clearly and communicates our intent in a better way.');
+			it('It is always preferable to use the literal syntax. It reads clearly and communicates our intent in a better way.', nullFunction);
 
 		});
 
@@ -117,7 +121,7 @@
 
 	describe('Object', function() {
 		
-		it('Object can be created by constructor form or literal syntax.');
+		it('Object can be created by constructor form or literal syntax.', nullFunction);
 
 		describe('Constructor Syntax', function() {
 			
@@ -132,7 +136,7 @@
 				assert.equal(obj['b'], 2);
 			});
 
-			xit('Hence, it is better to avoid constructor syntax, as it is less performant.');
+			it('Hence, it is better to avoid constructor syntax, as it is less performant.', nullFunction);
 
 		});
 
@@ -150,7 +154,7 @@
 				assert.equal(obj.b, 2);
 			});
 
-			xit('It is always preferable to use the literal syntax. It reads clearly, communicates our intent in a better way and more performant.');
+			it('It is always preferable to use the literal syntax. It reads clearly, communicates our intent in a better way and more performant.', nullFunction);
 
 		});
 
@@ -159,7 +163,7 @@
 
 	describe('RegExp', function() {
 		
-		xit('Regular Expression can be created by constructor form or literal syntax.');
+		it('Regular Expression can be created by constructor form or literal syntax.', nullFunction);
 
 		describe('Constructor Syntax', function() {
 			
@@ -181,7 +185,7 @@
 				assert.equal(pattern.test('hello world!'), true);
 			});
 
-			xit('It is always preferable to use the literal syntax. It reads clearly, communicates our intent in a better way and more performant.');
+			it('It is always preferable to use the literal syntax. It reads clearly, communicates our intent in a better way and more performant.', nullFunction);
 
 		});
 
@@ -189,13 +193,13 @@
 
 	describe('Date', function() {
 		
-		xit('Date object can be created only by constructor form.');
+		it('Date object can be created only by constructor form.', nullFunction);
 
 	});
 
 	describe('Function', function() {
 		
-		xit('Functions can be created by constructor form or literal syntax (as statement or expression).');
+		it('Functions can be created by constructor form or literal syntax (as statement or expression).', nullFunction);
 
 		describe('Constructor Syntax', function() {
 
