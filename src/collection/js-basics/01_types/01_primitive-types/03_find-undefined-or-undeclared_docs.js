@@ -11,9 +11,7 @@
 			undeclaredVar;
 		}
 		catch(err) {
-			if(err.name === 'ReferenceError') {
-				console.log('variable is not declared');
-			}
+			console.error(err);
 		}
 
 		var undefinedVar;
