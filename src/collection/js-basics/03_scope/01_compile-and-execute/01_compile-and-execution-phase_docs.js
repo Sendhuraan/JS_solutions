@@ -24,7 +24,31 @@
 
 		/* eslint-enable no-unused-vars */
 
-		it('TODO: Compile Phase', function() {
+		it('TODO: Compile and Execution Phase', function() {
+			assert.equal('TODO', 'TODO');
+		});
+
+	});
+
+
+	describe('TODO: Compile and Execution Phase', function() {
+
+		/* eslint-disable no-unused-vars, no-undef */
+		var foo = 'bar';
+
+		function bar() {
+			var foo = 'baz';
+
+			function baz(foo) {
+				foo = 'bam';
+				bam = 'yay';
+			}
+			baz();
+		}
+
+		/* eslint-enable no-unused-vars, no-undef */
+
+		it('TODO: Compile and Execution Phase', function() {
 			assert.equal('TODO', 'TODO');
 		});
 

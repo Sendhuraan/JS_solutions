@@ -10,7 +10,7 @@
 			},
 			test: {
 				runner: 'mocha',
-				reporter: 'mochawesome',
+				// reporter: 'mochawesome',
 				pattern: ['**/*_docs.js']
 			},
 			bundle: false

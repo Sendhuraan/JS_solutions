@@ -133,21 +133,19 @@
 	describe('TODO: const', function() {
 
 		/* eslint-disable no-unused-vars, no-const-assign */
-		var teacher = 'Suzy';
-		teacher = 'Kyle';
-
 		try {
+			var teacher = 'Suzy';
+			teacher = 'Kyle';
+
 			const myTeacher = teacher;
 			myTeacher = 'Suzy';
+
+			const teachers = ['Kyle', 'Suzy'];
+			teachers[1] = 'Brian'; //allowed
 		}
 		catch(err) {
-			if(err.name === 'TypeError') {
-				console.error('myTeacher -> TypeError');
-			}
+			console.error(err);
 		}
-		
-		const teachers = ['Kyle', 'Suzy'];
-		teachers[1] = 'Brian'; //allowed
 		
 		/* eslint-enable no-unused-vars, no-const-assign */
 

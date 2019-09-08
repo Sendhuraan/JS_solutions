@@ -4,48 +4,114 @@
 
 	var assert = require('chai').assert;
 
-	describe('TODO: Auto Globals', function() {
+	describe('TODO: Auto Globals - Example1', function() {
 
-		/* eslint-disable strict, no-unused-vars, no-implicit-globals, no-undef */
-		function autoGlobal_NonStrict() {
+		/* eslint-disable no-unused-vars, no-implicit-globals, no-undef, no-inner-declarations */
+		try {
+			function autoGlobal_NonStrict() {
 
-			var teacher = 'Kyle';
+				var teacher = 'Kyle';
 
-			function otherClass() {
-				teacher = 'Suzy';
-				topic = 'React';
-				console.log('Welcome!');
+				function otherClass() {
+					teacher = 'Suzy';
+					topic = 'React';
+					console.log('Welcome!');
+				}
+
+				otherClass();
+				
+				console.log(teacher);
+				console.log(topic);
 			}
 
-			otherClass();
-			
-			console.log(teacher);
-			console.log(topic);
-		}
+			function autoGlobal_Strict() {
+				'use strict';
 
-		function autoGlobal_Strict() {
-			'use strict';
+				var teacher = 'Kyle';
 
-			var teacher = 'Kyle';
+				function otherClass() {
+					teacher = 'Suzy';
+					topic = 'React';
+					console.log('Welcome!');
+				}
 
-			function otherClass() {
-				teacher = 'Suzy';
-				topic = 'React';
-				console.log('Welcome!');
+				otherClass();
+				
+				console.log(teacher);
+				console.log(topic);
 			}
 
-			otherClass();
-			
-			console.log(teacher);
-			console.log(topic);
+			autoGlobal_NonStrict();
+			autoGlobal_Strict();	
 		}
+		catch(err) {
+			console.error(err);
+		}
+		
+		/* eslint-enable no-unused-vars, no-implicit-globals, no-undef, no-inner-declarations */
 
-		autoGlobal_NonStrict();
-		autoGlobal_Strict();
+		it('TODO: Auto Globals - Example1', function() {
+			assert.equal('TODO', 'TODO');
+		});
 
-		/* eslint-enable strict, no-unused-vars, no-implicit-globals, no-undef */
+	});
 
-		it('TODO: Auto Globals', function() {
+
+	describe('TODO: Auto Globals - Example2', function() {
+
+		/* eslint-disable no-unused-vars, no-implicit-globals, no-undef, no-inner-declarations */
+		try {
+			function autoGlobal_NonStrict() {
+
+				var foo = 'bar';
+
+				function bar() {
+					var foo = 'baz';
+
+					function baz(foo) {
+						foo = 'bam';
+						bam = 'yay';
+					}
+					baz();
+				}
+
+				bar();
+				foo;
+				bam;
+				baz();
+			}
+
+			function autoGlobal_Strict() {
+				'use strict';
+
+				var foo = 'bar';
+
+				function bar() {
+					var foo = 'baz';
+
+					function baz(foo) {
+						foo = 'bam';
+						bam = 'yay';
+					}
+					baz();
+				}
+
+				bar();
+				foo;
+				bam;
+				baz();
+			}
+
+			autoGlobal_NonStrict();
+			autoGlobal_Strict();	
+		}
+		catch(err) {
+			console.error(err);
+		}
+		
+		/* eslint-enable no-unused-vars, no-implicit-globals, no-undef, no-inner-declarations */
+
+		it('TODO: Auto Globals - Example2', function() {
 			assert.equal('TODO', 'TODO');
 		});
 

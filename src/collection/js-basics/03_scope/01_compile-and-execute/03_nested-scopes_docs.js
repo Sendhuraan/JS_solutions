@@ -6,30 +6,26 @@
 
 	describe('TODO: Nested Scopes', function() {
 
-		/* eslint-disable no-undef */
-		function otherClass() {
-			var teacher = 'Suzy';
+		/* eslint-disable no-undef, no-inner-declarations */
+		try {
+			function otherClass() {
+				var teacher = 'Suzy';
 
-			function ask(question) {
-				console.log(teacher, question);
+				function ask(question) {
+					console.log(teacher, question);
+				}
+
+				ask('Why?');
 			}
 
-			ask('Why?');
-		}
-
-		otherClass();
-
-		try {
+			otherClass();
 			ask('????');
 		}
 		catch(err) {
-			if(err.name === 'ReferenceError') {
-				console.error('ask -> ReferenceError');
-			}
+			console.error(err);
 		}
 		
-
-		/* eslint-enable no-undef */
+		/* eslint-enable no-undef, no-inner-declarations */
 
 		it('TODO: Nested Scopes', function() {
 			assert.equal('TODO', 'TODO');
