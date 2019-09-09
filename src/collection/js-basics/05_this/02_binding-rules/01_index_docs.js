@@ -135,7 +135,8 @@
 			askAgain('What\'s the strict mode default?');
 		}
 		catch(err) {
-			console.error(err);
+			console.log(err.name, err.message);
+			//console.error(err);
 		}
 
 		/* eslint-enable no-inner-declarations, no-unused-vars */
