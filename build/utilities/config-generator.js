@@ -208,7 +208,7 @@
 					nodeTestConfig.reporter = NODE_TEST_REPORTER__PARAM;
 					nodeTestConfig.reporterOptions = {
 						reportDir: `${SOURCE_DIR}/documentation`
-					}
+					};
 				}
 
 				NODE_TEST_OPTIONS = {
