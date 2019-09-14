@@ -1,0 +1,9 @@
+.table {
+	display: flex;
+	justify-content: center;
+}
+
+.table .table-row {
+	word-wrap: break-word;
+	width: 17%;
+}
