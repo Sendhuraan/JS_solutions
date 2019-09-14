@@ -282,10 +282,12 @@
 			cb();
 		}
 		else {
-			let { path } = config.browser.bundle.output;
+			let bundlePath = config.browser.bundle.output.path;
 			let { bundle } = config.browser;
 
-			shell.rm('-rf', path);
+			console.log(bundlePath);
+
+			shell.rm('-rf', path.join(bundlePath, 'bundle.js'));
 
 			webpack(bundle, function(err, stats) {
 				if (err) {
