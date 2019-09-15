@@ -9,6 +9,7 @@ const DEFAULT_PAGE_NUMBER = '1';
 const DEFAULT_HITS_PER_PAGE = '4';
 const DEFAULT_SEARCH_TYPE = 'all';
 
+const SEARCH_TYPES = ['anime', 'manga', 'character'];
 const PATH_BASE = 'https://api.jikan.moe/v3';
 const PATH_SEARCH = 'search';
 const PARAM_TYPE = 'anime';
@@ -32,7 +33,11 @@ class App extends Component {
 				results: null
 			},
 			autoComplete: {
-				results: null
+				results: {
+					anime: null,
+					manga: null,
+					character: null
+				}
 			},
 			search: {
 				value: '',
@@ -43,8 +48,12 @@ class App extends Component {
 
 		this.onSearchChange = this.onSearchChange.bind(this);
 		this.onSearchSubmit = this.onSearchSubmit.bind(this);
-		this.setSearchResults = this.setSearchResults.bind(this);
 		this.onSortChange = this.onSortChange.bind(this);
+		this.onSearchTypeChange = this.onSearchTypeChange.bind(this);
+
+		this.setAutoCompleteResult = this.setAutoCompleteResult.bind(this);
+		this.setAutoCompleteResults = this.setAutoCompleteResults.bind(this);
+		this.setSearchResults = this.setSearchResults.bind(this);
 
 	}
 
@@ -81,23 +90,74 @@ class App extends Component {
 				return newSearchState;
 			},
 			function afterStateUpdate() {
-				const { value, orderBy } = this.state.search;
+				const { value, orderBy, type } = this.state.search;
+
+				var searchURL;
 
 				if(value.length >= 3) {
-					const searchURL = `https://api.jikan.moe/v3/search/anime/?q=${value}&page=1&order_by=${orderBy}&sort=desc&limit=5`;
 
-					axios(searchURL)
-					.then((response) => {
-						console.log(response.data.results);
-						this.setSearchResults(response.data.results);
-					})
-					.catch(function(error) {
-						console.log(error);
-						this.setState({
-							error
+					let orderByValue;
+
+					if(orderBy !== '') {
+						orderByValue = `&order_by=${orderBy}&sort=desc`
+					}
+					else {
+						orderByValue = ''
+					}
+
+					if(type === 'all') {
+						searchURL = `https://api.jikan.moe/v3/search/${type}/?q=${value}&page=1${orderByValue}&limit=2`;
+
+						axios.all(
+							[
+								axios.get(`https://api.jikan.moe/v3/search/anime/?q=${value}&page=1&limit=2`),
+								axios.get(`https://api.jikan.moe/v3/search/manga/?q=${value}&page=1&limit=2`),
+								axios.get(`https://api.jikan.moe/v3/search/character/?q=${value}&page=1&limit=2`)
+							]
+						)
+						.then((response) => {
+							console.log(response);
+							this.setAutoCompleteResults(response);
+						})
+						.catch(function(error) {
+							console.log(error);
+							this.setState({
+								error
+							});
 						});
+					}
+					else {
+						axios.get(`https://api.jikan.moe/v3/search/${type}/?q=${value}&page=1&limit=2`)
+						.then((response) => {
+							console.log(response.data.results);
+							this.setAutoCompleteResult(type, response.data.results);
+						})
+						.catch(function(error) {
+							console.log(error);
+							this.setState({
+								error
+							});
+						});
+					}
+				
+				}
+				else {
+					this.setState(function resetSearchState(prevState) {
+						let newAutoCompleteState = {...prevState};
+
+						let resetAutoCompleteState = {
+							results: {
+								anime: null,
+								manga: null,
+								character: null
+							}
+						}
+
+						newAutoCompleteState.autoComplete = resetAutoCompleteState;
+
+						return newAutoCompleteState;
 					});
-				}	
+				}
 			}
 		);
 	}
@@ -106,12 +166,49 @@ class App extends Component {
 
 	}
 
+	onSearchTypeChange(e) {
+		const searchType = e.target.options[e.target.selectedIndex].value;
+
+		this.setState(function setSearchType(prevState) {
+			const newSearchState = {...prevState};
+			newSearchState.search.type = searchType;
+
+			return newSearchState;
+		});
+	}
+
 	setSearchResults(results) {
 		this.setState(function setSearchResultInGrid(prevState) {
 			let newGridState = {...prevState};
 			newGridState.grid.results = results;
 
 			return newGridState;
+		});
+	}
+
+	setAutoCompleteResult(type, results) {
+		this.setState(function setAutoCompleteResult(prevState) {
+			let newAutoResult = {...prevState};
+			newAutoResult['autoComplete']['results'][type] = results;
+
+			return newAutoResult;
+		});
+	}
+
+	setAutoCompleteResults(results) {
+		this.setState(function setAutoCompleteResultsInSearch(prevState) {
+			let newAutoCompleteState = {...prevState};
+
+			for(
+				let currentSearchType=0, currentResult=0;
+				currentSearchType < SEARCH_TYPES.length;
+				currentSearchType++, currentResult++
+			) {
+				newAutoCompleteState['autoComplete']['results'][SEARCH_TYPES[currentSearchType]] = results[currentResult]['data']['results'];
+				
+			}
+
+			return newAutoCompleteState;
 		});
 	}
 
@@ -129,6 +226,13 @@ class App extends Component {
 					<section className='search-container'>
 						<main>
 							<form onSubmit={this.onSearchSubmit}>
+								<select defaultValue={search.type} onChange={this.onSearchTypeChange}>
+									<option value='all'>All</option>
+									<option value='anime'>Anime</option>
+									<option value='manga'>Manga</option>
+									<option value='character'>Character</option>
+								</select>
+
 								<input type='text' value={search.value} onChange={this.onSearchChange} />
 								<input type='submit' value='Search' />
 							</form>
@@ -143,12 +247,12 @@ class App extends Component {
 
 						</main>
 
-						<div className='search-autocomplete-container'>
-							{
-								autoComplete.results &&
-								<Table lists={autoComplete.results} />
-							}
-						</div>
+						{
+							(autoComplete.results.anime || autoComplete.results.manga || autoComplete.results.character) &&
+							<AutoComplete lists={autoComplete.results} />
+							
+						}
+
 					</section>
 
 					<section className='grid-result-container'>
@@ -200,21 +304,60 @@ function Search(props) {
 	);
 }
 
-function Table(props) {
+function AutoComplete(props) {
 
 	const { lists } = props;
 
-	const largeColumn = {
-		width: '40%'
-	};
+	function createAutoCompleteGroup() {
+		let autoCompleteGroup = [];
 
-	const midColumn = {
-		width: '30%'
-	};
+		for (let list in lists) {
 
-	const smallColumn = {
-		width: '10%'
-	};
+			if(Array.isArray(lists[list])) {
+
+				let listItems = [];
+				let listGroup = [];
+
+				if(list === 'character') {
+					listItems = lists[list].map(function(current) {
+						return (
+							<li key={current.mal_id}>{current.name}</li>
+						);
+					});
+				}
+				else {
+					listItems = lists[list].map(function(current) {
+						return (
+							<li key={current.mal_id}>{current.title}</li>
+						);
+					});
+				}
+
+				listGroup = (
+					<React.Fragment>
+						<h5>{list}</h5>
+						<ul>{listItems}</ul>
+					</React.Fragment>
+				);
+
+				autoCompleteGroup.push(listGroup);	
+			}
+			
+		}
+
+		return autoCompleteGroup;
+	}
+
+	return (
+		<div className='search-autocomplete-container'>
+			{createAutoCompleteGroup()}
+		</div>
+	);
+}
+
+function Table(props) {
+
+	const { lists } = props;
 
 	return (
 		<div className='table'>
