@@ -53,7 +53,8 @@ class App extends Component {
 
 		this.setAutoCompleteResult = this.setAutoCompleteResult.bind(this);
 		this.setAutoCompleteResults = this.setAutoCompleteResults.bind(this);
-		this.setSearchResults = this.setSearchResults.bind(this);
+		this.setGridResults = this.setGridResults.bind(this);
+		this.setAutoCompleteResultInSearch = this.setAutoCompleteResultInSearch.bind(this);
 
 	}
 
@@ -64,7 +65,7 @@ class App extends Component {
 
 		axios(gridResultURL)
 		.then((response) => {
-			this.setState(function setGridResults(prevState) {
+			this.setState(function setGridResultsInState(prevState) {
 				let newGridState = {...prevState};
 				newGridState.grid.results = response.data.top.slice(0,5);
 
@@ -79,8 +80,8 @@ class App extends Component {
 		});
 	}
 
-	onSearchChange(event) {
-		const searchValue = event.target.value;
+	onSearchChange(value) {
+		const searchValue = value;
 
 		this.setState(
 			function setSearchValue(prevState) {
@@ -99,10 +100,10 @@ class App extends Component {
 					let orderByValue;
 
 					if(orderBy !== '') {
-						orderByValue = `&order_by=${orderBy}&sort=desc`
+						orderByValue = `&order_by=${orderBy}&sort=desc`;
 					}
 					else {
-						orderByValue = ''
+						orderByValue = '';
 					}
 
 					if(type === 'all') {
@@ -110,7 +111,7 @@ class App extends Component {
 
 						axios.all(
 							[
-								axios.get(`https://api.jikan.moe/v3/search/anime/?q=${value}&page=1&limit=2`),
+								axios.get(`https://api.jikan.moe/v3/search/anime/?q=${value}&page=1&limit=5`),
 								axios.get(`https://api.jikan.moe/v3/search/manga/?q=${value}&page=1&limit=2`),
 								axios.get(`https://api.jikan.moe/v3/search/character/?q=${value}&page=1&limit=2`)
 							]
@@ -118,6 +119,7 @@ class App extends Component {
 						.then((response) => {
 							console.log(response);
 							this.setAutoCompleteResults(response);
+							this.setGridResults(response[0].data.results);
 						})
 						.catch(function(error) {
 							console.log(error);
@@ -151,7 +153,7 @@ class App extends Component {
 								manga: null,
 								character: null
 							}
-						}
+						};
 
 						newAutoCompleteState.autoComplete = resetAutoCompleteState;
 
@@ -162,7 +164,7 @@ class App extends Component {
 		);
 	}
 
-	onSearchSubmit() {
+	onSearchSubmit(e) {
 
 	}
 
@@ -177,7 +179,7 @@ class App extends Component {
 		});
 	}
 
-	setSearchResults(results) {
+	setGridResults(results) {
 		this.setState(function setSearchResultInGrid(prevState) {
 			let newGridState = {...prevState};
 			newGridState.grid.results = results;
@@ -212,6 +214,21 @@ class App extends Component {
 		});
 	}
 
+	setAutoCompleteResultInSearch(value) {
+		console.log(value);
+		this.setState(function(prevState) {
+			let newState = {...prevState};
+			newState.search.value = value;
+
+			return newState;
+		},
+		() => {
+			console.log('hi');
+			this.onSearchChange(value);
+		});
+
+	}
+
 	onSortChange(e) {
 		console.log(e.target.options[e.target.selectedIndex].value);
 	}
@@ -233,7 +250,7 @@ class App extends Component {
 									<option value='character'>Character</option>
 								</select>
 
-								<input type='text' value={search.value} onChange={this.onSearchChange} />
+								<input type='text' value={search.value} onChange={(e) => this.onSearchChange(e.target.value)} />
 								<input type='submit' value='Search' />
 							</form>
 
@@ -249,7 +266,7 @@ class App extends Component {
 
 						{
 							(autoComplete.results.anime || autoComplete.results.manga || autoComplete.results.character) &&
-							<AutoComplete lists={autoComplete.results} />
+							<AutoComplete lists={autoComplete.results} setValue={this.setAutoCompleteResultInSearch} />
 							
 						}
 
@@ -306,7 +323,7 @@ function Search(props) {
 
 function AutoComplete(props) {
 
-	const { lists } = props;
+	const { lists, setValue } = props;
 
 	function createAutoCompleteGroup() {
 		let autoCompleteGroup = [];
@@ -318,17 +335,21 @@ function AutoComplete(props) {
 				let listItems = [];
 				let listGroup = [];
 
+				let currentList = lists[list].slice(0, 2);
+
 				if(list === 'character') {
-					listItems = lists[list].map(function(current) {
+					listItems = currentList.map(function(current) {
 						return (
-							<li key={current.mal_id}>{current.name}</li>
+							<li key={current.mal_id} onClick={(e) => setValue(e.target.textContent)}>{current.name}</li>
 						);
 					});
 				}
 				else {
-					listItems = lists[list].map(function(current) {
+					listItems = currentList.map(function(current) {
 						return (
-							<li key={current.mal_id}>{current.title}</li>
+							<li key={current.mal_id} onClick={(e) => setValue(e.target.textContent)
+							
+							}>{current.title}</li>
 						);
 					});
 				}
