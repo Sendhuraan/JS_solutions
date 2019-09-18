@@ -2,3 +2,7 @@
 	margin: 0;
 	padding: 0;
 }
+
+section, header, footer, main, p, select {
+	width: 100%;
+}

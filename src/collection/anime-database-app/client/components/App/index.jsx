@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 import React, { Component }from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import axios from 'axios';
@@ -7,32 +5,14 @@ import 'regenerator-runtime/runtime';
 
 import AppContext from '../AppContext';
 
-import BookDetailPage from '../BookDetailPage';
-import BookSearchForm from '../BookSearchForm';
-import BooksList from '../BooksList';
+import AnimeDetails from '../AnimeDetails';
+import Search from '../Search';
+import SearchResultsGrid from '../SearchResultsGrid';
 
-import './index.css';
-
-const API_BASE_URL = 'https://api.jikan.moe/v3/search/anime/';
-
-const DEFAULT_QUERY = 'jigu';
-const DEFAULT_PAGE_NUMBER = '1';
-const DEFAULT_HITS_PER_PAGE = '4';
 const DEFAULT_SEARCH_TYPE = 'all';
 
 const SEARCH_TYPES = ['anime', 'manga', 'character'];
 const PATH_BASE = 'https://api.jikan.moe/v3';
-const PATH_SEARCH = 'search';
-const PARAM_TYPE = 'anime';
-const PARAM_SEARCH = '?q=';
-const PARAM_PAGE = 'page=';
-const PARAM_HITS_PER_PAGE = 'limit=';
-
-function NoMatchRoute() {
-	return (
-		<div>404 Page</div>
-	);
-}
 
 class App extends Component {
 
@@ -46,8 +26,9 @@ class App extends Component {
 			autoComplete_results_anime: null,
 			autoComplete_results_manga: null,
 			autoComplete_results_character: null,
+			autoComplete_display_show: false,
 			grid_results: []
-		}
+		};
 
 		this.fetchBooks = this.fetchBooks.bind(this);
 		this.fetchAutoCompleteResults = this.fetchAutoCompleteResults.bind(this);
@@ -55,33 +36,36 @@ class App extends Component {
 
 		this.onSearchInputChange = this.onSearchInputChange.bind(this);
 		this.onSearchSubmit = this.onSearchSubmit.bind(this);
-
 		this.onSearchTypeChange = this.onSearchTypeChange.bind(this);
+
+		this.setSearchType = this.setSearchType.bind(this);
 		
 		this.setAutoCompleteResult = this.setAutoCompleteResult.bind(this);
 		this.setAutoCompleteResults = this.setAutoCompleteResults.bind(this);
 		this.setAutoCompleteResultInSearch = this.setAutoCompleteResultInSearch.bind(this);
+		this.setAutoCompleteDisplayShow = this.setAutoCompleteDisplayShow.bind(this);
+		this.setAutoCompleteDisplayHide = this.setAutoCompleteDisplayHide.bind(this);
 	}
 
 	componentDidMount() {
-		console.log('joi');
 		this.fetchPopularAnime();
 	}
 
 	async fetchPopularAnime() {
-		const result = await axios.get(`${PATH_BASE}/top/anime/1/bypopularity/?limit=5`);
-		console.log(result);
+		const result = await axios.get(`${PATH_BASE}/top/anime/1/bypopularity`);
 		this.setState({
 			grid_results: result.data.top
 		});
-	};
+	}
 
 	async fetchBooks() {
-		const result = await axios.get(`${API_BASE_URL}?q=${this.state.search_value}`);
+		const { search_type, search_value } = this.state;
+
+		const result = await axios.get(`${PATH_BASE}/search/${search_type}?q=${search_value}&page=1&limit=30`);
 		this.setState({
 			grid_results: result.data.results
 		});
-	};
+	}
 
 	onSearchInputChange(e) {
 		this.setState({
@@ -90,28 +74,17 @@ class App extends Component {
 		function() {
 			this.fetchAutoCompleteResults();
 		});
-	};
+	}
 
 	onSearchSubmit(e){
 		e.preventDefault();
 		this.fetchBooks();
-	};
+	}
 
 	async fetchAutoCompleteResults() {
-		const { search_value, search_orderBy, search_type } = this.state;
-
-		var searchURL;
+		const { search_value, search_type } = this.state;
 
 		if(search_value.length >= 3) {
-
-			let orderByValue;
-
-			if(search_orderBy !== '') {
-				orderByValue = `&order_by=${search_orderBy}&sort=desc`;
-			}
-			else {
-				orderByValue = '';
-			}
 
 			if(search_type === 'all') {
 
@@ -122,8 +95,6 @@ class App extends Component {
 						axios.get(`https://api.jikan.moe/v3/search/character/?q=${search_value}&page=1&limit=2`)
 					]
 				);
-
-				// console.log(response);
 				
 				this.setAutoCompleteResults(response);
 			}
@@ -156,6 +127,12 @@ class App extends Component {
 		});
 	}
 
+	setSearchType(value) {
+		this.setState({
+			search_type: value
+		});
+	}
+
 	setAutoCompleteResult(type, results) {
 		this.setState({
 			[type]: results
@@ -185,32 +162,55 @@ class App extends Component {
 		});
 	}
 
-  	render() {
+	setAutoCompleteDisplayShow() {
+		this.setState({
+			autoComplete_display_show: true
+		});
+	}
+
+	setAutoCompleteDisplayHide() {
+		this.setState({
+			autoComplete_display_show: false
+		});
+	}
+
+	render() {
 
 		return (
-			<AppContext.Provider
-				value={{
-					state: this.state,
+			<div className='container'>
+				<div className='row'>
+					<AppContext.Provider
+						value={{
+							state: this.state,
 
-					onSearchSubmit: this.onSearchSubmit,
-					onSearchInputChange: this.onSearchInputChange,
-					onSearchTypeChange: this.onSearchTypeChange,
+							onSearchSubmit: this.onSearchSubmit,
+							onSearchInputChange: this.onSearchInputChange,
+							onSearchTypeChange: this.onSearchTypeChange,
 
-					setAutoCompleteResult: this.setAutoCompleteResult,
-					setAutoCompleteResults: this.setAutoCompleteResults,
-					setAutoCompleteResultInSearch: this.setAutoCompleteResultInSearch
-				}}
-			>
-				<BookSearchForm />
-				<Router>
-					<Switch>
-						<Route path='/' exact component={BooksList} />
-						<Route path='/book/:bookId' exact component={BookDetailPage} />
-					</Switch>
-				</Router>
-			</AppContext.Provider>
+							setSearchType: this.setSearchType,
+
+							setAutoCompleteResult: this.setAutoCompleteResult,
+							setAutoCompleteResults: this.setAutoCompleteResults,
+							setAutoCompleteResultInSearch: this.setAutoCompleteResultInSearch,
+							setAutoCompleteDisplayShow: this.setAutoCompleteDisplayShow,
+							setAutoCompleteDisplayHide: this.setAutoCompleteDisplayHide
+						}}
+					>
+						
+						<Router>
+							<>
+								<Search />
+								<Switch>
+									<Route path='/' exact component={SearchResultsGrid} />
+									<Route path='/:type/:animeId' exact component={AnimeDetails} />
+								</Switch>
+							</>
+						</Router>
+					</AppContext.Provider>
+				</div>
+			</div>
 		);
-  	}
+	}
 	
 }
 
