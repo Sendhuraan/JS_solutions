@@ -3,8 +3,6 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 
-import AppContext from '../AppContext';
-
 const DEFAULT_QUERY = 'jigu';
 const DEFAULT_PAGE_NUMBER = '1';
 const DEFAULT_HITS_PER_PAGE = '4';
@@ -25,45 +23,38 @@ class BookSearchForm extends Component {
 	
 	render() {
 		const {
-			search_value,
-			search_type,
-			search_orderBy,
-			autoComplete_results_anime,
-			autoComplete_results_manga,
-			autoComplete_results_character,
-			grid_results
-
-		} = this.context.state;
-
-		const {
-			onSearchInputChange,
-			onSearchSubmit,
+			searchValue,
+			searchType,
 			onSearchTypeChange,
-			setAutoCompleteResult,
-			setAutoCompleteResults,
+
+			onInputChange,
+			onSubmitHandler,
+			autoCompleteResultsAnime,
+			autoCompleteResultsManga,
+			autoCompleteResultsCharacter,
 			setAutoCompleteResultInSearch
 
-		} = this.context;
+		} = this.props;
 
 		return (
 			<div className='page'>
 				<div className='interactions'>
 					<section className='search-container'>
 						<main>
-							<form onSubmit={onSearchSubmit}>
-								<select defaultValue={search_type} onChange={onSearchTypeChange}>
+							<form onSubmit={onSubmitHandler}>
+								<select defaultValue={searchType} onChange={onSearchTypeChange}>
 									<option value='all'>All</option>
 									<option value='anime'>Anime</option>
 									<option value='manga'>Manga</option>
 									<option value='character'>Character</option>
 								</select>
 
-								<input type='text' value={search_value} onChange={onSearchInputChange} />
+								<input type='text' value={searchValue} onChange={onInputChange} />
 								<input type='submit' value='Search' />
 							</form>
 
 							{
-								search_value.length < 3 && (
+								searchValue.length < 3 && (
 								<React.Fragment>
 									<em>Keyword too short. Type minimum three characters to get result.</em>
 								</React.Fragment>
@@ -73,11 +64,11 @@ class BookSearchForm extends Component {
 						</main>
 
 						{
-							(autoComplete_results_anime || autoComplete_results_manga || autoComplete_results_character) &&
+							(autoCompleteResultsAnime || autoCompleteResultsManga || autoCompleteResultsCharacter) &&
 							<AutoComplete lists={{
-										'anime': autoComplete_results_anime,
-										'manga': autoComplete_results_manga,
-										'character': autoComplete_results_character,
+										'anime': autoCompleteResultsAnime,
+										'manga': autoCompleteResultsManga,
+										'character': autoCompleteResultsCharacter,
 									}} setValue={setAutoCompleteResultInSearch} />
 							
 						}
@@ -89,8 +80,6 @@ class BookSearchForm extends Component {
 		);
 	}
 }
-
-BookSearchForm.contextType = AppContext;
 
 function AutoComplete(props) {
 

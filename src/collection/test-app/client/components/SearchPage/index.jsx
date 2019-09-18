@@ -1,17 +1,11 @@
 /* eslint-disable */
 
-import React, { Component }from 'react';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import React, { Component } from 'react';
 import axios from 'axios';
 import 'regenerator-runtime/runtime';
 
-import AppContext from '../AppContext';
-
-import BookDetailPage from '../BookDetailPage';
-import BookSearchForm from '../BookSearchForm';
-import BooksList from '../BooksList';
-
-import './index.css';
+import BookSearchForm from '../bookSearchForm';
+import BooksList from '../booksList';
 
 const API_BASE_URL = 'https://api.jikan.moe/v3/search/anime/';
 
@@ -28,14 +22,7 @@ const PARAM_SEARCH = '?q=';
 const PARAM_PAGE = 'page=';
 const PARAM_HITS_PER_PAGE = 'limit=';
 
-function NoMatchRoute() {
-	return (
-		<div>404 Page</div>
-	);
-}
-
-class App extends Component {
-
+class SearchPage extends Component {
 	constructor(props) {
 		super(props);
 
@@ -51,10 +38,8 @@ class App extends Component {
 
 		this.fetchBooks = this.fetchBooks.bind(this);
 		this.fetchAutoCompleteResults = this.fetchAutoCompleteResults.bind(this);
-		this.fetchPopularAnime = this.fetchPopularAnime.bind(this);
-
-		this.onSearchInputChange = this.onSearchInputChange.bind(this);
-		this.onSearchSubmit = this.onSearchSubmit.bind(this);
+		this.onInputChange = this.onInputChange.bind(this);
+		this.onSubmitHandler = this.onSubmitHandler.bind(this);
 
 		this.onSearchTypeChange = this.onSearchTypeChange.bind(this);
 		
@@ -63,19 +48,6 @@ class App extends Component {
 		this.setAutoCompleteResultInSearch = this.setAutoCompleteResultInSearch.bind(this);
 	}
 
-	componentDidMount() {
-		console.log('joi');
-		this.fetchPopularAnime();
-	}
-
-	async fetchPopularAnime() {
-		const result = await axios.get(`${PATH_BASE}/top/anime/1/bypopularity/?limit=5`);
-		console.log(result);
-		this.setState({
-			grid_results: result.data.top
-		});
-	};
-
 	async fetchBooks() {
 		const result = await axios.get(`${API_BASE_URL}?q=${this.state.search_value}`);
 		this.setState({
@@ -83,7 +55,7 @@ class App extends Component {
 		});
 	};
 
-	onSearchInputChange(e) {
+	onInputChange(e) {
 		this.setState({
 			search_value: e.target.value
 		},
@@ -92,7 +64,7 @@ class App extends Component {
 		});
 	};
 
-	onSearchSubmit(e){
+	onSubmitHandler(e){
 		e.preventDefault();
 		this.fetchBooks();
 	};
@@ -175,6 +147,8 @@ class App extends Component {
 				
 			}
 
+			console.log(newAutoCompleteState);
+
 			return newAutoCompleteState;
 		});
 	}
@@ -186,32 +160,37 @@ class App extends Component {
 	}
 
   	render() {
+  		const {
+  			search_value,
+  			search_type,
+  			grid_results,
+  			autoComplete_results_anime,
+  			autoComplete_results_manga,
+  			autoComplete_results_character,
+
+  		} = this.state;
 
 		return (
-			<AppContext.Provider
-				value={{
-					state: this.state,
+			<>
+				<BookSearchForm
+					onSubmitHandler={this.onSubmitHandler}
+					onInputChange={this.onInputChange}
 
-					onSearchSubmit: this.onSearchSubmit,
-					onSearchInputChange: this.onSearchInputChange,
-					onSearchTypeChange: this.onSearchTypeChange,
+					searchValue={search_value}
+					searchType={search_type}
+					onSearchTypeChange={this.onSearchTypeChange}
 
-					setAutoCompleteResult: this.setAutoCompleteResult,
-					setAutoCompleteResults: this.setAutoCompleteResults,
-					setAutoCompleteResultInSearch: this.setAutoCompleteResultInSearch
-				}}
-			>
-				<BookSearchForm />
-				<Router>
-					<Switch>
-						<Route path='/' exact component={BooksList} />
-						<Route path='/book/:bookId' exact component={BookDetailPage} />
-					</Switch>
-				</Router>
-			</AppContext.Provider>
-		);
+					autoCompleteResultsAnime={this.state.autoComplete_results_anime}
+					autoCompleteResultsManga={this.state.autoComplete_results_manga}
+					autoCompleteResultsCharacter={this.state.autoComplete_results_character}
+					setAutoCompleteResultInSearch={this.setAutoCompleteResultInSearch}
+				/>
+				<BooksList gridResults={grid_results} />
+			</>
+		);	
   	}
-	
-}
 
-export default App;
+	
+};
+
+export default SearchPage;

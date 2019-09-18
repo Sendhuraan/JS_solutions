@@ -1,9 +1,5 @@
-/* eslint-disable */
-
 import React from 'react';
 import { Link } from 'react-router-dom';
-
-import AppContext from '../AppContext';
 
 const Book = ({ book }) => {
     return (
@@ -20,20 +16,18 @@ const Book = ({ book }) => {
     );
 };
 
-const BooksList = () => {
+const BooksList = ({ gridResults }) => {
     return (
-		<ul>
-			<AppContext.Consumer>
-				{(context) => {
-					return context.state.grid_results.map((book, index) => {
-						return (
-							<Book book={book} key={index} />
-						);
-					})
-				}}
-			</AppContext.Consumer>
-		</ul>
-	);
+        <ul>
+        {
+          gridResults.map((book, index) => {
+            return (
+                <Book book={book} key={index} />
+            );
+          })
+        }
+      </ul>
+    );
 };
 
 export default BooksList;

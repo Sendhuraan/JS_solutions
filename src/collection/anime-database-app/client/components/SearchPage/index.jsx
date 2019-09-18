@@ -4,6 +4,7 @@ import 'regenerator-runtime/runtime';
 
 import BookSearchForm from '../bookSearchForm';
 import BooksList from '../booksList';
+/* eslint-disable */
 
 const API_BASE_URL = 'https://api.jikan.moe/v3/search/anime/';
 
