@@ -17,24 +17,32 @@ class AnimeDetails extends Component {
 		};
 	}
 
+	static getDerivedStateFromProps(props) {
+		const { type } = props.match.params;
+
+		let searchType = (function setSearchType(input) {
+			if(input === 'all') {
+				return 'anime';
+			}
+			else {
+				return input;
+			}
+		})(type);
+
+		return {
+			searchType
+		};
+	}
+
 	componentDidMount() {
 		const PATH_BASE = 'https://api.jikan.moe/v3';
-		const { type, animeId } = this.props.match.params;
+		const { animeId } = this.props.match.params;
+		const { searchType } = this.state;
 
 		const fetchAnime = async () => {
-			var searchType = (function setSearchType(input) {
-				if(input === 'all') {
-					return 'anime';
-				}
-				else {
-					return input;
-				}
-			})(type);
-
 			try {
 				const result = await axios.get(`${PATH_BASE}/${searchType}/${animeId}`);
 				this.setState({
-					searchType: searchType,
 					data: result.data
 				});
 			}

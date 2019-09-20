@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { withRouter } from 'react-router-dom';
 
 import AppContext from '../AppContext';
 import AutoComplete from '../AutoComplete';
@@ -8,6 +9,18 @@ import './index.less';
 class Search extends Component {
 	constructor(props) {
 		super(props);
+
+		this.handleSubmitClick = this.handleSubmitClick.bind(this);
+	}
+
+	handleSubmitClick() {
+		const {
+			setAutoCompleteDisplayHide
+
+		} = this.context;
+
+		setAutoCompleteDisplayHide();
+		this.props.history.push('/');
 	}
 	
 	render() {
@@ -26,8 +39,7 @@ class Search extends Component {
 			onSearchSubmit,
 			onSearchTypeChange,
 			setAutoCompleteResultInSearch,
-			setAutoCompleteDisplayShow,
-			setAutoCompleteDisplayHide
+			setAutoCompleteDisplayShow
 
 		} = this.context;
 
@@ -58,7 +70,7 @@ class Search extends Component {
 								type='submit'
 								className='btn btn-primary'
 								value='Search'
-								onClick={setAutoCompleteDisplayHide}
+								onClick={this.handleSubmitClick}
 								disabled={search_value.length < 3 ? true : false}
 							/>
 
@@ -103,4 +115,4 @@ class Search extends Component {
 
 Search.contextType = AppContext;
 
-export default Search;
+export default withRouter(Search);
