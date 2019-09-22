@@ -20,7 +20,7 @@ class App extends Component {
 
 	render() {
 		const url = 'https://www.reactjs.org';
-		const title = 'Todo List (React and Redux)';
+		const title = 'Todo List (React and Redux Thunk)';
 
 		return (
 			<div className='App'>
