@@ -285,8 +285,6 @@
 			let bundlePath = config.browser.bundle.output.path;
 			let { bundle } = config.browser;
 
-			console.log(bundlePath);
-
 			shell.rm('-rf', path.join(bundlePath, 'bundle.js'));
 
 			webpack(bundle, function(err, stats) {
