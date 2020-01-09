@@ -34,13 +34,6 @@ import Appointment from '../Appointment';
 			expect(container.textContent).toMatch('Jordan');
 		});
 
-		it('renders another customer first name', function() {
-			customer = {
-				'firstName': 'Jordan'
-			};
-			renderComponent(<Appointment customer={customer} />);
-			expect(container.textContent).toMatch('Jordan');
-		});
 
 	});
 	

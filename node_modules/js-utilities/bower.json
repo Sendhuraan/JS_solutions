@@ -1,0 +1,21 @@
+{
+  "name": "js-utilities",
+  "main": [
+    "utils.js"
+  ],
+  "authors": [
+    "Vasileios Mitsaras"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "package.json"
+  ],
+  "keywords": [
+    "utilities"
+  ],
+  "license": "MIT"
+}

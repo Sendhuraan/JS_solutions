@@ -5,7 +5,7 @@
 	var solution = {
 		node: {
 			lint: {
-				pattern: ['*.js', 'server/**/*.js', 'data/**/*.js'],
+				pattern: ['*.js', 'server/**/*.js'],
 				options: 'defaultLintOptions'
 			},
 			test: false,
