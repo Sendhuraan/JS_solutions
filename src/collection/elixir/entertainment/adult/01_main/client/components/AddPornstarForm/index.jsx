@@ -5,18 +5,6 @@ import { addPornstar } from '../../state/actions/pornstar-actions';
 
 import './index.css';
 
-function hasKeyInStorage(key) {
-	return Boolean(localStorage.getItem(key));
-}
-
-function getFromStorage(key) {
-	return JSON.parse(localStorage.getItem(key));
-}
-
-function setToStorage(key, value) {
-	localStorage.setItem(key, JSON.stringify(value));
-}
-
 class AddPornstarForm extends Component {
 
 	constructor(props) {
@@ -37,12 +25,6 @@ class AddPornstarForm extends Component {
 		this.handleOnSubmit = this.handleOnSubmit.bind(this);
 	}
 
-	componentDidMount() {
-		if(!hasKeyInStorage('pornstars')) {
-			setToStorage('pornstars', []);
-		}
-	}
-
 	handleOnChange(e) {
 		const inputValue = e.target.value;
 		const inputName = e.target.name;
@@ -61,14 +43,6 @@ class AddPornstarForm extends Component {
 		e.preventDefault();
 
 		const { pornstar_name, pornstar_alias_names } = this.state;
-
-		let pornstarsKey = 'pornstars';
-		let pornstarsList = getFromStorage(pornstarsKey);
-
-		pornstarsList.push({
-			name: pornstar_name,
-			alias_names: pornstar_alias_names
-		});
 
 		this.props.addPornstar(pornstar_name, pornstar_alias_names);
 		this.personForm.current.reset();

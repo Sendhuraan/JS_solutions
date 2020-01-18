@@ -1,5 +1,9 @@
 import { ADD_PORNSTAR, DELETE_PORNSTAR } from '../constants/action-types';
-import { generateUniqueID, getFromStorage, setToStorage } from '../utilities';
+import { generateUniqueID, getFromStorage, setToStorage, hasKeyInStorage } from '../utilities';
+
+if(!hasKeyInStorage('pornstars')) {
+	setToStorage('pornstars', []);
+}
 
 const initialState = getFromStorage('pornstars').map(function addUniqId(pornstar) {
 	pornstar.id = generateUniqueID();
