@@ -1,42 +1,49 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { connect } from 'react-redux';
 
-import { toggleTodo, deleteTodo } from '../../state/actions/todo-actions';
+import {
+	getTodos,
+	toggleTodo,
+	deleteTodo
+} from '../../state/actions/todo-actions';
 
 import './index.css';
 
 function TodoItems(props) {
-	const { todos } = props;
+	const { getTodos, todos } = props;
+
+	useEffect(function fetchTodosFromAPI() {
+		getTodos();
+	}, []);
 
 	return (
-		<div className='TodoItems'>
+		<div className="TodoItems">
 			<ul>
-				{
-					todos.map(function(todo) {
-
-						return (
-							<li key={todo.id} className={`${todo.completed ? 'completed' : 'pending'}`}>
+				{todos.map(function(todo) {
+					return (
+						<li
+							key={todo.id}
+							className={`${todo.completed ? 'completed' : 'pending'}`}
+						>
 							{todo.title}
-								<div className='actions'>
-									<span
-										className={todo.completed ? 'hide' : 'done'}
-										onClick={() => props.toggleTodo(todo.id)}
-									>
-										<i className='fa fa-check'></i>
-									</span>
+							<div className="actions">
+								<span
+									className={todo.completed ? 'hide' : 'done'}
+									onClick={() => props.toggleTodo(todo.id)}
+								>
+									<i className="fa fa-check"></i>
+								</span>
 
-									<span
-										className='trash'
-										onClick={() => props.deleteTodo(todo.id)}
-									>
-										<i className='fa fa-trash'></i>
-									</span>
-								</div>
-							</li>
-						);
-					
-					})
-				}
+								<span
+									className="trash"
+									onClick={() => props.deleteTodo(todo.id)}
+								>
+									<i className="fa fa-trash"></i>
+								</span>
+							</div>
+						</li>
+					);
+				})}
 			</ul>
 		</div>
 	);
@@ -48,4 +55,6 @@ function mapStateToProps(state) {
 	};
 }
 
-export default connect(mapStateToProps, { toggleTodo, deleteTodo })(TodoItems);
+export default connect(mapStateToProps, { getTodos, toggleTodo, deleteTodo })(
+	TodoItems
+);

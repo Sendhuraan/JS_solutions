@@ -1,18 +1,7 @@
-import { ajax } from 'rxjs/ajax';
-import { map, mergeMap } from 'rxjs/operators';
-import { ofType } from 'redux-observable';
+import { combineEpics } from 'redux-observable';
 
-import { GET_TODOS } from '../constants/action-types';
-import { setTodos } from '../actions/todo-actions';
+import { fetchTodosEpic } from './todo-epics';
 
-const fetchTodosEpic = action$ =>
-	action$.pipe(
-		ofType(GET_TODOS),
-		mergeMap(() =>
-			ajax
-				.getJSON('https://jsonplaceholder.typicode.com/todos')
-				.pipe(map(response => setTodos(response)))
-		)
-	);
+const rootEpic = combineEpics(fetchTodosEpic);
 
-export { fetchTodosEpic };
+export default rootEpic;
