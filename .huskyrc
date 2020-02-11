@@ -1,5 +1,5 @@
 {
   "hooks": {
-    "pre-commit": "eslint"
+    "pre-commit": "gulp --dir anime-database-app"
   }
 }
