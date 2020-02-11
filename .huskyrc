@@ -1,5 +1,5 @@
 {
   "hooks": {
-    "pre-commit": "gulp --dir anime-database-app"
+    "pre-commit": "gulp --dir _solution_templates/redux-observable"
   }
 }
