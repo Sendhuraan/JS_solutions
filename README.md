@@ -2,7 +2,7 @@
 
 ## How to Run
 
-- Make sure that Node JS (v8.11.3) is installed
+- Make sure that Node JS (v8.11.3) is installed.
 - Clone the repository
 
 ### Run Solution
