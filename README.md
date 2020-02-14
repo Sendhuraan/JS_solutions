@@ -1,4 +1,4 @@
-## This repo contains solutions for HTML CSS Javascript React Redux Node
+## This repo contains solutions for HTML CSS Javascript React Redux Node.
 
 ## How to Run
 * Make sure that Node JS (v8.11.3) is installed.
